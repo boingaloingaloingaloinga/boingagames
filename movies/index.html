@@ -1,26 +1,449 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-style="modern">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movies</title>
+  <title>BoingaMovies</title>
+  <script>
+    /*
+      Runs before the page paints so the right style shows immediately and the
+      intro covers the screen from the very first frame.
+      Set INTRO_EVERY_LOAD to true to play the intro on every page load instead
+      of once per browser session.
+    */
+    (function () {
+      var INTRO_EVERY_LOAD = false;
+      var root = document.documentElement;
+      var s = {};
+      try { s = JSON.parse(localStorage.getItem("movieSiteSettings") || "{}"); } catch (e) {}
+      var style = s.style === "classic" ? "classic" : "modern";
+      root.setAttribute("data-style", style);
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var played = false;
+      try { played = !!sessionStorage.getItem("introPlayed"); } catch (e) {}
+      if (style === "modern" && s.intro !== false && !reduce && (INTRO_EVERY_LOAD || !played)) {
+        root.classList.add("intro-on");
+      }
+    })();
+  </script>
   <style>
+    :root {
+      --black: #000;
+      --surface-2: #1f1f1f;
+      --line: #2e2e2e;
+      --yellow: #ffd60a;
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+      --font: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      font-family: var(--font);
+      background: var(--black);
+      color: var(--text);
+    }
+
+    .movie[hidden] { display: none !important; }
+
+    /* ---------- Icon buttons (settings gear, search) ---------- */
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: color .2s, background .2s, transform .4s;
+    }
+    .icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn:hover { color: var(--yellow); }
+    .icon-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+    .gear:hover { transform: rotate(60deg); }
+
+    /* ---------- Settings panel ---------- */
+    .panel {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      width: 310px;
+      max-width: calc(100vw - 40px);
+      background: #101010;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--yellow);
+      border-radius: 6px;
+      padding: 18px 20px 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.6);
+      z-index: 100;
+      text-align: left;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .panel.open { opacity: 1; transform: none; pointer-events: auto; }
+    .panel h2 { margin: 0 0 14px; font-size: 1.05rem; }
+    .panel fieldset { border: 0; margin: 0 0 16px; padding: 0; }
+    .panel legend { font-size: .85rem; color: var(--muted); padding: 0; margin-bottom: 8px; }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      font-size: .95rem;
+    }
+    .choice:has(input:checked) { border-color: var(--yellow); background: rgba(255,214,10,.08); }
+    .choice input { accent-color: var(--yellow); margin: 0; }
+
+    .switch-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; font-size: .95rem; }
+    .switch-row + .switch-row { margin-top: 16px; }
+    .switch-row small { display: block; color: var(--muted); margin-top: 3px; font-size: .8rem; line-height: 1.35; }
+    .switch { position: relative; flex: none; width: 44px; height: 24px; }
+    .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+    .switch span { position: absolute; inset: 0; background: #3a3a3a; border-radius: 12px; transition: background .2s; }
+    .switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+    .switch input:checked + span { background: var(--yellow); }
+    .switch input:checked + span::after { transform: translateX(20px); background: #000; }
+    .switch input:focus-visible + span { outline: 2px solid var(--yellow); outline-offset: 2px; }
+    .switch input:disabled { cursor: not-allowed; }
+    .switch input:disabled + span { opacity: .4; }
+
+    .link-btn {
+      margin-top: 8px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--yellow);
+      font: inherit;
+      font-size: .85rem;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .link-btn:disabled { color: var(--muted); cursor: not-allowed; text-decoration: none; }
+    .link-btn:focus-visible { outline: 2px solid var(--yellow); outline-offset: 2px; }
+
+    /* ---------- Streaming layout ---------- */
+    html[data-style="modern"] body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 4vw;
+      background: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,0));
+    }
+    .topbar h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+      font-weight: 900;
+      letter-spacing: .02em;
+      color: var(--yellow);
+      text-shadow: 0 2px 12px rgba(255,214,10,.25);
+    }
+    .tools { display: flex; align-items: center; gap: 6px; }
+
+    /* Search */
+    .search {
+      display: flex;
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      transition: background .25s, border-color .25s;
+    }
+    .search.open { background: rgba(0,0,0,.8); border-color: var(--yellow); }
+    .search input {
+      width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: .95rem;
+      outline: none;
+      transition: width .25s ease, padding .25s ease;
+    }
+    .search input::placeholder { color: var(--muted); }
+    .search.open input { width: min(240px, 38vw); padding: 0 4px 0 0; }
+    .search input::-webkit-search-cancel-button { display: none; }
+    .search-clear {
+      display: none;
+      width: 30px;
+      height: 30px;
+      margin-right: 6px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+    .search-clear:hover { color: var(--yellow); }
+    .search-clear:focus-visible { outline: 2px solid var(--yellow); }
+    .search.has-text .search-clear { display: block; }
+
+    /* Backdrop (two layers so it can crossfade) */
+    #backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    #backdrop .bd {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center 20%;
+      opacity: 0;
+      transition: opacity .5s ease;
+    }
+    #backdrop .bd.show { opacity: .85; }
+    #backdrop::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, #000 6%, rgba(0,0,0,.25) 55%, rgba(0,0,0,.7)),
+        linear-gradient(to right, rgba(0,0,0,.75), rgba(0,0,0,0) 65%);
+    }
+
+    /* Featured title area */
+    .hero {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 0 4vw 12px;
+    }
+    .hero-inner { max-width: 760px; }
+    .hero h2 {
+      margin: 0 0 16px;
+      font-size: clamp(1.8rem, 5.5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.05;
+      text-shadow: 0 3px 18px rgba(0,0,0,.8);
+    }
+    .watch {
+      display: inline-block;
+      padding: 11px 30px;
+      border-radius: 4px;
+      background: var(--yellow);
+      color: #000;
+      font-weight: 800;
+      font-size: 1.05rem;
+      text-decoration: none;
+      transition: background .2s, transform .2s;
+    }
+    .watch:hover { background: #ffe55c; transform: translateY(-1px); }
+    .watch:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+    /* Scrolling row */
+    .rail { position: relative; z-index: 1; flex: none; }
+    .track {
+      position: relative;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 28px 4vw 26px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      overscroll-behavior-x: contain;
+    }
+    .track::-webkit-scrollbar { display: none; }
+
+    /* While searching, show only the matching movies once (no loop copies) */
+    .rail.filtered .movie[data-set="0"],
+    .rail.filtered .movie[data-set="2"],
+    .rail.filtered .arrow { display: none; }
+
+    .empty { margin: 0; padding: 30px 4vw 44px; color: var(--muted); font-size: 1.05rem; }
+    .empty[hidden] { display: none; }
+
+    .arrow {
+      position: absolute;
+      top: 28px;
+      bottom: 26px;
+      width: max(44px, 3.5vw);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      color: var(--yellow);
+      cursor: pointer;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity .2s, background .2s;
+    }
+    .arrow svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow.left  { left: 0;  background: linear-gradient(to right, rgba(0,0,0,.85), rgba(0,0,0,0)); }
+    .arrow.right { right: 0; background: linear-gradient(to left,  rgba(0,0,0,.85), rgba(0,0,0,0)); }
+    .rail:hover .arrow, .arrow:focus-visible { opacity: 1; }
+    .arrow:focus-visible { outline: 2px solid var(--yellow); outline-offset: -2px; }
+    @media (hover: none) { .arrow { display: none; } }
+
+    .rail .movie { flex: 0 0 auto; width: clamp(130px, 13vw, 200px); }
+    .rail .movie a {
+      position: relative;
+      display: block;
+      aspect-ratio: 2 / 3;
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--surface-2);
+      color: var(--text);
+      text-decoration: none;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .rail .movie a:hover,
+    .rail .movie a:focus-visible {
+      transform: scale(1.08);
+      z-index: 5;
+      box-shadow: 0 0 0 2px var(--yellow), 0 14px 34px rgba(0,0,0,.7);
+      outline: none;
+    }
+    .rail .movie img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .rail .movie-title {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 40px 10px 10px;
+      font-size: .85rem;
+      font-weight: 700;
+      line-height: 1.25;
+      background: linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,0));
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    .rail .movie a:hover .movie-title,
+    .rail .movie a:focus-visible .movie-title { opacity: 1; color: var(--yellow); }
+    @media (hover: none) { .rail .movie-title { opacity: 1; font-size: .75rem; } }
+
+    /* Shown if a poster fails to load */
+    .movie.no-img a { display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; }
+    .rail .movie.no-img a { border: 1px solid var(--line); }
+    .rail .movie.no-img .movie-title { position: static; opacity: 1; background: none; padding: 0; color: var(--yellow); }
+
+    @media (max-width: 600px) {
+      .hero h2 { font-size: 1.7rem; }
+      .rail .movie { width: 120px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+
+    /* ---------- Intro ---------- */
+    #intro {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #000;
+      cursor: pointer;
+      animation: introOut .45s ease 2.25s forwards;
+    }
+    html.intro-on #intro { display: flex; }
+    #intro.leaving { animation: introOut .25s ease forwards; }
+    #intro::before {
+      content: "";
+      position: absolute;
+      width: 70vmax;
+      height: 70vmax;
+      background: radial-gradient(closest-side, rgba(255,214,10,.28), rgba(255,214,10,0));
+      opacity: 0;
+      animation: introGlow 2.6s ease forwards;
+    }
+    .intro-word {
+      position: relative;
+      display: flex;
+      font-size: clamp(2.4rem, 11vw, 7.5rem);
+      font-weight: 900;
+      color: var(--yellow);
+      text-shadow: 0 0 30px rgba(255,214,10,.45);
+      animation: introPush 2.7s cubic-bezier(.45, 0, .25, 1) forwards;
+    }
+    .intro-word span {
+      display: inline-block;
+      opacity: 0;
+      animation: letterIn .55s cubic-bezier(.2, .7, .2, 1) forwards;
+      animation-delay: calc(.15s + var(--i) * .06s);
+    }
+    @keyframes letterIn {
+      from { opacity: 0; transform: translateY(24px) scale(1.35); filter: blur(10px); }
+      to   { opacity: 1; transform: none; filter: blur(0); }
+    }
+    @keyframes introPush {
+      0%   { transform: scale(.88); }
+      65%  { transform: scale(1.08); }
+      100% { transform: scale(2.4); }
+    }
+    @keyframes introGlow {
+      0%   { opacity: 0; }
+      40%  { opacity: 1; }
+      100% { opacity: .6; }
+    }
+    @keyframes introOut { to { opacity: 0; visibility: hidden; } }
+
+    /* ---------- Classic (original) ---------- */
+    .grid { display: none; }
+
+    html[data-style="classic"] .hero,
+    html[data-style="classic"] .rail,
+    html[data-style="classic"] .search,
+    html[data-style="classic"] #intro,
+    html[data-style="classic"] #backdrop { display: none; }
+
+    html[data-style="classic"] body {
       text-align: center;
       background: linear-gradient(135deg, #ece9e6, #ffffff);
-      margin: 0;
-      padding: 0;
       color: #333;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
-
-    h1 {
+    html[data-style="classic"] .topbar { display: block; padding: 0; background: none; }
+    html[data-style="classic"] .topbar h1 {
       margin: 20px 0;
       font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: normal;
       color: #222;
+      text-shadow: none;
     }
+    html[data-style="classic"] .gear {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 60;
+      color: #444;
+      background: rgba(255,255,255,.85);
+      border-color: #ccc;
+    }
+    html[data-style="classic"] .gear:hover { color: #ff4c00; }
 
-    .container {
+    html[data-style="classic"] .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 25px;
@@ -28,327 +451,496 @@
       max-width: 1400px;
       margin: auto;
     }
-
-    .movie {
-      perspective: 1000px;
-    }
-
-    .movie a {
+    .grid .movie { perspective: 1000px; }
+    .grid .movie a {
       display: block;
       border-radius: 15px;
       overflow: hidden;
       background: #fff;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,.15);
       transform-style: preserve-3d;
-      transition: transform 0.4s ease, box-shadow 0.4s ease;
+      transition: transform .4s ease, box-shadow .4s ease;
     }
-
-    .movie a:hover {
+    .grid .movie a:hover {
       transform: rotateY(5deg) rotateX(5deg) translateY(-10px);
-      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 20px 30px rgba(0,0,0,.25);
     }
-
-    .movie img {
+    .grid .movie img {
       width: 100%;
-      height: 600px; /* taller for full movie poster */
+      height: 600px;
       object-fit: cover;
       display: block;
-      transition: transform 0.4s ease;
+      transition: transform .4s ease;
     }
+    .grid .movie a:hover img { transform: scale(1.05); }
+    .grid .movie-title { padding: 12px; font-weight: bold; background: #fff; color: #333; transition: color .3s; }
+    .grid .movie a:hover .movie-title { color: #ff4c00; }
+    .grid .movie.no-img a { display: block; padding: 0; }
 
-    .movie a:hover img {
-      transform: scale(1.05);
-    }
-
-    .movie-title {
-      padding: 12px;
-      font-weight: bold;
-      background: #fff;
-      transition: color 0.3s;
-    }
-
-    .movie a:hover .movie-title {
-      color: #ff4c00;
-    }
-
-    /* Responsive tweaks */
-    @media (max-width: 1300px) {
-      .movie img {
-        height: 500px;
-      }
-    }
-
+    @media (max-width: 1300px) { .grid .movie img { height: 500px; } }
     @media (max-width: 600px) {
-      h1 {
-        font-size: 2rem;
-      }
-      .movie img {
-        height: 400px;
-      }
+      html[data-style="classic"] .topbar h1 { font-size: 2rem; }
+      .grid .movie img { height: 400px; }
     }
   </style>
 </head>
 <body>
-  <h1>Movies</h1>
-  <div class="container">
-<div class="movie">
-  <a href="https://boingagames.onrender.com/curious/">
-    <img src="https://i.ebayimg.com/images/g/mC4AAOSwjqxeZ9SX/s-l1200.jpg" alt="Curious George">
-    <div class="movie-title">Curious George</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="halloween.html">
-    <img src="https://m.media-amazon.com/images/M/MV5BNDY3NTE3MDYxOV5BMl5BanBnXkFtZTgwMDAzODA2MDE@._V1_FMjpg_UX1000_.jpg" alt="Curious George: A Halloween Boofest!">
-    <div class="movie-title">Curious George: A Halloween Boofest!</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="christmas.html">
-    <img src="https://m.media-amazon.com/images/M/MV5BMjRkNzg2YTctYjJhMy00ZjIyLWFmNWUtMjczNWNkODAwOTFmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" alt="Curious George: A Very Monkey Christmas!">
-    <div class="movie-title">Curious George: A Very Monkey Christmas!</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="sponge.html">
-    <img src="https://i.ebayimg.com/00/s/MTYwMFgxMDY2/z/x~QAAOSw1PdgnGpR/$_57.JPG?set_id=8800005007" alt="The Spongebob Squarepants Movie">
-    <div class="movie-title">The Spongebob Squarepants Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="muppets.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/8/89/Muppets_ver4.jpg/250px-Muppets_ver4.jpg" alt="The Muppet Movie (2011)">
-    <div class="movie-title">The Muppet Movie (2011)</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="wanted.html">
-    <img src="https://images.moviesanywhere.com/e5fe25500e937ec8f88e1891d53124d3/c0742579-3d14-4679-a65e-8fe84220f6aa.jpg" alt="The Muppet Movie: Muppets Most Wanted">
-    <div class="movie-title">The Muppet Movie: Muppets Most Wanted</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="lego.html">
-    <img src="https://musicart.xboxlive.com/7/9f0a5100-0000-0000-0000-000000000002/504/image.jpg" alt="The Lego Movie">
-    <div class="movie-title">The Lego Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="batman.html">
-    <img src="https://m.media-amazon.com/images/M/MV5BMTcyNTEyOTY0M15BMl5BanBnXkFtZTgwOTAyNzU3MDI@._V1_FMjpg_UX1000_.jpg" alt="The Lego Batman Movie">
-    <div class="movie-title">The Lego Batman Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="wimpy.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/thumb/e/e2/Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg/250px-Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg" alt="Diary Of A Wimpy Kid">
-    <div class="movie-title">Diary Of A Wimpy Kid</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="rodrick.html">
-    <img src="https://m.media-amazon.com/images/M/MV5BMTcxNDYwOTEzMl5BMl5BanBnXkFtZTcwOTA3MzY3NA@@._V1_.jpg" alt="Diary Of A Wimpy Kid: Rodrick Rules">
-    <div class="movie-title">Diary Of A Wimpy Kid: Rodrick Rules</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="dog.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/5/57/Diary_of_a_Wimpy_Kid_-_Dog_Days_movie_poster.jpg" alt="Diary Of A Wimpy Kid: Dog Days">
-    <div class="movie-title">Diary Of A Wimpy Kid: Dog Days</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="sonic1.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/4/45/Sonic_the_Hedgehog_film_poster.jpg" alt="Sonic The Hedgehog">
-    <div class="movie-title">Sonic The Hedgehog</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="sonic2.html">
-    <img src="https://m.media-amazon.com/images/M/MV5BMDBiYzk0YTMtNWRiYi00YWY0LWE3NjgtYmJiYTAwZmYzOTM0XkEyXkFqcGc@._V1_.jpg" alt="Sonic The Hedgehog 2">
-    <div class="movie-title">Sonic The Hedgehog 2</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="sonic3.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/f/f2/Sonic_the_Hedgehog_3_film_poster.jpg" alt="Sonic The Hedgehog 3">
-    <div class="movie-title">Sonic The Hedgehog 3</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="bttf.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/d/d2/Back_to_the_Future.jpg" alt="Back To The Future">
-    <div class="movie-title">Back To The Future</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="rock.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/1/11/School_of_Rock_Poster.jpg" alt="School Of Rock">
-    <div class="movie-title">School Of Rock</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="nacho.html">
-    <img src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQS2aAZPJr9XW43n4SgZLOInzDm_KpLsh6Mg9ArBKVuWj9d4bj4-Jg4cMlDQR6OpTFxFdPV" alt="Nacho Libre">
-    <div class="movie-title">Nacho Libre</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="goofy.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS3K-KXdcWUZDIWuqs9QwcVsUgXbPmIZfDNkLFKVuBBC8dIK8w12UUJEq9mQqEOddgZzNA_XQ" alt="A Goofy Movie">
-    <div class="movie-title">A Goofy Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="dogman.html">
-    <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSsFIA8PwcujdiEBhpGNlZj2ZPd-DhutzxLrAMrJvXsiWzWcFC8rP-zmh2W3UP_qGzH4CSvqw" alt="Dog Man">
-    <div class="movie-title">Dog Man</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="captain.html">
-    <img src="https://i.ebayimg.com/00/s/MTMxNFg5MDA=/z/9w4AAOSwIEpgbvux/$_57.JPG?set_id=8800005007" alt="Captain Underpants: The First Epic Movie">
-    <div class="movie-title">Captain Underpants: The First Epic Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="croods.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcSaYx-qOP4faVy7OM-rsIkN4WE_RWqix4K8oWbwxr3KBEzbxlt8A-OdeAx7E0qOK6DHgNC4Uw" alt="The Croods">
-    <div class="movie-title">The Croods</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="avengers.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQluFl3GfQDXohBaH-xG3GuRi8T4MDIQPRpCqUGLiE5tXdXbUO0hRFwnshvzg07igEgGg7i" alt="The Avengers">
-    <div class="movie-title">The Avengers</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="rango.html">
-    <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcStBYhybZBjk1OW8lSjTmoJOajGsHveqZhdDCqEk0XAxlLYAibHdKFVo0x3MUvV-Zv4WqDl" alt="Rango">
-    <div class="movie-title">Rango</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="shrek.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQg_Lj-AwA3TKS-FSwZ8c8V0zDIA4cnGrMGz0tGfAzakmcYhWr6ndm6EXpSrYYXCprXW9d6" alt="Shrek">
-    <div class="movie-title">Shrek</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="shrek2.html">
-    <img src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTB4nQHkVygjUx0Cad3i51hOLXd2WxGsbOHNBuyLDYVG7dTM0Lg5JMQSiE8YZod66Rbr_xvKg" alt="Shrek 2">
-    <div class="movie-title">Shrek 2</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="pussinboots.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQBI-ZkqVDJYLGXvGCo6Z99JXrTupmwpGV6WGllfgSDXX4YXhExM6Ph79gKWVnw07m58W0-Aw" alt="Puss In Boots">
-    <div class="movie-title">Puss In Boots</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="pussinboots2.html">
-    <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSX2q5n3N0MEsdRnUy44WM1sxy-R44S8dXu-mmceQyMVDbOd-9qMbKkv-arS726F685U1TI" alt="Puss In Boots: The Last Wish">
-    <div class="movie-title">Puss In Boots: The Last Wish</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="httyd.html">
-    <img src="https://m.media-amazon.com/images/I/51uJGH71GsL.jpg" alt="How To Train Your Dragon">
-    <div class="movie-title">How To Train Your Dragon</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="httyd2.html">
-    <img src="https://upload.wikimedia.org/wikipedia/en/a/af/How_to_Train_Your_Dragon_2_poster.jpg" alt="How To Train Your Dragon 2">
-    <div class="movie-title">How To Train Your Dragon 2</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="httyd3.html">
-    <img src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR-PYOiZILAaGhTnvJ5q-uaLIBbpRFwiecmHCCdUvYydhivpZC0TEv4F4xkhoDwDCIkYBhd" alt="How To Train Your Dragon: The Hidden World">
-    <div class="movie-title">How To Train Your Dragon: The Hidden World</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="minecraft.html">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvI5KTA7BcyEMh1-ReAKnD97wOQdYoGXvTZ8pB91EEG7A420ChxrBOqlGdVOy9PSJanneK8g" alt="A Minecraft Movie">
-    <div class="movie-title">A Minecraft Movie</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="cars.html">
-    <img src="https://m.media-amazon.com/images/I/91J9Eoa0udL.jpg" alt="Cars">
-    <div class="movie-title">Cars</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="cars2.html">
-    <img src="https://www.originalfilmart.com/cdn/shop/products/cars_2_2011_teaser_original_film_art_5000x.jpg?v=1574445842" alt="Cars 2">
-    <div class="movie-title">Cars 2</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="madagascar.html">
-    <img src="https://image.tmdb.org/t/p/original/zMpJY5CJKUufG9OTw0In4eAFqPX.jpg" alt="Madagascar">
-    <div class="movie-title">Madagascar</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="madagascar2.html">
-    <img src="https://i.ebayimg.com/images/g/gTIAAOSw0clmaAz9/s-l1200.jpg" alt="Madagascar: Escape 2 Africa">
-    <div class="movie-title">Madagascar: Escape 2 Africa</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="madagascar3.html">
-    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYBxvRkMNaygtC3GOwLuk3crqABUwwudSeZQ&s" alt="Madagascar 3: Europe's Most Wanted">
-    <div class="movie-title">Madagascar 3: Europe's Most Wanted</div>
-  </a>
-</div>
-
-<div class="movie">
-  <a href="penguins.html">
-    <img src="https://m.media-amazon.com/images/I/71BjMdsGStL._AC_UF894,1000_QL80_.jpg" alt="Penguins of Madagascar">
-    <div class="movie-title">Penguins of Madagascar</div>
-  </a>
-</div>
+  <!-- Intro (Version 2 only) -->
+  <div id="intro" aria-hidden="true">
+    <div class="intro-word">
+      <span style="--i:0">B</span><span style="--i:1">o</span><span style="--i:2">i</span><span style="--i:3">n</span><span style="--i:4">g</span><span style="--i:5">a</span><span style="--i:6">M</span><span style="--i:7">o</span><span style="--i:8">v</span><span style="--i:9">i</span><span style="--i:10">e</span><span style="--i:11">s</span>
+    </div>
   </div>
+
+  <div id="backdrop" aria-hidden="true"><div class="bd"></div><div class="bd"></div></div>
+
+  <header class="topbar">
+    <h1>BoingaMovies</h1>
+    <div class="tools">
+      <div class="search" id="search" role="search">
+        <button class="icon-btn" id="searchBtn" type="button" aria-label="Search movies">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+        <input id="searchInput" type="search" placeholder="Search titles" autocomplete="off" aria-label="Search movies">
+        <button class="search-clear" id="searchClear" type="button" aria-label="Clear search">&times;</button>
+      </div>
+      <button class="icon-btn gear" id="settingsBtn" aria-label="Settings" aria-expanded="false" aria-controls="settingsPanel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="panel" id="settingsPanel" role="dialog" aria-label="Settings">
+    <h2>Settings</h2>
+    <fieldset>
+      <legend>Site style</legend>
+      <label class="choice"><input type="radio" name="style" value="modern"> Version 2 (netflix-like)</label>
+      <label class="choice"><input type="radio" name="style" value="classic"> Version 1 (original)</label>
+    </fieldset>
+    <div class="switch-row">
+      <div>
+        Background thumbnails
+        <small id="bgHint">Show the selected movie's backdrop behind the page.</small>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="bgToggle" aria-describedby="bgHint">
+        <span></span>
+      </label>
+    </div>
+    <div class="switch-row">
+      <div>
+        Intro animation
+        <small id="introHint">Play a short intro when the site opens.</small>
+        <button class="link-btn" id="replayIntro" type="button">Replay intro</button>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="introToggle" aria-describedby="introHint">
+        <span></span>
+      </label>
+    </div>
+  </section>
+
+  <!-- Version 2 -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <h2 id="heroTitle"></h2>
+      <a class="watch" id="heroLink" href="#">Watch now</a>
+    </div>
+  </section>
+
+  <section class="rail" id="rail" aria-label="Movies">
+    <button class="arrow left" id="prevBtn" aria-label="Scroll left"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 4 7 12 15 20"/></svg></button>
+    <div class="track" id="track"></div>
+    <button class="arrow right" id="nextBtn" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 4 17 12 9 20"/></svg></button>
+    <p class="empty" id="noResults" hidden></p>
+  </section>
+
+  <!-- Version 1 -->
+  <main class="grid" id="movies"></main>
+
+  <script>
+    /*
+      ADD MOVIES HERE
+      - title:    shown on the card
+      - href:     page the card links to
+      - poster:   the tall poster image
+      - backdrop: (optional) wide image shown behind the page while that movie
+                  is selected. Leave it as "" and nothing is shown.
+    */
+    const movies = [
+      { title: "Curious George", href: "https://boingagames.onrender.com/curious/", poster: "https://image.tmdb.org/t/p/original/7SpokDLiRHON9H36GdlF7vWKOm6.jpg", backdrop: "https://image.tmdb.org/t/p/original/6So309LMhVrNd2KNmjdQxUJFYHf.jpg" },
+      { title: "Curious George: A Halloween Boofest!", href: "halloween.html", poster: "https://m.media-amazon.com/images/M/MV5BNDY3NTE3MDYxOV5BMl5BanBnXkFtZTgwMDAzODA2MDE@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/xiPQmjyV0kfAuICGuBodbiNninO.jpg" },
+      { title: "Curious George: A Very Monkey Christmas!", href: "christmas.html", poster: "https://m.media-amazon.com/images/M/MV5BMjRkNzg2YTctYjJhMy00ZjIyLWFmNWUtMjczNWNkODAwOTFmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/6neV3FfMdX3YZhqBKHDYCHLFbBo.jpg" },
+      { title: "The Spongebob Squarepants Movie", href: "sponge.html", poster: "https://i.ebayimg.com/00/s/MTYwMFgxMDY2/z/x~QAAOSw1PdgnGpR/$_57.JPG?set_id=8800005007", backdrop: "https://image.tmdb.org/t/p/original/hE3ZGSMiQEkqD4I7GXRfNfpK5L5.jpg" },
+      { title: "The Muppet Movie (2011)", href: "muppets.html", poster: "https://upload.wikimedia.org/wikipedia/en/thumb/8/89/Muppets_ver4.jpg/250px-Muppets_ver4.jpg", backdrop: "https://image.tmdb.org/t/p/original/sUQ6sT0oTbK6p0RqVSvmtrtecYx.jpg" },
+      { title: "The Muppet Movie: Muppets Most Wanted", href: "wanted.html", poster: "https://images.moviesanywhere.com/e5fe25500e937ec8f88e1891d53124d3/c0742579-3d14-4679-a65e-8fe84220f6aa.jpg", backdrop: "https://image.tmdb.org/t/p/original/afH2HkgBAumobWx47ujESuRtLCr.jpg" },
+      { title: "The Lego Movie", href: "lego.html", poster: "https://musicart.xboxlive.com/7/9f0a5100-0000-0000-0000-000000000002/504/image.jpg", backdrop: "https://image.tmdb.org/t/p/original/5N2mfRrvJUnCVpsMIebfosEyo1i.jpg" },
+      { title: "The Lego Batman Movie", href: "batman.html", poster: "https://m.media-amazon.com/images/M/MV5BMTcyNTEyOTY0M15BMl5BanBnXkFtZTgwOTAyNzU3MDI@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/5sqGN93VLMDOoa0JrwAVFNYMBrx.jpg" },
+      { title: "Diary Of A Wimpy Kid", href: "wimpy.html", poster: "https://upload.wikimedia.org/wikipedia/en/thumb/e/e2/Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg/250px-Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/14wogeWHbWkFr4J2qpDXmqsjyhn.jpg" },
+      { title: "Diary Of A Wimpy Kid: Rodrick Rules", href: "rodrick.html", poster: "https://m.media-amazon.com/images/M/MV5BMTcxNDYwOTEzMl5BMl5BanBnXkFtZTcwOTA3MzY3NA@@._V1_.jpg", backdrop: "https://image.tmdb.org/t/p/original/rww4R50L0SiyUYHXxzszWKwRnxO.jpg" },
+      { title: "Diary Of A Wimpy Kid: Dog Days", href: "dog.html", poster: "https://upload.wikimedia.org/wikipedia/en/5/57/Diary_of_a_Wimpy_Kid_-_Dog_Days_movie_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/4xmSkstuSeAEG1EumcUdKtbwVX4.jpg" },
+      { title: "Sonic The Hedgehog", href: "sonic1.html", poster: "https://upload.wikimedia.org/wikipedia/en/4/45/Sonic_the_Hedgehog_film_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/1yZkmqtQniJq7sGuS842g5YYJ7m.jpg" },
+      { title: "Sonic The Hedgehog 2", href: "sonic2.html", poster: "https://m.media-amazon.com/images/M/MV5BMDBiYzk0YTMtNWRiYi00YWY0LWE3NjgtYmJiYTAwZmYzOTM0XkEyXkFqcGc@._V1_.jpg", backdrop: "https://image.tmdb.org/t/p/original/gA8CGh8YHxXtRZIOqHpof4h5yAO.jpg" },
+      { title: "Sonic The Hedgehog 3", href: "sonic3.html", poster: "https://upload.wikimedia.org/wikipedia/en/f/f2/Sonic_the_Hedgehog_3_film_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/gOrOugLzYEpPgjxvYvrHYX8560M.jpg" },
+      { title: "Back To The Future", href: "bttf.html", poster: "https://upload.wikimedia.org/wikipedia/en/d/d2/Back_to_the_Future.jpg", backdrop: "https://image.tmdb.org/t/p/original/qskzmLTbarKnXDbo2HRj4NJ3vcW.jpg" },
+      { title: "School Of Rock", href: "rock.html", poster: "https://upload.wikimedia.org/wikipedia/en/1/11/School_of_Rock_Poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/4y9mFnyDZLfLVqUvcQUuzVejrok.jpg" },
+      { title: "Nacho Libre", href: "nacho.html", poster: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQS2aAZPJr9XW43n4SgZLOInzDm_KpLsh6Mg9ArBKVuWj9d4bj4-Jg4cMlDQR6OpTFxFdPV", backdrop: "https://image.tmdb.org/t/p/original/wNgdVnxMzjeyFD2FYcsDtsGcC5C.jpg" },
+      { title: "A Goofy Movie", href: "goofy.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS3K-KXdcWUZDIWuqs9QwcVsUgXbPmIZfDNkLFKVuBBC8dIK8w12UUJEq9mQqEOddgZzNA_XQ", backdrop: "https://image.tmdb.org/t/p/original/k3ERqpbIFTO761d07XAEKUR0i1n.jpg" },
+      { title: "Dog Man", href: "dogman.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSsFIA8PwcujdiEBhpGNlZj2ZPd-DhutzxLrAMrJvXsiWzWcFC8rP-zmh2W3UP_qGzH4CSvqw", backdrop: "https://image.tmdb.org/t/p/original/2QgxkF2ZDqt7CyxAMojVge0tKmK.jpg" },
+      { title: "Captain Underpants: The First Epic Movie", href: "captain.html", poster: "https://i.ebayimg.com/00/s/MTMxNFg5MDA=/z/9w4AAOSwIEpgbvux/$_57.JPG?set_id=8800005007", backdrop: "https://image.tmdb.org/t/p/original/5ceIqlRzWH4x1IPU9OfjXHO2Kz6.jpg" },
+      { title: "The Croods", href: "croods.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcSaYx-qOP4faVy7OM-rsIkN4WE_RWqix4K8oWbwxr3KBEzbxlt8A-OdeAx7E0qOK6DHgNC4Uw", backdrop: "https://image.tmdb.org/t/p/original/9Oi5mxQJTCOPA3uiQb0vk6CLeCr.jpg" },
+      { title: "The Avengers", href: "avengers.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQluFl3GfQDXohBaH-xG3GuRi8T4MDIQPRpCqUGLiE5tXdXbUO0hRFwnshvzg07igEgGg7i", backdrop: "https://image.tmdb.org/t/p/original/kwUQFeFXOOpgloMgZaadhzkbTI4.jpg" },
+      { title: "Rango", href: "rango.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcStBYhybZBjk1OW8lSjTmoJOajGsHveqZhdDCqEk0XAxlLYAibHdKFVo0x3MUvV-Zv4WqDl", backdrop: "https://image.tmdb.org/t/p/original/mOtKQlXdL5J4lwqcSFlkZmgmFeZ.jpg" },
+      { title: "Shrek", href: "shrek.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQg_Lj-AwA3TKS-FSwZ8c8V0zDIA4cnGrMGz0tGfAzakmcYhWr6ndm6EXpSrYYXCprXW9d6", backdrop: "https://image.tmdb.org/t/p/original/bNTHSd3UqqLzIVwbDOGPnx3ScfF.jpg" },
+      { title: "Shrek 2", href: "shrek2.html", poster: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTB4nQHkVygjUx0Cad3i51hOLXd2WxGsbOHNBuyLDYVG7dTM0Lg5JMQSiE8YZod66Rbr_xvKg", backdrop: "https://image.tmdb.org/t/p/original/iaNoLnnpQb5SNxGc4bkQmdCvEdG.jpg" },
+      { title: "Puss In Boots", href: "pussinboots.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQBI-ZkqVDJYLGXvGCo6Z99JXrTupmwpGV6WGllfgSDXX4YXhExM6Ph79gKWVnw07m58W0-Aw", backdrop: "https://image.tmdb.org/t/p/original/qk1plO0CifSVwpdgzNF5FOhsgHH.jpg" },
+      { title: "Puss In Boots: The Last Wish", href: "pussinboots2.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSX2q5n3N0MEsdRnUy44WM1sxy-R44S8dXu-mmceQyMVDbOd-9qMbKkv-arS726F685U1TI", backdrop: "https://image.tmdb.org/t/p/original/tJswVLKdNHb1vGmQsB1yM7LA90r.jpg" },
+      { title: "How To Train Your Dragon", href: "httyd.html", poster: "https://m.media-amazon.com/images/I/51uJGH71GsL.jpg", backdrop: "https://image.tmdb.org/t/p/original/kxklJL1v8MYEU5xdU6W5VvmBwVz.jpg" },
+      { title: "How To Train Your Dragon 2", href: "httyd2.html", poster: "https://upload.wikimedia.org/wikipedia/en/a/af/How_to_Train_Your_Dragon_2_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/rSbSMyI5Y5IDS8kvkpHoO18w6El.jpg" },
+      { title: "How To Train Your Dragon: The Hidden World", href: "httyd3.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR-PYOiZILAaGhTnvJ5q-uaLIBbpRFwiecmHCCdUvYydhivpZC0TEv4F4xkhoDwDCIkYBhd", backdrop: "https://image.tmdb.org/t/p/original/2lXYW8PuBclBfgR47iKqV6GTlXS.jpg" },
+      { title: "A Minecraft Movie", href: "minecraft.html", poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvI5KTA7BcyEMh1-ReAKnD97wOQdYoGXvTZ8pB91EEG7A420ChxrBOqlGdVOy9PSJanneK8g", backdrop: "https://image.tmdb.org/t/p/original/2F7rJqSO2E6Gk9KVqz9NjLiaEuM.jpg" },
+      { title: "Cars", href: "cars.html", poster: "https://m.media-amazon.com/images/I/91J9Eoa0udL.jpg", backdrop: "https://image.tmdb.org/t/p/original/wZiUsAI939lOKgs0u3qA3zSW7zx.jpg" },
+      { title: "Cars 2", href: "cars2.html", poster: "https://www.originalfilmart.com/cdn/shop/products/cars_2_2011_teaser_original_film_art_5000x.jpg?v=1574445842", backdrop: "https://image.tmdb.org/t/p/original/mDb6HtfFYe8gzxo8d6S1mFkzoBW.jpg" },
+      { title: "Madagascar", href: "madagascar.html", poster: "https://image.tmdb.org/t/p/original/zMpJY5CJKUufG9OTw0In4eAFqPX.jpg", backdrop: "https://image.tmdb.org/t/p/original/j7A8wkcW9UYvchFdWu89oHN9b6O.jpg" },
+      { title: "Madagascar: Escape 2 Africa", href: "madagascar2.html", poster: "https://i.ebayimg.com/images/g/gTIAAOSw0clmaAz9/s-l1200.jpg", backdrop: "https://image.tmdb.org/t/p/original/p2Z2yzrTJauWTLxkvtRdKLzxhcp.jpg" },
+      { title: "Madagascar 3: Europe's Most Wanted", href: "madagascar3.html", poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYBxvRkMNaygtC3GOwLuk3crqABUwwudSeZQ&s", backdrop: "https://image.tmdb.org/t/p/original/2jWo63NbhubaJntRpxls7n3IMn7.jpg" },
+      { title: "Penguins of Madagascar", href: "penguins.html", poster: "https://m.media-amazon.com/images/I/71BjMdsGStL._AC_UF894,1000_QL80_.jpg", backdrop: "https://image.tmdb.org/t/p/original/77KUH3Dheen9duqXitJD4nZHuom.jpg" }
+    ];
+
+    const INTRO_MS = 2700; // keep in sync with the intro animation length in the CSS
+
+    const root = document.documentElement;
+    const settings = { style: "modern", backgrounds: true, intro: true };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("movieSiteSettings") || "{}");
+      if (saved.style === "modern" || saved.style === "classic") settings.style = saved.style;
+      if (typeof saved.backgrounds === "boolean") settings.backgrounds = saved.backgrounds;
+      if (typeof saved.intro === "boolean") settings.intro = saved.intro;
+    } catch (e) { /* storage unavailable: use defaults */ }
+
+    function saveSettings() {
+      try { localStorage.setItem("movieSiteSettings", JSON.stringify(settings)); } catch (e) {}
+    }
+
+    const btn = document.getElementById("settingsBtn");
+    const panel = document.getElementById("settingsPanel");
+    const bgToggle = document.getElementById("bgToggle");
+    const bgHint = document.getElementById("bgHint");
+    const introToggle = document.getElementById("introToggle");
+    const introHint = document.getElementById("introHint");
+    const replayBtn = document.getElementById("replayIntro");
+    const intro = document.getElementById("intro");
+    const layers = Array.from(document.querySelectorAll("#backdrop .bd"));
+    const heroTitle = document.getElementById("heroTitle");
+    const heroLink = document.getElementById("heroLink");
+    const rail = document.getElementById("rail");
+    const track = document.getElementById("track");
+    const grid = document.getElementById("movies");
+    const noResults = document.getElementById("noResults");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ---------- Intro ---------- */
+    let introTimer = null;
+
+    function armIntro() {
+      try { sessionStorage.setItem("introPlayed", "1"); } catch (e) {}
+      clearTimeout(introTimer);
+      introTimer = setTimeout(() => endIntro(false), INTRO_MS);
+    }
+
+    function endIntro(fast) {
+      clearTimeout(introTimer);
+      if (!root.classList.contains("intro-on")) return;
+      if (fast) {
+        intro.classList.add("leaving");
+        setTimeout(() => { root.classList.remove("intro-on"); intro.classList.remove("leaving"); }, 260);
+      } else {
+        root.classList.remove("intro-on");
+      }
+    }
+
+    function startIntro() {
+      if (reduceMotion || settings.style === "classic") return;
+      root.classList.remove("intro-on");
+      intro.classList.remove("leaving");
+      void intro.offsetWidth; // restart the CSS animations
+      root.classList.add("intro-on");
+      armIntro();
+    }
+
+    intro.addEventListener("click", () => endIntro(true));
+    document.addEventListener("keydown", () => { if (root.classList.contains("intro-on")) endIntro(true); });
+    if (root.classList.contains("intro-on")) armIntro(); // the head script decided to play it
+
+    /* ---------- Background thumbnail ---------- */
+    // TMDB serves a much smaller (w1280) version of the same backdrop, which loads far faster.
+    function backdropUrl(src) {
+      return src.replace("://image.tmdb.org/t/p/original/", "://image.tmdb.org/t/p/w1280/");
+    }
+
+    const loaded = new Set();  // backdrops already downloaded
+    const loading = new Set(); // backdrops currently downloading
+    let front = 0;             // which of the two layers is on top
+    let activeSrc = "";        // the backdrop we want to be showing right now
+
+    function hideBackdrop() {
+      layers.forEach(l => l.classList.remove("show"));
+    }
+
+    function showLayer(src) {
+      const next = layers[1 - front];
+      next.style.backgroundImage = 'url("' + src.replace(/"/g, "%22") + '")';
+      next.classList.add("show");
+      layers[front].classList.remove("show");
+      front = 1 - front;
+    }
+
+    let current = movies[0];
+
+    function updateBackdrop() {
+      const raw = current && current.backdrop;
+      // Nothing entered for this movie, feature off, or Version 1: plain black.
+      if (!raw || !settings.backgrounds || settings.style === "classic") {
+        activeSrc = "";
+        hideBackdrop();
+        return;
+      }
+      const src = backdropUrl(raw);
+      if (src === activeSrc) return; // already showing it, or already waiting for it
+      activeSrc = src;
+
+      if (loaded.has(src)) { showLayer(src); return; }
+
+      // Not downloaded yet: go back to black right away instead of holding the old image.
+      hideBackdrop();
+      if (loading.has(src)) return; // its onload below will show it if it's still selected
+      loading.add(src);
+      const img = new Image();
+      img.onload = () => {
+        loading.delete(src);
+        loaded.add(src);
+        if (activeSrc === src) showLayer(src);
+      };
+      img.onerror = () => {
+        loading.delete(src);
+        if (activeSrc === src) activeSrc = ""; // stay black; a later hover will retry
+      };
+      img.src = src;
+    }
+
+    function feature(m) {
+      current = m;
+      heroTitle.textContent = m.title;
+      heroLink.href = m.href;
+      updateBackdrop();
+    }
+
+    /* ---------- Build cards ---------- */
+    function makeCard(m, isClone) {
+      const card = document.createElement("div");
+      card.className = "movie";
+
+      const a = document.createElement("a");
+      a.href = m.href;
+
+      if (m.poster) {
+        const img = document.createElement("img");
+        img.referrerPolicy = "no-referrer"; // avoids hotlink blocking on some image hosts
+        img.decoding = "async";
+        img.alt = m.title;
+        img.addEventListener("error", () => { img.remove(); card.classList.add("no-img"); });
+        img.src = m.poster;
+        a.appendChild(img);
+      } else {
+        card.classList.add("no-img");
+      }
+
+      const t = document.createElement("div");
+      t.className = "movie-title";
+      t.textContent = m.title;
+      a.appendChild(t);
+      card.appendChild(a);
+
+      if (isClone) { // loop copies are hidden from keyboard and screen readers
+        card.setAttribute("aria-hidden", "true");
+        a.tabIndex = -1;
+      }
+
+      a.addEventListener("mouseenter", () => feature(m));
+      a.addEventListener("focus", () => feature(m));
+      return card;
+    }
+
+    // Version 1 grid: one copy
+    movies.forEach(m => grid.appendChild(makeCard(m, false)));
+
+    // Version 2 row: three copies back to back so it can loop
+    for (let s = 0; s < 3; s++) {
+      movies.forEach((m, i) => {
+        const card = makeCard(m, s !== 1);
+        card.dataset.set = s;
+        card.dataset.i = i;
+        track.appendChild(card);
+      });
+    }
+
+    /* ---------- Looping row ---------- */
+    let setW = 0;      // width of one full copy of the list
+    let baseLeft = 0;  // scroll position of the first card in the middle copy
+    let positioned = false;
+    let idleTimer = null;
+
+    const isFiltering = () => rail.classList.contains("filtered");
+
+    function measureRail() {
+      if (isFiltering()) return;
+      const a = track.querySelector('[data-set="0"][data-i="0"]');
+      const b = track.querySelector('[data-set="1"][data-i="0"]');
+      const oldW = setW;
+      setW = b.offsetLeft - a.offsetLeft;
+      if (!setW) return; // row is hidden (Version 1)
+      baseLeft = b.offsetLeft - parseFloat(getComputedStyle(track).paddingLeft);
+      if (!positioned) { track.scrollLeft = baseLeft; positioned = true; }
+      else if (oldW) track.scrollLeft = track.scrollLeft / oldW * setW;
+    }
+
+    function wrapRail() {
+      if (!setW || isFiltering()) return;
+      const sl = track.scrollLeft;
+      if (sl < baseLeft - setW / 2) track.scrollLeft = sl + setW;
+      else if (sl > baseLeft + setW / 2) track.scrollLeft = sl - setW;
+    }
+
+    track.addEventListener("scroll", () => {
+      if (!setW || isFiltering()) return;
+      const nearEdge = track.scrollLeft < track.clientWidth ||
+                       track.scrollLeft > track.scrollWidth - track.clientWidth * 2;
+      if (nearEdge) wrapRail();
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(wrapRail, 120);
+    }, { passive: true });
+
+    // Mouse wheel scrolls the row sideways
+    rail.addEventListener("wheel", e => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        track.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    function page(dir) {
+      track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: reduceMotion ? "auto" : "smooth" });
+    }
+    document.getElementById("prevBtn").addEventListener("click", () => page(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => page(1));
+    window.addEventListener("resize", () => requestAnimationFrame(measureRail));
+
+    /* ---------- Search (Version 2) ---------- */
+    const search = document.getElementById("search");
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const searchClear = document.getElementById("searchClear");
+
+    // lowercase, drop apostrophes, treat other punctuation as spaces
+    const norm = s => s.toLowerCase().replace(/['\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    movies.forEach(m => { m._n = norm(m.title); });
+
+    function applySearch() {
+      const raw = searchInput.value;
+      const tokens = norm(raw).split(" ").filter(Boolean);
+      const filtering = tokens.length > 0;
+      const wasFiltering = isFiltering();
+
+      search.classList.toggle("has-text", raw.length > 0);
+      rail.classList.toggle("filtered", filtering);
+
+      let first = null, count = 0;
+      track.querySelectorAll('.movie[data-set="1"]').forEach(card => {
+        const m = movies[card.dataset.i];
+        const ok = !filtering || tokens.every(t => m._n.includes(t));
+        card.hidden = !ok;
+        if (ok) { count++; if (!first) first = m; }
+      });
+
+      noResults.hidden = !(filtering && count === 0);
+      if (filtering && count === 0) noResults.textContent = "No movies found for \u201C" + raw.trim() + "\u201D.";
+
+      if (filtering) {
+        track.scrollLeft = 0;
+        if (first) feature(first);
+      } else if (wasFiltering) {
+        positioned = false;
+        requestAnimationFrame(measureRail);
+      }
+    }
+
+    function closeSearchIfEmpty() {
+      if (!searchInput.value) search.classList.remove("open");
+    }
+
+    searchBtn.addEventListener("mousedown", e => { if (search.classList.contains("open")) e.preventDefault(); });
+    searchBtn.addEventListener("click", () => { search.classList.add("open"); searchInput.focus(); });
+    searchInput.addEventListener("input", applySearch);
+    searchInput.addEventListener("blur", closeSearchIfEmpty);
+    searchInput.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        searchInput.value = "";
+        applySearch();
+        searchInput.blur();
+      }
+    });
+    searchClear.addEventListener("click", () => { searchInput.value = ""; applySearch(); searchInput.focus(); });
+
+    /* ---------- Settings ---------- */
+    let lastStyle = null;
+
+    function applySettings() {
+      root.dataset.style = settings.style;
+      document.querySelectorAll('input[name="style"]').forEach(r => { r.checked = r.value === settings.style; });
+      bgToggle.checked = settings.backgrounds;
+      introToggle.checked = settings.intro;
+
+      const classic = settings.style === "classic";
+      bgToggle.disabled = classic;
+      introToggle.disabled = classic;
+      replayBtn.disabled = classic;
+      bgHint.textContent = classic
+        ? "Only available in Version 2."
+        : "Show the selected movie's backdrop behind the page.";
+      introHint.textContent = classic
+        ? "Only available in Version 2."
+        : "Play a short intro when the site opens.";
+
+      updateBackdrop();
+      if (!classic) {
+        if (lastStyle !== "modern") positioned = false; // re-centre the row after coming back from Version 1
+        requestAnimationFrame(measureRail);
+      }
+      lastStyle = settings.style;
+    }
+
+    document.querySelectorAll('input[name="style"]').forEach(r => {
+      r.addEventListener("change", () => { settings.style = r.value; saveSettings(); applySettings(); });
+    });
+    bgToggle.addEventListener("change", () => { settings.backgrounds = bgToggle.checked; saveSettings(); applySettings(); });
+    introToggle.addEventListener("change", () => { settings.intro = introToggle.checked; saveSettings(); });
+    replayBtn.addEventListener("click", () => { setPanel(false); startIntro(); });
+
+    function setPanel(open) {
+      panel.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", String(open));
+    }
+    btn.addEventListener("click", e => { e.stopPropagation(); setPanel(!panel.classList.contains("open")); });
+    panel.addEventListener("click", e => e.stopPropagation());
+    document.addEventListener("click", () => setPanel(false));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") { setPanel(false); } });
+
+    feature(movies[0]);
+    applySettings();
+  </script>
 </body>
 </html>
