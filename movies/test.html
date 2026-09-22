@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en" data-style="modern" data-theme="boinga" data-ctheme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BoingaMovies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fredoka:wght@700&family=Poppins:wght@800&family=Inter:wght@800&display=swap">
+  <script>
+    /*
+      Runs before the page paints so the right style/theme show immediately
+      and the intro covers the screen from the very first frame.
+      Set INTRO_EVERY_LOAD to true to play the intro on every page load instead
+      of once per browser session.
+    */
+    (function () {
+      var INTRO_EVERY_LOAD = false;
+      var THEMES = ["boinga", "crimson", "frost", "verdant", "primeblue"];
+      var CTHEMES = ["light", "dark", "sepia"];
+      var root = document.documentElement;
+      var s = {};
+      try { s = JSON.parse(localStorage.getItem("movieSiteSettings") || "{}"); } catch (e) {}
+      var style = s.style === "classic" ? "classic" : "modern";
+      var theme = THEMES.indexOf(s.theme) > -1 ? s.theme : "boinga";
+      var ctheme = CTHEMES.indexOf(s.classicTheme) > -1 ? s.classicTheme : "light";
+      root.setAttribute("data-style", style);
+      root.setAttribute("data-theme", theme);
+      root.setAttribute("data-ctheme", ctheme);
+      var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var played = false;
+      try { played = !!sessionStorage.getItem("introPlayed"); } catch (e) {}
+      if (style === "modern" && s.intro !== false && !reduce && (INTRO_EVERY_LOAD || !played)) {
+        root.classList.add("intro-on");
+      }
+    })();
+  </script>
+  <style>
+    :root {
+      --black: #000;
+      --surface-2: #1f1f1f;
+      --line: #2e2e2e;
+      --text: #f2f2f2;
+      --muted: #9a9a9a;
+      --font: "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+      --heading-font: var(--font);
+      --radius: 6px;
+
+      /* Theme palette (default: Boinga, yellow & black) */
+      --accent: #ffd60a;
+      --accent-rgb: 255, 214, 10;
+      --accent-text: #000;
+      --bg: #000;
+
+      /* Version 1 (classic) palette, default Light */
+      --c-bg1: #ece9e6; --c-bg2: #fff; --c-text: #333; --c-title: #222;
+      --c-card: #fff; --c-hover: #ff4c00; --c-shadow: rgba(0,0,0,.15); --c-shadow-hover: rgba(0,0,0,.25);
+    }
+
+    /* Streaming-service-inspired palettes and layout tweaks. Colors, general
+       mood and type personality only; no logos or trademarked assets. */
+    html[data-theme="crimson"]  { --accent: #e50914; --accent-rgb: 229, 9, 20;  --accent-text: #fff; --bg: #000; --heading-font: 'Bebas Neue', var(--font); }
+    html[data-theme="frost"]    { --accent: #2596ff; --accent-rgb: 37, 150, 255; --accent-text: #fff; --bg: #06101f; --radius: 14px; --heading-font: 'Fredoka', var(--font); }
+    html[data-theme="verdant"]  { --accent: #1ce783; --accent-rgb: 28, 231, 131; --accent-text: #000; --bg: #0a0f0c; --heading-font: 'Poppins', var(--font); }
+    html[data-theme="primeblue"]{ --accent: #00a8e1; --accent-rgb: 0, 168, 225;  --accent-text: #001018; --bg: #0d1b2a; --heading-font: 'Inter', var(--font); }
+
+    /* Version 1 palettes */
+    html[data-ctheme="dark"]  { --c-bg1:#1b1b1b; --c-bg2:#000; --c-text:#e6e6e6; --c-title:#fff; --c-card:#1e1e1e; --c-hover:#ffcf4d; --c-shadow: rgba(0,0,0,.6); --c-shadow-hover: rgba(0,0,0,.8); }
+    html[data-ctheme="sepia"] { --c-bg1:#f4ecd8; --c-bg2:#fbf3e3; --c-text:#3b2f22; --c-title:#2a2015; --c-card:#fffaf0; --c-hover:#b5651d; --c-shadow: rgba(80,60,20,.18); --c-shadow-hover: rgba(80,60,20,.32); }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: var(--black);
+      color: var(--text);
+    }
+    html[data-style="modern"] body { background: var(--bg); min-height: 100vh; }
+
+    .movie[hidden] { display: none !important; }
+
+    /* ---------- Icon buttons (settings gear, search) ---------- */
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: color .2s, background .2s, transform .4s;
+    }
+    .icon-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn:hover { color: var(--accent); }
+    .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .gear:hover { transform: rotate(60deg); }
+
+    /* ---------- Settings panel ---------- */
+    .panel {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      width: 320px;
+      max-width: calc(100vw - 40px);
+      max-height: calc(100vh - 90px);
+      overflow-y: auto;
+      background: #101010;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--accent);
+      border-radius: 6px;
+      padding: 18px 20px 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,.6);
+      z-index: 200;
+      text-align: left;
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .panel.open { opacity: 1; transform: none; pointer-events: auto; }
+    .panel h2 { margin: 0 0 14px; font-size: 1.05rem; }
+    .panel fieldset { border: 0; margin: 0 0 16px; padding: 0; }
+    .panel fieldset:last-of-type { margin-bottom: 0; }
+    .panel legend { font-size: .85rem; color: var(--muted); padding: 0; margin-bottom: 8px; }
+
+    .choice {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      font-size: .95rem;
+    }
+    .choice:has(input:checked) { border-color: var(--accent); background: rgba(var(--accent-rgb), .08); }
+    .choice input { accent-color: var(--accent); margin: 0; }
+    .choice.swatch::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--swatch, var(--accent));
+      flex: none;
+      border: 1px solid rgba(255,255,255,.25);
+    }
+
+    .switch-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; font-size: .95rem; }
+    .switch-row + .switch-row { margin-top: 16px; }
+    .switch-row small { display: block; color: var(--muted); margin-top: 3px; font-size: .8rem; line-height: 1.35; }
+    .switch { position: relative; flex: none; width: 44px; height: 24px; }
+    .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+    .switch span { position: absolute; inset: 0; background: #3a3a3a; border-radius: 12px; transition: background .2s; }
+    .switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; }
+    .switch input:checked + span { background: var(--accent); }
+    .switch input:checked + span::after { transform: translateX(20px); background: #000; }
+    .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .switch input:disabled { cursor: not-allowed; }
+    .switch input:disabled + span { opacity: .4; }
+
+    .link-btn {
+      margin-top: 8px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--accent);
+      font: inherit;
+      font-size: .85rem;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .link-btn:disabled { color: var(--muted); cursor: not-allowed; text-decoration: none; }
+    .link-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---------- Shared streaming chrome ---------- */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 4vw;
+      background: linear-gradient(to bottom, rgba(0,0,0,.9), rgba(0,0,0,0));
+    }
+    .topbar h1 {
+      margin: 0;
+      font-family: var(--heading-font);
+      font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+      font-weight: 900;
+      letter-spacing: .02em;
+      color: var(--accent);
+      text-shadow: 0 2px 12px rgba(var(--accent-rgb), .25);
+    }
+    html[data-theme="crimson"] .topbar h1 { text-transform: uppercase; letter-spacing: .04em; }
+    .tools { display: flex; align-items: center; gap: 6px; }
+
+    /* Search */
+    .search {
+      display: flex;
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      transition: background .25s, border-color .25s;
+    }
+    .search.open { background: rgba(0,0,0,.8); border-color: var(--accent); }
+    .search input {
+      width: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: .95rem;
+      outline: none;
+      transition: width .25s ease, padding .25s ease;
+    }
+    .search input::placeholder { color: var(--muted); }
+    .search.open input { width: min(240px, 38vw); padding: 0 4px 0 0; }
+    .search input::-webkit-search-cancel-button { display: none; }
+    .search-clear {
+      display: none;
+      width: 30px;
+      height: 30px;
+      margin-right: 6px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+    .search-clear:hover { color: var(--accent); }
+    .search-clear:focus-visible { outline: 2px solid var(--accent); }
+    .search.has-text .search-clear { display: block; }
+
+    /* Backdrop (two layers so it can crossfade), fixed behind the scrolling page */
+    #backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    #backdrop .bd {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center 20%;
+      opacity: 0;
+      transition: opacity .5s ease;
+    }
+    #backdrop .bd.show { opacity: .85; }
+    #backdrop::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to top, var(--bg) 4%, rgba(0,0,0,.3) 45%, rgba(0,0,0,.65)),
+        linear-gradient(to right, rgba(0,0,0,.75), rgba(0,0,0,0) 65%);
+    }
+
+    #modernRoot { position: relative; z-index: 1; }
+
+    /* ---------- Hero variants (one shown per theme) ---------- */
+    .hero-full, .hero-compact, .hero-mini, .spotlight {
+      display: none;
+      position: relative;
+    }
+    .hero-inner { max-width: 760px; }
+    .hero-full h2, .hero-compact h2 {
+      margin: 0 0 16px;
+      font-family: var(--heading-font);
+      font-weight: 900;
+      line-height: 1.05;
+      text-shadow: 0 3px 18px rgba(0,0,0,.8);
+    }
+    .watch {
+      display: inline-block;
+      border-radius: 4px;
+      background: var(--accent);
+      color: var(--accent-text);
+      font-weight: 800;
+      text-decoration: none;
+      transition: filter .2s, transform .2s;
+    }
+    .watch:hover { filter: brightness(1.12); transform: translateY(-1px); }
+    .watch:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+    /* Boinga & Crimson: big immersive hero */
+    html[data-theme="boinga"] .hero-full,
+    html[data-theme="crimson"] .hero-full {
+      display: flex;
+      align-items: flex-end;
+      height: 58vh;
+      min-height: 360px;
+      padding: 0 4vw 28px;
+    }
+    .hero-full h2 { font-size: clamp(1.8rem, 5.5vw, 4rem); }
+    .hero-full .watch { padding: 11px 30px; font-size: 1.05rem; }
+
+    /* Verdant: shorter hero */
+    html[data-theme="verdant"] .hero-compact {
+      display: flex;
+      align-items: flex-end;
+      height: 32vh;
+      min-height: 230px;
+      padding: 0 4vw 20px;
+    }
+    .hero-compact h2 { font-size: clamp(1.4rem, 4vw, 2.6rem); }
+    .hero-compact .watch { padding: 9px 22px; font-size: .9rem; }
+
+    /* Prime Blue: minimal slim bar, dense rows */
+    html[data-theme="primeblue"] .hero-mini {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 64px;
+      padding: 10px 4vw;
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-mini .mini-label { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; flex: none; }
+    .hero-mini strong { flex: 1; min-width: 0; font-family: var(--heading-font); font-size: 1.15rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .watch.tiny { padding: 7px 16px; font-size: .8rem; flex: none; }
+
+    /* Frost: single-slide spotlight instead of a text hero. Slides advance on
+       their own; there's no free scrolling across it, only the dot controls. */
+    html[data-theme="frost"] .spotlight {
+      display: block;
+      height: 52vh;
+      min-height: 320px;
+      margin: 18px 0;
+      overflow: hidden;
+    }
+    .spotlight-track { position: absolute; top: 0; bottom: 0; left: 4vw; right: 4vw; }
+    .spot-slide {
+      position: absolute;
+      inset: 0;
+      display: block;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface-2);
+      color: inherit;
+      text-decoration: none;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .7s ease;
+    }
+    .spot-slide.active { opacity: 1; pointer-events: auto; }
+    .spot-slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .spot-cap {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,0) 75%);
+    }
+    .spot-title { font-family: var(--heading-font); font-size: clamp(1.15rem, 2.6vw, 2rem); font-weight: 700; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+    .spot-watch { align-self: flex-start; padding: 8px 20px; font-size: .85rem; }
+    .spot-dots { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 8px; z-index: 2; }
+    .spot-dot { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.45); cursor: pointer; transition: background .2s, width .2s, border-radius .2s; }
+    .spot-dot.active { background: var(--accent); width: 22px; border-radius: 5px; }
+    .spot-dot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* ---------- Movie rows (shared; just a layout, not separate categories) ---------- */
+    .rowsArea { padding-bottom: 48px; }
+    .rail + .rail { margin-top: 14px; }
+
+    .rail { position: relative; }
+    .track, .searchArea .track {
+      position: relative;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 4vw 10px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      overscroll-behavior-x: contain;
+    }
+    .track::-webkit-scrollbar { display: none; }
+
+    .arrow {
+      position: absolute;
+      top: 4px;
+      bottom: 10px;
+      width: max(44px, 3.5vw);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      color: var(--accent);
+      cursor: pointer;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity .2s, background .2s;
+    }
+    .arrow svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .arrow.left  { left: 0;  background: linear-gradient(to right, var(--bg), rgba(0,0,0,0)); }
+    .arrow.right { right: 0; background: linear-gradient(to left,  var(--bg), rgba(0,0,0,0)); }
+    .rail:hover .arrow, .arrow:focus-visible { opacity: 1; }
+    .arrow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    @media (hover: none) { .arrow { display: none; } }
+
+    .movie { position: relative; flex: 0 0 auto; width: clamp(130px, 13vw, 200px); }
+    .rail[data-cardstyle="landscape"] .movie,
+    .searchArea .movie.landscape { width: clamp(200px, 24vw, 320px); }
+
+    .movie a {
+      position: relative;
+      display: block;
+      aspect-ratio: 2 / 3;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface-2);
+      color: var(--text);
+      text-decoration: none;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .rail[data-cardstyle="landscape"] .movie a,
+    .searchArea .movie.landscape a { aspect-ratio: 16 / 9; }
+
+    .movie a:hover, .movie a:focus-visible {
+      transform: scale(1.08);
+      z-index: 5;
+      box-shadow: 0 0 0 2px var(--accent), 0 14px 34px rgba(0,0,0,.7);
+      outline: none;
+    }
+    .movie img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .movie-title {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 40px 10px 10px;
+      font-size: .85rem;
+      font-weight: 700;
+      line-height: 1.25;
+      background: linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,0));
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+    .movie a:hover .movie-title, .movie a:focus-visible .movie-title { opacity: 1; color: var(--accent); }
+    @media (hover: none) { .movie-title { opacity: 1; font-size: .75rem; } }
+
+    /* Shown if a poster fails to load */
+    .movie.no-img a { display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; }
+    .movie.no-img a { border: 1px solid var(--line); }
+    .movie.no-img .movie-title { position: static; opacity: 1; background: none; padding: 0; color: var(--accent); }
+
+    .empty { margin: 0; padding: 10px 4vw 44px; color: var(--muted); font-size: 1.05rem; }
+    .searchArea[hidden] { display: none; }
+
+    @media (max-width: 600px) {
+      .hero-full h2 { font-size: 1.7rem; }
+      .movie { width: 120px; }
+      .rail[data-cardstyle="landscape"] .movie, .searchArea .movie.landscape { width: 180px; }
+    }
+    @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+
+    /* ---------- Intro: a different scene per theme ---------- */
+    #intro {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      overflow: hidden;
+      background: #000;
+      cursor: pointer;
+    }
+    html.intro-on #intro { display: block; }
+    #intro.leaving { animation: introOut .3s ease forwards; }
+    #intro::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 70vmax;
+      height: 70vmax;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(closest-side, rgba(var(--accent-rgb), .28), rgba(var(--accent-rgb), 0));
+      opacity: 0;
+      animation: introGlow 2s ease forwards;
+    }
+    @keyframes introGlow { 0% { opacity: 0; } 40% { opacity: 1; } 100% { opacity: .6; } }
+    @keyframes introOut { to { opacity: 0; visibility: hidden; } }
+
+    .scene { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; overflow: hidden; }
+    html[data-theme="boinga"] .scene-boinga,
+    html[data-theme="crimson"] .scene-crimson,
+    html[data-theme="frost"] .scene-frost,
+    html[data-theme="verdant"] .scene-verdant,
+    html[data-theme="primeblue"] .scene-primeblue { display: flex; }
+
+    /* Boinga: letters pop in, then the whole word pushes toward the screen */
+    .scene-boinga .intro-word {
+      display: flex;
+      font-family: var(--heading-font);
+      font-size: clamp(2.4rem, 11vw, 7.5rem);
+      font-weight: 900;
+      color: var(--accent);
+      text-shadow: 0 0 30px rgba(var(--accent-rgb), .45);
+      animation: introPush 2.7s cubic-bezier(.45, 0, .25, 1) forwards;
+    }
+    .scene-boinga .intro-word span {
+      display: inline-block;
+      opacity: 0;
+      animation: letterIn .55s cubic-bezier(.2, .7, .2, 1) forwards;
+      animation-delay: calc(.15s + var(--i) * .06s);
+    }
+    @keyframes letterIn { from { opacity: 0; transform: translateY(24px) scale(1.35); filter: blur(10px); } to { opacity: 1; transform: none; filter: blur(0); } }
+    @keyframes introPush { 0% { transform: scale(.88); } 65% { transform: scale(1.08); } 100% { transform: scale(2.4); } }
+
+    /* Crimson: the word snaps in and slams forward, like a dramatic zoom */
+    .scene-crimson .word {
+      font-family: var(--heading-font);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: clamp(3rem, 14vw, 9rem);
+      color: var(--accent);
+      text-shadow: 0 0 40px rgba(var(--accent-rgb), .6);
+      animation: crimsonPop 2s cubic-bezier(.34, 0, .2, 1) forwards;
+    }
+    @keyframes crimsonPop {
+      0%   { transform: scale(.15); opacity: 0; }
+      55%  { transform: scale(1.12); opacity: 1; }
+      75%  { transform: scale(.96); }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    /* Frost: a small spark arcs across the sky before the wordmark settles in */
+    .scene-frost .spark {
+      position: absolute;
+      left: 0; top: 0;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 20px 6px rgba(var(--accent-rgb), .9), 0 0 60px 20px rgba(var(--accent-rgb), .35);
+      animation: sparkMove 1.5s ease-in-out forwards;
+    }
+    @keyframes sparkMove {
+      0%   { transform: translate(10vw, 70vh) scale(.4); opacity: 0; }
+      12%  { opacity: 1; }
+      55%  { transform: translate(50vw, 24vh) scale(1); }
+      100% { transform: translate(88vw, 46vh) scale(.5); opacity: 0; }
+    }
+    .scene-frost .word {
+      position: relative;
+      font-family: var(--heading-font);
+      font-weight: 700;
+      font-size: clamp(2.2rem, 9vw, 5.5rem);
+      color: var(--accent);
+      opacity: 0;
+      animation: frostWordIn .8s ease forwards;
+      animation-delay: 1.3s;
+    }
+    @keyframes frostWordIn { from { opacity: 0; transform: translateY(10px) scale(.92); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+    /* Verdant: a quick, clean circular wipe reveals the wordmark */
+    .scene-verdant .disc {
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      clip-path: circle(0% at 50% 50%);
+      animation: verdantWipe 1s cubic-bezier(.6, 0, .2, 1) forwards;
+    }
+    @keyframes verdantWipe { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+    .scene-verdant .word {
+      position: relative;
+      z-index: 1;
+      font-family: var(--heading-font);
+      font-weight: 800;
+      font-size: clamp(2rem, 8vw, 4.5rem);
+      color: var(--accent-text);
+      opacity: 0;
+      animation: verdantWordIn .5s ease forwards;
+      animation-delay: .55s;
+    }
+    @keyframes verdantWordIn { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+    /* Prime Blue: a slim bar sweeps through, leaving the wordmark behind */
+    .scene-primeblue .bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 40%;
+      background: linear-gradient(100deg, transparent, var(--accent), transparent);
+      filter: blur(2px);
+      animation: primeSweep 1s cubic-bezier(.4, 0, .2, 1) forwards;
+    }
+    @keyframes primeSweep { from { transform: translateX(-140%); } to { transform: translateX(240%); } }
+    .scene-primeblue .word {
+      position: relative;
+      font-family: var(--heading-font);
+      font-weight: 800;
+      font-size: clamp(2rem, 8vw, 4.5rem);
+      color: var(--accent);
+      opacity: 0;
+      animation: primeWordIn .5s ease forwards;
+      animation-delay: .6s;
+    }
+    @keyframes primeWordIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ---------- Classic (Version 1), theme-able via data-ctheme ---------- */
+    .grid { display: none; }
+
+    html[data-style="classic"] #modernRoot,
+    html[data-style="classic"] .search,
+    html[data-style="classic"] #intro,
+    html[data-style="classic"] #backdrop { display: none; }
+
+    html[data-style="classic"] body {
+      text-align: center;
+      background: linear-gradient(135deg, var(--c-bg1), var(--c-bg2));
+      color: var(--c-text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    html[data-style="classic"] .topbar { position: static; display: block; padding: 0; background: none; }
+    html[data-style="classic"] .topbar h1 {
+      margin: 20px 0;
+      font-family: inherit;
+      font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: normal;
+      color: var(--c-title);
+      text-shadow: none;
+    }
+    html[data-style="classic"] .gear {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      z-index: 60;
+      color: var(--c-text);
+      background: var(--c-card);
+      border-color: var(--c-shadow);
+    }
+    html[data-style="classic"] .gear:hover { color: var(--c-hover); }
+
+    html[data-style="classic"] .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      padding: 30px;
+      max-width: 1400px;
+      margin: auto;
+    }
+    .grid .movie { perspective: 1000px; width: auto; }
+    .grid .movie a {
+      display: block;
+      aspect-ratio: auto;
+      border-radius: 15px;
+      overflow: hidden;
+      background: var(--c-card);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 8px 20px var(--c-shadow);
+      transform-style: preserve-3d;
+      transition: transform .4s ease, box-shadow .4s ease;
+    }
+    .grid .movie a:hover {
+      transform: rotateY(5deg) rotateX(5deg) translateY(-10px);
+      box-shadow: 0 20px 30px var(--c-shadow-hover);
+    }
+    .grid .movie img {
+      position: static;
+      width: 100%;
+      height: 600px;
+      object-fit: cover;
+      display: block;
+      transition: transform .4s ease;
+    }
+    .grid .movie a:hover img { transform: scale(1.05); }
+    .grid .movie-title { position: static; padding: 12px; font-weight: bold; background: var(--c-card); color: var(--c-text); opacity: 1; transition: color .3s; }
+    .grid .movie a:hover .movie-title { color: var(--c-hover); }
+    .grid .movie.no-img a { display: block; padding: 0; border: 0; }
+
+    @media (max-width: 1300px) { .grid .movie img { height: 500px; } }
+    @media (max-width: 600px) {
+      html[data-style="classic"] .topbar h1 { font-size: 2rem; }
+      .grid .movie img { height: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>BoingaMovies</h1>
+    <div class="tools">
+      <div class="search" id="search" role="search">
+        <button class="icon-btn" id="searchBtn" type="button" aria-label="Search movies">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+        <input id="searchInput" type="search" placeholder="Search titles" autocomplete="off" aria-label="Search movies">
+        <button class="search-clear" id="searchClear" type="button" aria-label="Clear search">&times;</button>
+      </div>
+      <button class="icon-btn gear" id="settingsBtn" aria-label="Settings" aria-expanded="false" aria-controls="settingsPanel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="panel" id="settingsPanel" role="dialog" aria-label="Settings">
+    <h2>Settings</h2>
+    <fieldset>
+      <legend>Site style</legend>
+      <label class="choice"><input type="radio" name="style" value="modern"> Version 2 (streaming-style)</label>
+      <label class="choice"><input type="radio" name="style" value="classic"> Version 1 (original)</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Theme</legend>
+      <div id="modernThemeChoices">
+        <label class="choice swatch" style="--swatch:#ffd60a"><input type="radio" name="theme" value="boinga"> Boinga</label>
+        <label class="choice swatch" style="--swatch:#e50914"><input type="radio" name="theme" value="crimson"> Crimson</label>
+        <label class="choice swatch" style="--swatch:#2596ff"><input type="radio" name="theme" value="frost"> Frost</label>
+        <label class="choice swatch" style="--swatch:#1ce783"><input type="radio" name="theme" value="verdant"> Verdant</label>
+        <label class="choice swatch" style="--swatch:#00a8e1"><input type="radio" name="theme" value="primeblue"> Prime Blue</label>
+      </div>
+      <div id="classicThemeChoices">
+        <label class="choice swatch" style="--swatch:#ece9e6"><input type="radio" name="classicTheme" value="light"> Light (original)</label>
+        <label class="choice swatch" style="--swatch:#1b1b1b"><input type="radio" name="classicTheme" value="dark"> Dark</label>
+        <label class="choice swatch" style="--swatch:#f4ecd8"><input type="radio" name="classicTheme" value="sepia"> Sepia</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Sort movies</legend>
+      <label class="choice"><input type="radio" name="sort" value="default"> Default order</label>
+      <label class="choice"><input type="radio" name="sort" value="alpha"> Alphabetical (A-Z)</label>
+    </fieldset>
+
+    <div class="switch-row">
+      <div>
+        Background thumbnails
+        <small id="bgHint">Show the selected movie's backdrop behind the page.</small>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="bgToggle" aria-describedby="bgHint">
+        <span></span>
+      </label>
+    </div>
+    <div class="switch-row">
+      <div>
+        Intro animation
+        <small id="introHint">Play a short intro when the site opens.</small>
+        <button class="link-btn" id="replayIntro" type="button">Replay intro</button>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="introToggle" aria-describedby="introHint">
+        <span></span>
+      </label>
+    </div>
+  </section>
+
+  <!-- Intro: only one of these scenes is shown, matching the current theme -->
+  <div id="intro" aria-hidden="true">
+    <div class="scene scene-boinga">
+      <div class="intro-word">
+        <span style="--i:0">B</span><span style="--i:1">o</span><span style="--i:2">i</span><span style="--i:3">n</span><span style="--i:4">g</span><span style="--i:5">a</span><span style="--i:6">M</span><span style="--i:7">o</span><span style="--i:8">v</span><span style="--i:9">i</span><span style="--i:10">e</span><span style="--i:11">s</span>
+      </div>
+    </div>
+    <div class="scene scene-crimson"><div class="word">BoingaMovies</div></div>
+    <div class="scene scene-frost"><div class="spark"></div><div class="word">BoingaMovies</div></div>
+    <div class="scene scene-verdant"><div class="disc"></div><div class="word">BoingaMovies</div></div>
+    <div class="scene scene-primeblue"><div class="bar"></div><div class="word">BoingaMovies</div></div>
+  </div>
+
+  <div id="backdrop" aria-hidden="true"><div class="bd"></div><div class="bd"></div></div>
+
+  <!-- Version 2: everything here is theme-aware -->
+  <div id="modernRoot">
+    <div id="browseArea">
+      <section class="hero-full" id="heroFull">
+        <div class="hero-inner">
+          <h2 id="heroTitleFull"></h2>
+          <a class="watch" id="heroLinkFull" href="#">Watch now</a>
+        </div>
+      </section>
+
+      <section class="hero-compact" id="heroCompact">
+        <div class="hero-inner">
+          <h2 id="heroTitleCompact"></h2>
+          <a class="watch" id="heroLinkCompact" href="#">Watch now</a>
+        </div>
+      </section>
+
+      <section class="hero-mini" id="heroMini">
+        <span class="mini-label">Now featuring</span>
+        <strong id="heroTitleMini"></strong>
+        <a class="watch tiny" id="heroLinkMini" href="#">Watch</a>
+      </section>
+
+      <section class="spotlight" id="spotlight" aria-label="Featured">
+        <div class="spotlight-track" id="spotlightTrack"></div>
+        <div class="spot-dots" id="spotlightDots"></div>
+      </section>
+
+      <section class="rowsArea" id="rowsArea" aria-label="Movies"></section>
+    </div>
+
+    <section class="searchArea" id="searchArea" hidden aria-label="Search results">
+      <div class="track" id="searchTrack"></div>
+      <p class="empty" id="noResults" hidden></p>
+    </section>
+  </div>
+
+  <!-- Version 1 -->
+  <main class="grid" id="movies"></main>
+
+  <script>
+    /*
+      ADD MOVIES HERE
+      - title:    shown on the card
+      - href:     page the card links to
+      - poster:   the tall poster image
+      - backdrop: (optional) wide image, used as the full-page background and
+                  as the thumbnail for landscape-style rows/cards. Leave it as
+                  "" and those features just show a plain background instead.
+    */
+    const movies = [
+      { title: "Curious George", href: "https://boingagames.onrender.com/curious/", poster: "https://image.tmdb.org/t/p/original/7SpokDLiRHON9H36GdlF7vWKOm6.jpg", backdrop: "https://image.tmdb.org/t/p/original/6So309LMhVrNd2KNmjdQxUJFYHf.jpg" },
+      { title: "Curious George: A Halloween Boofest!", href: "halloween.html", poster: "https://m.media-amazon.com/images/M/MV5BNDY3NTE3MDYxOV5BMl5BanBnXkFtZTgwMDAzODA2MDE@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/xiPQmjyV0kfAuICGuBodbiNninO.jpg" },
+      { title: "Curious George: A Very Monkey Christmas!", href: "christmas.html", poster: "https://m.media-amazon.com/images/M/MV5BMjRkNzg2YTctYjJhMy00ZjIyLWFmNWUtMjczNWNkODAwOTFmXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/6neV3FfMdX3YZhqBKHDYCHLFbBo.jpg" },
+      { title: "The Spongebob Squarepants Movie", href: "sponge.html", poster: "https://i.ebayimg.com/00/s/MTYwMFgxMDY2/z/x~QAAOSw1PdgnGpR/$_57.JPG?set_id=8800005007", backdrop: "https://image.tmdb.org/t/p/original/hE3ZGSMiQEkqD4I7GXRfNfpK5L5.jpg" },
+      { title: "The Muppet Movie (2011)", href: "muppets.html", poster: "https://upload.wikimedia.org/wikipedia/en/thumb/8/89/Muppets_ver4.jpg/250px-Muppets_ver4.jpg", backdrop: "https://image.tmdb.org/t/p/original/sUQ6sT0oTbK6p0RqVSvmtrtecYx.jpg" },
+      { title: "The Muppet Movie: Muppets Most Wanted", href: "wanted.html", poster: "https://images.moviesanywhere.com/e5fe25500e937ec8f88e1891d53124d3/c0742579-3d14-4679-a65e-8fe84220f6aa.jpg", backdrop: "https://image.tmdb.org/t/p/original/afH2HkgBAumobWx47ujESuRtLCr.jpg" },
+      { title: "The Lego Movie", href: "lego.html", poster: "https://musicart.xboxlive.com/7/9f0a5100-0000-0000-0000-000000000002/504/image.jpg", backdrop: "https://image.tmdb.org/t/p/original/5N2mfRrvJUnCVpsMIebfosEyo1i.jpg" },
+      { title: "The Lego Batman Movie", href: "batman.html", poster: "https://m.media-amazon.com/images/M/MV5BMTcyNTEyOTY0M15BMl5BanBnXkFtZTgwOTAyNzU3MDI@._V1_FMjpg_UX1000_.jpg", backdrop: "https://image.tmdb.org/t/p/original/5sqGN93VLMDOoa0JrwAVFNYMBrx.jpg" },
+      { title: "Diary Of A Wimpy Kid", href: "wimpy.html", poster: "https://upload.wikimedia.org/wikipedia/en/thumb/e/e2/Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg/250px-Diary_of_a_Wimpy_Kid_%282010_film%29_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/14wogeWHbWkFr4J2qpDXmqsjyhn.jpg" },
+      { title: "Diary Of A Wimpy Kid: Rodrick Rules", href: "rodrick.html", poster: "https://m.media-amazon.com/images/M/MV5BMTcxNDYwOTEzMl5BMl5BanBnXkFtZTcwOTA3MzY3NA@@._V1_.jpg", backdrop: "https://image.tmdb.org/t/p/original/rww4R50L0SiyUYHXxzszWKwRnxO.jpg" },
+      { title: "Diary Of A Wimpy Kid: Dog Days", href: "dog.html", poster: "https://upload.wikimedia.org/wikipedia/en/5/57/Diary_of_a_Wimpy_Kid_-_Dog_Days_movie_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/4xmSkstuSeAEG1EumcUdKtbwVX4.jpg" },
+      { title: "Sonic The Hedgehog", href: "sonic1.html", poster: "https://upload.wikimedia.org/wikipedia/en/4/45/Sonic_the_Hedgehog_film_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/1yZkmqtQniJq7sGuS842g5YYJ7m.jpg" },
+      { title: "Sonic The Hedgehog 2", href: "sonic2.html", poster: "https://m.media-amazon.com/images/M/MV5BMDBiYzk0YTMtNWRiYi00YWY0LWE3NjgtYmJiYTAwZmYzOTM0XkEyXkFqcGc@._V1_.jpg", backdrop: "https://image.tmdb.org/t/p/original/gA8CGh8YHxXtRZIOqHpof4h5yAO.jpg" },
+      { title: "Sonic The Hedgehog 3", href: "sonic3.html", poster: "https://upload.wikimedia.org/wikipedia/en/f/f2/Sonic_the_Hedgehog_3_film_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/gOrOugLzYEpPgjxvYvrHYX8560M.jpg" },
+      { title: "Back To The Future", href: "bttf.html", poster: "https://upload.wikimedia.org/wikipedia/en/d/d2/Back_to_the_Future.jpg", backdrop: "https://image.tmdb.org/t/p/original/qskzmLTbarKnXDbo2HRj4NJ3vcW.jpg" },
+      { title: "School Of Rock", href: "rock.html", poster: "https://upload.wikimedia.org/wikipedia/en/1/11/School_of_Rock_Poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/4y9mFnyDZLfLVqUvcQUuzVejrok.jpg" },
+      { title: "Nacho Libre", href: "nacho.html", poster: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQS2aAZPJr9XW43n4SgZLOInzDm_KpLsh6Mg9ArBKVuWj9d4bj4-Jg4cMlDQR6OpTFxFdPV", backdrop: "https://image.tmdb.org/t/p/original/wNgdVnxMzjeyFD2FYcsDtsGcC5C.jpg" },
+      { title: "A Goofy Movie", href: "goofy.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS3K-KXdcWUZDIWuqs9QwcVsUgXbPmIZfDNkLFKVuBBC8dIK8w12UUJEq9mQqEOddgZzNA_XQ", backdrop: "https://image.tmdb.org/t/p/original/k3ERqpbIFTO761d07XAEKUR0i1n.jpg" },
+      { title: "Dog Man", href: "dogman.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSsFIA8PwcujdiEBhpGNlZj2ZPd-DhutzxLrAMrJvXsiWzWcFC8rP-zmh2W3UP_qGzH4CSvqw", backdrop: "https://image.tmdb.org/t/p/original/2QgxkF2ZDqt7CyxAMojVge0tKmK.jpg" },
+      { title: "Captain Underpants: The First Epic Movie", href: "captain.html", poster: "https://i.ebayimg.com/00/s/MTMxNFg5MDA=/z/9w4AAOSwIEpgbvux/$_57.JPG?set_id=8800005007", backdrop: "https://image.tmdb.org/t/p/original/5ceIqlRzWH4x1IPU9OfjXHO2Kz6.jpg" },
+      { title: "The Croods", href: "croods.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcSaYx-qOP4faVy7OM-rsIkN4WE_RWqix4K8oWbwxr3KBEzbxlt8A-OdeAx7E0qOK6DHgNC4Uw", backdrop: "https://image.tmdb.org/t/p/original/9Oi5mxQJTCOPA3uiQb0vk6CLeCr.jpg" },
+      { title: "The Avengers", href: "avengers.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQluFl3GfQDXohBaH-xG3GuRi8T4MDIQPRpCqUGLiE5tXdXbUO0hRFwnshvzg07igEgGg7i", backdrop: "https://image.tmdb.org/t/p/original/kwUQFeFXOOpgloMgZaadhzkbTI4.jpg" },
+      { title: "Rango", href: "rango.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcStBYhybZBjk1OW8lSjTmoJOajGsHveqZhdDCqEk0XAxlLYAibHdKFVo0x3MUvV-Zv4WqDl", backdrop: "https://image.tmdb.org/t/p/original/mOtKQlXdL5J4lwqcSFlkZmgmFeZ.jpg" },
+      { title: "Shrek", href: "shrek.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQg_Lj-AwA3TKS-FSwZ8c8V0zDIA4cnGrMGz0tGfAzakmcYhWr6ndm6EXpSrYYXCprXW9d6", backdrop: "https://image.tmdb.org/t/p/original/bNTHSd3UqqLzIVwbDOGPnx3ScfF.jpg" },
+      { title: "Shrek 2", href: "shrek2.html", poster: "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTB4nQHkVygjUx0Cad3i51hOLXd2WxGsbOHNBuyLDYVG7dTM0Lg5JMQSiE8YZod66Rbr_xvKg", backdrop: "https://image.tmdb.org/t/p/original/iaNoLnnpQb5SNxGc4bkQmdCvEdG.jpg" },
+      { title: "Puss In Boots", href: "pussinboots.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQBI-ZkqVDJYLGXvGCo6Z99JXrTupmwpGV6WGllfgSDXX4YXhExM6Ph79gKWVnw07m58W0-Aw", backdrop: "https://image.tmdb.org/t/p/original/qk1plO0CifSVwpdgzNF5FOhsgHH.jpg" },
+      { title: "Puss In Boots: The Last Wish", href: "pussinboots2.html", poster: "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcSX2q5n3N0MEsdRnUy44WM1sxy-R44S8dXu-mmceQyMVDbOd-9qMbKkv-arS726F685U1TI", backdrop: "https://image.tmdb.org/t/p/original/tJswVLKdNHb1vGmQsB1yM7LA90r.jpg" },
+      { title: "How To Train Your Dragon", href: "httyd.html", poster: "https://m.media-amazon.com/images/I/51uJGH71GsL.jpg", backdrop: "https://image.tmdb.org/t/p/original/kxklJL1v8MYEU5xdU6W5VvmBwVz.jpg" },
+      { title: "How To Train Your Dragon 2", href: "httyd2.html", poster: "https://upload.wikimedia.org/wikipedia/en/a/af/How_to_Train_Your_Dragon_2_poster.jpg", backdrop: "https://image.tmdb.org/t/p/original/rSbSMyI5Y5IDS8kvkpHoO18w6El.jpg" },
+      { title: "How To Train Your Dragon: The Hidden World", href: "httyd3.html", poster: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR-PYOiZILAaGhTnvJ5q-uaLIBbpRFwiecmHCCdUvYydhivpZC0TEv4F4xkhoDwDCIkYBhd", backdrop: "https://image.tmdb.org/t/p/original/2lXYW8PuBclBfgR47iKqV6GTlXS.jpg" },
+      { title: "A Minecraft Movie", href: "minecraft.html", poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvI5KTA7BcyEMh1-ReAKnD97wOQdYoGXvTZ8pB91EEG7A420ChxrBOqlGdVOy9PSJanneK8g", backdrop: "https://image.tmdb.org/t/p/original/2F7rJqSO2E6Gk9KVqz9NjLiaEuM.jpg" },
+      { title: "Cars", href: "cars.html", poster: "https://m.media-amazon.com/images/I/91J9Eoa0udL.jpg", backdrop: "https://image.tmdb.org/t/p/original/wZiUsAI939lOKgs0u3qA3zSW7zx.jpg" },
+      { title: "Cars 2", href: "cars2.html", poster: "https://www.originalfilmart.com/cdn/shop/products/cars_2_2011_teaser_original_film_art_5000x.jpg?v=1574445842", backdrop: "https://image.tmdb.org/t/p/original/mDb6HtfFYe8gzxo8d6S1mFkzoBW.jpg" },
+      { title: "Madagascar", href: "madagascar.html", poster: "https://image.tmdb.org/t/p/original/zMpJY5CJKUufG9OTw0In4eAFqPX.jpg", backdrop: "https://image.tmdb.org/t/p/original/j7A8wkcW9UYvchFdWu89oHN9b6O.jpg" },
+      { title: "Madagascar: Escape 2 Africa", href: "madagascar2.html", poster: "https://i.ebayimg.com/images/g/gTIAAOSw0clmaAz9/s-l1200.jpg", backdrop: "https://image.tmdb.org/t/p/original/p2Z2yzrTJauWTLxkvtRdKLzxhcp.jpg" },
+      { title: "Madagascar 3: Europe's Most Wanted", href: "madagascar3.html", poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYBxvRkMNaygtC3GOwLuk3crqABUwwudSeZQ&s", backdrop: "https://image.tmdb.org/t/p/original/2jWo63NbhubaJntRpxls7n3IMn7.jpg" },
+      { title: "Penguins of Madagascar", href: "penguins.html", poster: "https://m.media-amazon.com/images/I/71BjMdsGStL._AC_UF894,1000_QL80_.jpg", backdrop: "https://image.tmdb.org/t/p/original/77KUH3Dheen9duqXitJD4nZHuom.jpg" }
+    ];
+
+    const introDurations = { boinga: 2700, crimson: 2000, frost: 2400, verdant: 1600, primeblue: 1700 };
+    const SPOTLIGHT_COUNT = 8;   // how many movies appear in Frost's spotlight
+    const SPOTLIGHT_MS = 5000;  // how long each spotlight slide stays up
+    const THEMES = ["boinga", "crimson", "frost", "verdant", "primeblue"];
+    const CTHEMES = ["light", "dark", "sepia"];
+
+    const root = document.documentElement;
+    const settings = { style: "modern", backgrounds: true, intro: true, theme: "boinga", classicTheme: "light", sort: "default" };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem("movieSiteSettings") || "{}");
+      if (saved.style === "modern" || saved.style === "classic") settings.style = saved.style;
+      if (typeof saved.backgrounds === "boolean") settings.backgrounds = saved.backgrounds;
+      if (typeof saved.intro === "boolean") settings.intro = saved.intro;
+      if (THEMES.includes(saved.theme)) settings.theme = saved.theme;
+      if (CTHEMES.includes(saved.classicTheme)) settings.classicTheme = saved.classicTheme;
+      if (saved.sort === "default" || saved.sort === "alpha") settings.sort = saved.sort;
+    } catch (e) { /* storage unavailable: use defaults */ }
+
+    function saveSettings() {
+      try { localStorage.setItem("movieSiteSettings", JSON.stringify(settings)); } catch (e) {}
+    }
+
+    const btn = document.getElementById("settingsBtn");
+    const panel = document.getElementById("settingsPanel");
+    const modernThemeChoices = document.getElementById("modernThemeChoices");
+    const classicThemeChoices = document.getElementById("classicThemeChoices");
+    const bgToggle = document.getElementById("bgToggle");
+    const bgHint = document.getElementById("bgHint");
+    const introToggle = document.getElementById("introToggle");
+    const introHint = document.getElementById("introHint");
+    const replayBtn = document.getElementById("replayIntro");
+    const intro = document.getElementById("intro");
+    const layers = Array.from(document.querySelectorAll("#backdrop .bd"));
+
+    const heroFields = [
+      { title: document.getElementById("heroTitleFull"), link: document.getElementById("heroLinkFull") },
+      { title: document.getElementById("heroTitleCompact"), link: document.getElementById("heroLinkCompact") },
+      { title: document.getElementById("heroTitleMini"), link: document.getElementById("heroLinkMini") }
+    ];
+
+    const modernRoot = document.getElementById("modernRoot");
+    const spotlight = document.getElementById("spotlight");
+    const spotlightTrack = document.getElementById("spotlightTrack");
+    const spotlightDots = document.getElementById("spotlightDots");
+    const rowsArea = document.getElementById("rowsArea");
+    const grid = document.getElementById("movies");
+    const searchArea = document.getElementById("searchArea");
+    const searchTrack = document.getElementById("searchTrack");
+    const noResults = document.getElementById("noResults");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    /* ---------- Intro ---------- */
+    let introTimer = null;
+
+    function armIntro() {
+      try { sessionStorage.setItem("introPlayed", "1"); } catch (e) {}
+      clearTimeout(introTimer);
+      const dur = introDurations[settings.theme] || 2200;
+      introTimer = setTimeout(() => endIntro(false), dur);
+    }
+
+    function endIntro() {
+      clearTimeout(introTimer);
+      if (!root.classList.contains("intro-on")) return;
+      intro.classList.add("leaving");
+      setTimeout(() => { root.classList.remove("intro-on"); intro.classList.remove("leaving"); }, 300);
+    }
+
+    function startIntro() {
+      if (reduceMotion || settings.style === "classic") return;
+      root.classList.remove("intro-on");
+      intro.classList.remove("leaving");
+      void intro.offsetWidth; // restart the CSS animations
+      root.classList.add("intro-on");
+      armIntro();
+    }
+
+    intro.addEventListener("click", endIntro);
+    document.addEventListener("keydown", () => { if (root.classList.contains("intro-on")) endIntro(); });
+    if (root.classList.contains("intro-on")) armIntro(); // the head script decided to play it
+
+    /* ---------- Image helpers ---------- */
+    // TMDB serves smaller versions of the same image, which load far faster on slow connections.
+    function tmdbSize(src, size) {
+      return src && src.includes("image.tmdb.org/t/p/original/") ? src.replace("/t/p/original/", "/t/p/" + size + "/") : src;
+    }
+    const backdropUrl = src => tmdbSize(src, "w1280"); // full-page background
+    const thumbUrl = src => src ? tmdbSize(src, "w500") : null; // landscape/spotlight thumbnail
+
+    /* ---------- Background thumbnail (crossfades, falls back to plain bg) ---------- */
+    const loaded = new Set();
+    const loading = new Set();
+    let front = 0;
+    let activeSrc = "";
+    let current = movies[0];
+
+    function hideBackdrop() { layers.forEach(l => l.classList.remove("show")); }
+
+    function showLayer(src) {
+      const next = layers[1 - front];
+      next.style.backgroundImage = 'url("' + src.replace(/"/g, "%22") + '")';
+      next.classList.add("show");
+      layers[front].classList.remove("show");
+      front = 1 - front;
+    }
+
+    function updateBackdrop() {
+      const raw = current && current.backdrop;
+      // Nothing entered for this movie, feature off, Version 1, or Frost (its
+      // own spotlight art takes over this role): plain background.
+      if (!raw || !settings.backgrounds || settings.style === "classic" || settings.theme === "frost") {
+        activeSrc = "";
+        hideBackdrop();
+        return;
+      }
+      const src = backdropUrl(raw);
+      if (src === activeSrc) return;
+      activeSrc = src;
+
+      if (loaded.has(src)) { showLayer(src); return; }
+      hideBackdrop(); // not downloaded yet: plain background until it's ready
+      if (loading.has(src)) return;
+      loading.add(src);
+      const img = new Image();
+      img.onload = () => { loading.delete(src); loaded.add(src); if (activeSrc === src) showLayer(src); };
+      img.onerror = () => { loading.delete(src); if (activeSrc === src) activeSrc = ""; };
+      img.src = src;
+    }
+
+    function feature(m) {
+      current = m;
+      heroFields.forEach(f => { f.title.textContent = m.title; f.link.href = m.href; });
+      updateBackdrop();
+    }
+
+    /* ---------- Cards ---------- */
+    function makeCard(m, isClone, cardStyle) {
+      const card = document.createElement("div");
+      card.className = "movie";
+
+      const a = document.createElement("a");
+      a.href = m.href;
+
+      const src = cardStyle === "landscape" ? (thumbUrl(m.backdrop) || m.poster) : m.poster;
+      if (src) {
+        const img = document.createElement("img");
+        img.referrerPolicy = "no-referrer";
+        img.decoding = "async";
+        img.alt = m.title;
+        img.addEventListener("error", () => { img.remove(); card.classList.add("no-img"); });
+        img.src = src;
+        a.appendChild(img);
+      } else {
+        card.classList.add("no-img");
+      }
+
+      const t = document.createElement("div");
+      t.className = "movie-title";
+      t.textContent = m.title;
+      a.appendChild(t);
+      card.appendChild(a);
+
+      if (isClone) {
+        card.setAttribute("aria-hidden", "true");
+        a.tabIndex = -1;
+      }
+
+      a.addEventListener("mouseenter", () => feature(m));
+      a.addEventListener("focus", () => feature(m));
+      return card;
+    }
+
+    /* ---------- Sorting ---------- */
+    const norm = s => s.toLowerCase().replace(/['\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    movies.forEach(m => { m._n = norm(m.title); });
+
+    function getOrder() {
+      const idx = movies.map((m, i) => i);
+      if (settings.sort === "alpha") idx.sort((a, b) => movies[a]._n.localeCompare(movies[b]._n));
+      return idx;
+    }
+
+    function buildGrid(order) {
+      grid.innerHTML = "";
+      order.forEach(i => grid.appendChild(makeCard(movies[i], false, "poster")));
+    }
+
+    /* ---------- A single independently-looping row (used by several themes as
+       just a way of laying the same catalog out, not separate categories) --- */
+    function createRail(orderArr, cardStyle) {
+      const wrap = document.createElement("div");
+      wrap.className = "rail";
+      wrap.dataset.cardstyle = cardStyle;
+
+      const prevBtn = document.createElement("button");
+      prevBtn.type = "button"; prevBtn.className = "arrow left"; prevBtn.setAttribute("aria-label", "Scroll left");
+      prevBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="15 4 7 12 15 20"/></svg>';
+
+      const nextBtn = document.createElement("button");
+      nextBtn.type = "button"; nextBtn.className = "arrow right"; nextBtn.setAttribute("aria-label", "Scroll right");
+      nextBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9 4 17 12 9 20"/></svg>';
+
+      const track = document.createElement("div");
+      track.className = "track";
+
+      wrap.appendChild(prevBtn);
+      wrap.appendChild(track);
+      wrap.appendChild(nextBtn);
+
+      const loop = orderArr.length > 1;
+      let setW = 0, baseLeft = 0, positioned = false, idleTimer = null;
+
+      function fill() {
+        track.innerHTML = "";
+        const copies = loop ? 3 : 1;
+        for (let s = 0; s < copies; s++) {
+          orderArr.forEach((i, pos) => {
+            const card = makeCard(movies[i], loop && s !== 1, cardStyle);
+            card.dataset.set = s;
+            card.dataset.pos = pos;
+            track.appendChild(card);
+          });
+        }
+        positioned = false;
+        requestAnimationFrame(measure);
+      }
+
+      function measure() {
+        if (!loop) return;
+        const a = track.querySelector('[data-set="0"][data-pos="0"]');
+        const b = track.querySelector('[data-set="1"][data-pos="0"]');
+        if (!a || !b) return;
+        const oldW = setW;
+        setW = b.offsetLeft - a.offsetLeft;
+        if (!setW) return;
+        baseLeft = b.offsetLeft - parseFloat(getComputedStyle(track).paddingLeft);
+        if (!positioned) { track.scrollLeft = baseLeft; positioned = true; }
+        else if (oldW) track.scrollLeft = track.scrollLeft / oldW * setW;
+      }
+
+      function wrapScroll() {
+        if (!setW) return;
+        const sl = track.scrollLeft;
+        if (sl < baseLeft - setW / 2) track.scrollLeft = sl + setW;
+        else if (sl > baseLeft + setW / 2) track.scrollLeft = sl - setW;
+      }
+
+      track.addEventListener("scroll", () => {
+        if (!setW) return;
+        const nearEdge = track.scrollLeft < track.clientWidth || track.scrollLeft > track.scrollWidth - track.clientWidth * 2;
+        if (nearEdge) wrapScroll();
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(wrapScroll, 120);
+      }, { passive: true });
+
+      wrap.addEventListener("wheel", e => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { e.preventDefault(); track.scrollLeft += e.deltaY; }
+      }, { passive: false });
+
+      function page(dir) { track.scrollBy({ left: dir * track.clientWidth * 0.85, behavior: reduceMotion ? "auto" : "smooth" }); }
+      prevBtn.addEventListener("click", () => page(-1));
+      nextBtn.addEventListener("click", () => page(1));
+      if (!loop) { prevBtn.style.display = "none"; nextBtn.style.display = "none"; }
+
+      fill();
+      return { el: wrap, refresh: measure };
+    }
+
+    let activeRails = [];
+
+    function chunkRoundRobin(order, n) {
+      const out = Array.from({ length: n }, () => []);
+      order.forEach((idx, pos) => out[pos % n].push(idx));
+      return out;
+    }
+
+    // These just split the same catalog across a few rows for a multi-row
+    // look, or give a row a different card shape. They're a layout choice,
+    // not separate categories, so they carry no labels.
+    function getRowsConfig(theme, order) {
+      if (theme === "crimson") {
+        const parts = chunkRoundRobin(order, 3);
+        return [{ order: parts[0], style: "poster" }, { order: parts[1], style: "poster" }, { order: parts[2], style: "poster" }];
+      }
+      if (theme === "verdant") {
+        const parts = chunkRoundRobin(order, 2);
+        return [{ order: parts[0], style: "landscape" }, { order: parts[1], style: "landscape" }];
+      }
+      if (theme === "primeblue") {
+        const parts = chunkRoundRobin(order, 2);
+        return [{ order: parts[0], style: "poster" }, { order: parts[1], style: "landscape" }];
+      }
+      return [{ order: order, style: "poster" }]; // boinga
+    }
+
+    /* ---------- Frost's spotlight: a single-slide, auto-advancing slideshow.
+       There's no free scrolling across it, only the dot controls, matching
+       how Disney+'s own top carousel behaves. ---------- */
+    let spotOrder = [];
+    let spotIndex = -1;
+    let spotTimer = null;
+
+    function buildSpotlight(orderArr) {
+      spotOrder = orderArr;
+      spotIndex = -1;
+      spotlightTrack.innerHTML = "";
+      spotlightDots.innerHTML = "";
+
+      orderArr.forEach((i, idx) => {
+        const m = movies[i];
+        const src = thumbUrl(m.backdrop) || m.poster;
+        const slide = document.createElement("a");
+        slide.className = "spot-slide";
+        slide.href = m.href;
+        if (src) {
+          const img = document.createElement("img");
+          img.referrerPolicy = "no-referrer";
+          img.decoding = "async";
+          img.alt = m.title;
+          img.addEventListener("error", () => img.remove());
+          img.src = src;
+          slide.appendChild(img);
+        }
+        const cap = document.createElement("div");
+        cap.className = "spot-cap";
+        const h = document.createElement("span"); h.className = "spot-title"; h.textContent = m.title;
+        const w = document.createElement("span"); w.className = "watch spot-watch"; w.textContent = "Watch now";
+        cap.appendChild(h); cap.appendChild(w);
+        slide.appendChild(cap);
+        slide.addEventListener("mouseenter", () => { feature(m); pauseSpotlight(); });
+        slide.addEventListener("focus", () => feature(m));
+        slide.addEventListener("mouseleave", startSpotlightTimer);
+        spotlightTrack.appendChild(slide);
+
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "spot-dot";
+        dot.setAttribute("aria-label", "Show " + m.title);
+        dot.addEventListener("click", () => { goToSpotSlide(idx); pauseSpotlight(); clearTimeout(dot._resume); dot._resume = setTimeout(startSpotlightTimer, 6000); });
+        spotlightDots.appendChild(dot);
+      });
+
+      if (orderArr.length) goToSpotSlide(0);
+      startSpotlightTimer();
+    }
+
+    function goToSpotSlide(idx) {
+      if (!spotOrder.length) return;
+      const slides = spotlightTrack.children;
+      const dots = spotlightDots.children;
+      if (spotIndex > -1) { slides[spotIndex].classList.remove("active"); dots[spotIndex].classList.remove("active"); }
+      spotIndex = (idx + spotOrder.length) % spotOrder.length;
+      slides[spotIndex].classList.add("active");
+      dots[spotIndex].classList.add("active");
+      feature(movies[spotOrder[spotIndex]]);
+    }
+
+    function startSpotlightTimer() {
+      clearInterval(spotTimer);
+      if (spotOrder.length < 2 || reduceMotion || settings.theme !== "frost") return;
+      spotTimer = setInterval(() => goToSpotSlide(spotIndex + 1), SPOTLIGHT_MS);
+    }
+    function pauseSpotlight() { clearInterval(spotTimer); }
+
+    function buildLayout(order) {
+      activeRails = [];
+      rowsArea.innerHTML = "";
+      pauseSpotlight();
+
+      const theme = settings.theme;
+      let rows;
+
+      if (theme === "frost") {
+        const spotCount = Math.min(SPOTLIGHT_COUNT, order.length);
+        buildSpotlight(order.slice(0, spotCount));
+        rows = [{ order: order.slice(spotCount), style: "landscape" }];
+      } else {
+        spotlightTrack.innerHTML = "";
+        spotlightDots.innerHTML = "";
+        spotOrder = [];
+        rows = getRowsConfig(theme, order);
+      }
+
+      rows.forEach(row => {
+        if (!row.order.length) return;
+        const railCtrl = createRail(row.order, row.style);
+        rowsArea.appendChild(railCtrl.el);
+        activeRails.push(railCtrl);
+      });
+    }
+
+    window.addEventListener("resize", () => { activeRails.forEach(r => requestAnimationFrame(r.refresh)); });
+
+    /* ---------- Search (flat results, independent of the theme's layout) ---------- */
+    const search = document.getElementById("search");
+    const searchBtn = document.getElementById("searchBtn");
+    const searchInput = document.getElementById("searchInput");
+    const searchClear = document.getElementById("searchClear");
+
+    function updateSearch() {
+      const raw = searchInput.value;
+      const tokens = norm(raw).split(" ").filter(Boolean);
+      const filtering = tokens.length > 0;
+
+      search.classList.toggle("has-text", raw.length > 0);
+      modernRoot.classList.toggle("searching", filtering);
+      searchArea.hidden = !filtering;
+
+      if (!filtering) return;
+
+      const matches = getOrder().filter(i => tokens.every(t => movies[i]._n.includes(t)));
+      searchTrack.innerHTML = "";
+      matches.forEach(i => searchTrack.appendChild(makeCard(movies[i], false, "poster")));
+      noResults.hidden = matches.length > 0;
+      if (matches.length === 0) noResults.textContent = "No movies found for \u201C" + raw.trim() + "\u201D.";
+      if (matches.length) feature(movies[matches[0]]);
+    }
+
+    function closeSearchIfEmpty() {
+      if (!searchInput.value) search.classList.remove("open");
+    }
+
+    searchBtn.addEventListener("mousedown", e => { if (search.classList.contains("open")) e.preventDefault(); });
+    searchBtn.addEventListener("click", () => { search.classList.add("open"); searchInput.focus(); });
+    searchInput.addEventListener("input", updateSearch);
+    searchInput.addEventListener("blur", closeSearchIfEmpty);
+    searchInput.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        searchInput.value = "";
+        updateSearch();
+        searchInput.blur();
+      }
+    });
+    searchClear.addEventListener("click", () => { searchInput.value = ""; updateSearch(); searchInput.focus(); });
+
+    /* ---------- Rebuilding on sort/theme change ---------- */
+    function rebuildMovies() {
+      const order = getOrder();
+      buildGrid(order);
+      buildLayout(order);
+      if (!modernRoot.classList.contains("searching")) feature(movies[order[0]]);
+      updateSearch(); // re-applies any text already typed into the search box
+    }
+
+    /* Hides the browsing layout while a search is active, regardless of theme */
+    const searchStyle = document.createElement("style");
+    searchStyle.textContent = "#modernRoot.searching #browseArea{display:none;}";
+    document.head.appendChild(searchStyle);
+
+    /* ---------- Settings ---------- */
+    function applySettings() {
+      root.dataset.style = settings.style;
+      root.dataset.theme = settings.theme;
+      root.dataset.ctheme = settings.classicTheme;
+
+      document.querySelectorAll('input[name="style"]').forEach(r => { r.checked = r.value === settings.style; });
+      document.querySelectorAll('input[name="theme"]').forEach(r => { r.checked = r.value === settings.theme; });
+      document.querySelectorAll('input[name="classicTheme"]').forEach(r => { r.checked = r.value === settings.classicTheme; });
+      document.querySelectorAll('input[name="sort"]').forEach(r => { r.checked = r.value === settings.sort; });
+      bgToggle.checked = settings.backgrounds;
+      introToggle.checked = settings.intro;
+
+      const classic = settings.style === "classic";
+      const frost = settings.theme === "frost";
+
+      modernThemeChoices.style.display = classic ? "none" : "block";
+      classicThemeChoices.style.display = classic ? "block" : "none";
+
+      introToggle.disabled = classic;
+      replayBtn.disabled = classic;
+
+      bgToggle.disabled = classic || frost;
+      bgHint.textContent = classic
+        ? "Only available in Version 2."
+        : frost
+          ? "Frost's spotlight provides the imagery instead."
+          : "Show the selected movie's backdrop behind the page.";
+      introHint.textContent = classic ? "Only available in Version 2." : "Play a short intro when the site opens.";
+
+      updateBackdrop();
+      if (!classic) {
+        activeRails.forEach(r => requestAnimationFrame(r.refresh));
+        startSpotlightTimer();
+      }
+    }
+
+    document.querySelectorAll('input[name="style"]').forEach(r => {
+      r.addEventListener("change", () => { settings.style = r.value; saveSettings(); applySettings(); });
+    });
+    document.querySelectorAll('input[name="theme"]').forEach(r => {
+      r.addEventListener("change", () => { settings.theme = r.value; saveSettings(); applySettings(); rebuildMovies(); });
+    });
+    document.querySelectorAll('input[name="classicTheme"]').forEach(r => {
+      r.addEventListener("change", () => { settings.classicTheme = r.value; saveSettings(); applySettings(); });
+    });
+    document.querySelectorAll('input[name="sort"]').forEach(r => {
+      r.addEventListener("change", () => { settings.sort = r.value; saveSettings(); applySettings(); rebuildMovies(); });
+    });
+    bgToggle.addEventListener("change", () => { settings.backgrounds = bgToggle.checked; saveSettings(); applySettings(); });
+    introToggle.addEventListener("change", () => { settings.intro = introToggle.checked; saveSettings(); });
+    replayBtn.addEventListener("click", () => { setPanel(false); startIntro(); });
+
+    function setPanel(open) {
+      panel.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", String(open));
+    }
+    btn.addEventListener("click", e => { e.stopPropagation(); setPanel(!panel.classList.contains("open")); });
+    panel.addEventListener("click", e => e.stopPropagation());
+    document.addEventListener("click", () => setPanel(false));
+    document.addEventListener("keydown", e => { if (e.key === "Escape") { setPanel(false); } });
+
+    rebuildMovies();
+    applySettings();
+  </script>
+</body>
+</html>
