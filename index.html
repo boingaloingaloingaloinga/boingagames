@@ -1378,6 +1378,11 @@
           document.body.style.backgroundSize = '100% 120%';
           document.body.style.backgroundAttachment = 'fixed';
           break;
+        case 'james':
+          document.body.style.background = 'url("james.png")';
+          document.body.style.backgroundSize = '100% 120%';
+          document.body.style.backgroundAttachment = 'fixed';
+          break;
         case 'custom': {
           const savedCustomBackground = localStorage.getItem('customBackground');
           if (savedCustomBackground) {
@@ -1516,6 +1521,9 @@
     document.getElementById('codeInput').addEventListener('input', function () {
       if (this.value.toLowerCase() === 'gaster') {
         window.location.reload();
+      }
+      if (this.value.toLowerCase() === 'james') {
+        function applyTheme(theme);
       }
     });
 
