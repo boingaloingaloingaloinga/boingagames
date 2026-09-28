@@ -1518,13 +1518,12 @@
     document.getElementById('curiousGeorge').onclick = openCodeBar;
     document.querySelector('.closeBtn').onclick = closeCodeBar;
 
-    document.getElementById('codeInput').addEventListener('input', function () {
-      if (this.value.toLowerCase() === 'gaster') {
-        window.location.reload();
-      }
-      if (this.value.toLowerCase() === 'james') {
-        function applyTheme(theme);
-      }
+    document.getElementById('codeInput').addEventListener('input', function () { 
+        if (this.value.toLowerCase() === 'gaster') { 
+            window.location.reload(); 
+        } else if (this.value.toLowerCase() === 'james') { 
+            applyTheme('james');
+        } 
     });
 
     document.getElementById('submitCode').onclick = function () {
