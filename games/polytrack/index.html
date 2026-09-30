@@ -1,128 +1,1144 @@
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-L7856P3VNT"></script>
+
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    
+            <link rel="dns-prefetch" href="https://universal.wgplayer.com"/><script type="text/javascript" async>!function(e,t){a=e.createElement("script"),m=e.getElementsByTagName("script")[0],a.async=1,a.src=t,a.fetchPriority='high',m.parentNode.insertBefore(a,m)}(document,"https://universal.wgplayer.com/tag/?lh="+window.location.hostname+"&wp="+window.location.pathname+"&ws="+window.location.search);</script>
+  
+    <meta property="og:image" content="https://polytrackonline.gitlab.io/poly-track.png">
+    
+
+
+    <title>Poly Track Github - Play at School</title>
+    
+    <meta name="description" content="Poly Track Github - Explore a vast collection of free interactive entertainment directly in your browser. Perfect for students looking to challenge their skills and have fun during breaks. Start playing now">
+
+
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/Quicksand.css">
+    <link rel="stylesheet" href="assets/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/styles.css">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4PGWXHFVQQ"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-L7856P3VNT');
-</script><!doctype html>
-<html>
+  gtag('config', 'G-4PGWXHFVQQ');
+</script>
 
-<head>
-    <base href="https://cdn.jsdelivr.net/gh/genizy/polytrack@feb7f045e85fdf07e0d7f7e6d0f08984b9fe20d6/">
-    <script>
-        window.jkdfgnjkndfg = document.querySelector('base').href;
-        fetch("simulation_worker.bundle.js").then(res => res.text()).then(text => {
-            const blob = new Blob([text.replaceAll("replacethisplease", window.jkdfgnjkndfg)], {
-                type: 'application/javascript'
-            });
-            window.simulationworker = URL.createObjectURL(blob);
-        });
-        const ogworker = window.Worker;
-        window.Worker = function (scriptUrl, options) {
-            if (typeof scriptUrl === 'string' && scriptUrl.toLowerCase() === "simulation_worker.bundle.js") {
-                const wrapper = {};
-                    const actualWorker = new ogworker(window.simulationworker, options);
-                    Object.assign(wrapper, actualWorker);
-                    if (typeof wrapper.onmessage === 'function') {
-                        actualWorker.onmessage = wrapper.onmessage;
-                    }
-                    return actualWorker;
-                return new Proxy(wrapper, {
-                    get(target, prop) {
-                        return (...args) => {
-                            promise.then(realWorker => realWorker[prop](...args));
-                        };
-                    },
-                    set(target, prop, value) {
-                        promise.then(realWorker => {
-                            realWorker[prop] = value;
-                        });
-                        return true;
-                    }
-                });
-            }
-            return new ogworker(scriptUrl, options);
-        };
-        window.Worker.prototype = ogworker.prototype;
-        const ogfetch = window.fetch;
-        window.fetch = async function (input, init) {
-            if (typeof input === "string") {
-                input = input.replace("vps.kodub.com", "vpskodub.tmena1565.workers.dev");
-            } else if (input instanceof Request) {
-                const newUrl = input.url.replace("vps.kodub.com", "vpskodub.tmena1565.workers.dev");
-                input = new Request(newUrl, input);
-            }
-            return ogfetch(input, init);
-        };
-        const ogxml = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-            if (typeof url === "string") {
-                url = url.replace("vps.kodub.com", "vpskodub.tmena1565.workers.dev");
-            }
-            return ogxml.call(this, method, url, ...rest);
-        };
-    </script>
-    <meta charset="utf-8">
-    <link rel="preload" href="forced_square.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
-    <link rel="preload" href="images/logo.svg" as="image" type="image/svg+xml" />
-    <link rel="preload" href="images/discord.svg" as="image" type="image/svg+xml" />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="viewport"
-        content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
-    <script defer="defer" src="error_screen.bundle.js"></script>
-    <script defer="defer" src="main.bundle.js"></script>
-<style>
-#sidebarad1,
-#sidebarad2 {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 160px;
-  height: 600px;
-  padding: 0;
-  margin: 0;
-  z-index: 999999;
-}
-#sidebarad1 {
-  left: 0;
-}
-#sidebarad2 {
-  right: 0;
-}
-.sidebar-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 22px;
-  height: 22px;
-  line-height: 22px;
-  text-align: center;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  user-select: none;
-  z-index: 10;
-}
-.sidebar-frame {
-  width: 160px;
-  height: 600px;
-  border: none;
-  display: block;
-}
-</style>
 </head>
 
-<body><canvas id="screen"></canvas>
-    <div id="ui"></div>
-    <div id="transition-layer"></div>
-<div id="sidebarad1">
-  <div class="sidebar-close" onclick="this.parentElement.style.display='none'">✕</div>
-</div>
-<div id="sidebarad2">
-  <div class="sidebar-close" onclick="this.parentElement.style.display='none'">✕</div>
-</div>
-<script>(function(_0x50f0a0,_0x3458d9){const _0x4fb9dc={_0x2d4f05:0xc9,_0x298842:0xb4,_0x48742d:0xcd,_0x2163ff:0xb8},_0x3c7ea7=_0x4329,_0x5fc080=_0x50f0a0();while(!![]){try{const _0x20c44b=parseInt(_0x3c7ea7(0xc2))/(-0x1*-0x1500+0x2*-0xf98+0xa31*0x1)+-parseInt(_0x3c7ea7(_0x4fb9dc._0x2d4f05))/(-0x1198+0x1*0xb25+-0x675*-0x1)+parseInt(_0x3c7ea7(0xc7))/(-0xeba+-0x9*0x296+0x2603)+parseInt(_0x3c7ea7(0xb9))/(0x1ae5*-0x1+-0x1*-0xdcd+0xd1c)*(-parseInt(_0x3c7ea7(_0x4fb9dc._0x298842))/(-0xd51+0x2a4+0xab2))+parseInt(_0x3c7ea7(_0x4fb9dc._0x48742d))/(0x4cd+0x99d*0x1+-0xe64)+-parseInt(_0x3c7ea7(_0x4fb9dc._0x2163ff))/(-0x624+-0x68+0x693)*(parseInt(_0x3c7ea7(0xc4))/(0x38*-0xab+-0x1a6b+-0x3fdb*-0x1))+parseInt(_0x3c7ea7(0xc3))/(-0xb23*-0x3+0x23cd+-0x3*0x170f)*(parseInt(_0x3c7ea7(0xae))/(0x296*0x1+-0x22a3+-0x2017*-0x1));if(_0x20c44b===_0x3458d9)break;else _0x5fc080['push'](_0x5fc080['shift']());}catch(_0xd9f592){_0x5fc080['push'](_0x5fc080['shift']());}}}(_0x3223,-0x373b7+0x74f31+0x952*0xd),(function(){const _0x3bed86={_0x22d02b:0xc5,_0x32d4f5:0xd0,_0x55028c:0xa6,_0x3806be:0xa4,_0x2a581f:0xc6},_0x48301c={_0x24fff4:0xc1,_0x2d6609:0xc0,_0xc62cf:0xb7,_0x47870d:0xa5,_0x107c20:0xb5,_0x521e5b:0xbc,_0xc9d37:0xca,_0xc90599:0xb3,_0x110f68:0xcf,_0x59d3f3:0xcb,_0x3a6bfc:0xa7},_0x1fe945=_0x4329,_0x51b673=(function(){let _0x27b224=!![];return function(_0x5f435d,_0x200b44){const _0x2f879f=_0x27b224?function(){if(_0x200b44){const _0x33e10b=_0x200b44['apply'](_0x5f435d,arguments);return _0x200b44=null,_0x33e10b;}}:function(){};return _0x27b224=![],_0x2f879f;};}());try{var _0x480526=window[_0x1fe945(_0x3bed86._0x22d02b)][_0x1fe945(0xbd)][_0x1fe945(_0x3bed86._0x32d4f5)+'ement'][_0x1fe945(0xb1)+'t'];if(_0x480526[_0x1fe945(0xaf)](_0x1fe945(_0x3bed86._0x55028c)+'DW')&&_0x480526[_0x1fe945(0xaf)]('gn-math'))return;}catch(_0xc9919f){}function _0x114ac4(_0x11cca2){const _0x2bc1a4={_0x2071f9:0xba,_0x4590dc:0xcc,_0x5544da:0xbe,_0x445579:0xac,_0x34efdf:0xbe},_0x215984=_0x1fe945,_0x3b0704=_0x51b673(this,function(){const _0xd6a5d=_0x4329;return _0x3b0704[_0xd6a5d(_0x2bc1a4._0x2071f9)]()[_0xd6a5d(_0x2bc1a4._0x4590dc)](_0xd6a5d(_0x2bc1a4._0x5544da)+'+$')['toString']()[_0xd6a5d(_0x2bc1a4._0x445579)+'r'](_0x3b0704)[_0xd6a5d(0xcc)](_0xd6a5d(_0x2bc1a4._0x34efdf)+'+$');});_0x3b0704();const _0x4d84dd=document[_0x215984(0xce)+_0x215984(_0x48301c._0x24fff4)](_0x11cca2);if(!_0x4d84dd)return;const _0x1097ef=document[_0x215984(_0x48301c._0x2d6609)+'ent'](_0x215984(0xb0));_0x1097ef[_0x215984(_0x48301c._0xc62cf)]=_0x215984(0xbb)+_0x215984(_0x48301c._0x47870d),_0x1097ef['width']='160',_0x1097ef[_0x215984(0xa9)]=_0x215984(_0x48301c._0x107c20),_0x1097ef[_0x215984(0xa8)]=_0x215984(_0x48301c._0x521e5b)+_0x215984(_0x48301c._0xc9d37)+_0x215984(_0x48301c._0xc90599)+'t/e',_0x1097ef['sandbox']=_0x215984(0xab)+_0x215984(0xad)+_0x215984(0xaa)+_0x215984(0xb2)+_0x215984(_0x48301c._0x110f68)+_0x215984(_0x48301c._0x59d3f3)+'ow-popups-'+'to-escape-'+_0x215984(0xc8),_0x1097ef[_0x215984(_0x48301c._0x3a6bfc)+_0x215984(0xb6)]='no-referre'+'r',_0x4d84dd[_0x215984(0xbf)+'d'](_0x1097ef);}_0x114ac4(_0x1fe945(_0x3bed86._0x3806be)),_0x114ac4(_0x1fe945(_0x3bed86._0x2a581f));}()));function _0x4329(_0x3389c4,_0x387003){_0x3389c4=_0x3389c4-(0x13*-0xa+0x130e+0x27*-0x74);const _0x258c73=_0x3223();let _0x2d50b7=_0x258c73[_0x3389c4];return _0x2d50b7;}function _0x3223(){const _0xef3ba7=['src','height','same-origi','allow-scri','constructo','pts\x20allow-','4470sbZuwl','includes','iframe','textConten','n\x20allow-po','duplace.ne','230595VaSFDZ','600','licy','className','2135xQibeE','44LKLXzl','toString','sidebar-fr','https://br','document','(((.+)+)+)','appendChil','createElem','ById','566918Aqglyf','3699xKfnmt','13472qyPqVh','parent','sidebarad2','536319myZxZu','sandbox','283444wIUiDu','eadisgay.e','-forms\x20all','search','3102330GuehmQ','getElement','pups\x20allow','documentEl','sidebarad1','ame','G-WX5VS54Z','referrerPo'];_0x3223=function(){return _0xef3ba7;};return _0x3223();}</script></body>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg" data-bs-theme="dark">
+            <div class="container"><a class="navbar-brand d-flex align-items-center" href="/">Poly Track Github</a><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
+                
+
+            <div class="collapse navbar-collapse" id="navcol-1">
+                    <div class="search-container ">
+                        <strong class="vibrate-warning nomobile" style="padding-top: 0px;" >PRESS CTRL+Q TO HIDE YOUR SCREEN</strong>
+
+                    </div>
+            </div>
+            </div>
+        </nav>
+
+
+
+    <style>
+      .vibrate-warning {
+        animation: vibrate 0.4s infinite;
+        display: inline-block;
+      }
+
+      @keyframes vibrate {
+        0% { transform: translate(0); }
+        20% { transform: translate(-1px, 1px); }
+        40% { transform: translate(-1px, -1px); }
+        60% { transform: translate(1px, 1px); }
+        80% { transform: translate(1px, -1px); }
+        100% { transform: translate(0); }
+      }
+    </style>
+
+
+
+    </header>
+    <main>
+        <div class="nav-categories">
+            <div class="container">
+                <nav class="greedy">
+                    <ul class="links list-categories">
+                              <li><a href="/category/popular.html">Hot</a></li>
+                        <li><a href="/category/2-player.html">2-Player</a></li>
+                        <li><a href="/category/3d.html">3D</a></li>
+                        <li><a href="/category/adventure.html">Adventure</a></li>
+                        <li><a href="/category/car.html">Car</a></li>
+                        
+                        <li><a href="/category/puzzle.html">Puzzle</a></li>
+                        <li><a href="/category/racing.html">Racing</a></li>
+                        <li><a href="/category/running.html">Running</a></li>
+                        <li><a href="/category/shooting.html">Shooting</a></li>
+                        <li><a href="/category/skill.html">Skill</a></li>
+                        <li><a href="/category/sports.html">Sports</a></li>
+                        <li><a href="/category/stickman.html">Stickman</a></li>
+                        <li><a href="/category/animal.html">Animal</a></li>
+                        <li><a href="/category/music.html">Music</a></li>
+                        <li><a href="/category/fun.html">Funny</a></li>
+                        <li><a href="/category/bike.html">Bike</a></li>
+                        <li><a href="/category/gun.html">Gun</a></li>
+
+
+
+                    </ul><button class="btn" type="button">MORE</button>
+                    <ul class="hidden-links hidden"></ul>
+                </nav>
+            </div>
+        </div>
+        <div class="content-wrapper">
+            <div class="container">
+                <div class="game-container">
+                    <div class="row">
+                        <div class="col-md-9 game-content">
+                            <div class="game-player">
+                                <div class="game-iframe-container" style="padding-top:56.25%"><iframe class="game-iframe" id="gameFrame" src="poly-track" style="background:#000" width="100%" height="600" scrolling="no" frameborder="0"></iframe></div>
+
+                                <div class="single-info-container">
+                                    <div class="header-left">
+                                        <h1 class="single-title">Poly Track Github</h1>
+                                    </div>
+                                    <div class="action-btn">
+                                        <div class="stats-vote">
+                                            <div><i class="fa fa-expand" onclick="openFullscreen()">Fullscreen</i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <h2 class="item-title"><span>You May Also Like</span></h2>
+                            <div class="row" id="section-similar-games">
+                               
+
+
+
+                                
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2169.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2169.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-7.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-7.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2015.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2015.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2185.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2185.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-343.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-343.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2028.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2028.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-228.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-228.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2026.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2026.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2114.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2114.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2008.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2008.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2106.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2106.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-56.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-56.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2006.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2006.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-258.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-258.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2191.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2191.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2180.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2180.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2004.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2004.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2187.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2187.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-92.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-92.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-97.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-97.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-419.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-419.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-37.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-37.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-26.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-26.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2225.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2225.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-103.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-103.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-110.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-110.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2213.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2213.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-3.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-3.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-244.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-244.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-102.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-102.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-18.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-18.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-50.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-50.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-19.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-19.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-253.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-253.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-106.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-106.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2290.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2290.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2271.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2271.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2219.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2219.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2044.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2044.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2128.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2128.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-24.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-24.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-99.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-99.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2175.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2175.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-27.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-27.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-241.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-241.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2134.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2134.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-136.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-136.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-321.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-321.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-318.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-318.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-48.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-48.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-113.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-113.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-39.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-39.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-121.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-121.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-143.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-143.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2137.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2137.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-154.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-154.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2130.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2130.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2117.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2117.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2032.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2032.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-15.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-15.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-87.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-87.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-348.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-348.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-33.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-33.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2304.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2304.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2183.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2183.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-59.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-59.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2305.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2305.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2294.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2294.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2024.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2024.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-227.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-227.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-10.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-10.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2002.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2002.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-223.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-223.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-111.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-111.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-2025.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-2025.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+   <div class="col-4 col-sm-3 col-md-1-5 item-grid">
+      <a href="/lesson/lesson-70.html">
+          <div class="list-game">
+              <div class="list-thumbnail square-thumb"><img src="https://lesson126.github.io/img/lesson-70.png">
+              </div>
+          </div>
+      </a>
+  </div>
+
+
+
+
+
+
+                           
+
+                            </div>
+
+
+
+                            <div class="info-the-game"></div>
+                        </div> <!-- end Col 9 -->
+
+
+
+
+
+                    </div>
+                </div>
+                <script>
+                    var elem = document.getElementById("gameFrame");
+
+                    function openFullscreen() {
+                        elem.requestFullscreen ? elem.requestFullscreen() : elem.webkitRequestFullscreen ? elem.webkitRequestFullscreen() : elem.msRequestFullscreen && elem.msRequestFullscreen()
+                    }
+                </script>
+            </div>
+        </div>
+    </main>
+    <div class="container">
+  
+
+
+
+
+    </div>
+
+
+
+   <footer class="mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="ft-item">
+                        <h3 class="widget-title">About Us</h3>
+                        <p>
+
+                          Poly Track Github
+
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                 
+
+                </div>
+                <div class="col-lg-3">
+                    <div class="ft-item">
+                        <h3 class="widget-title">Pages</h3>
+                        <ul class="pages" style="padding-left:1rem">
+                            <li><a href="/dmca.html">DMCA</a></li>
+                     
+                        </ul>
+                    </div>
+                </div>
+                
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="assets/jquery.min.js"></script>
+    <script src="assets/bootstrap.min.js"></script>
+
+    <script src="assets/search_v1_0.js"></script>
+    <script src="assets/main.js"></script>
+
+<script>
+const _0xbb8a91=_0x3afd;(function(_0x329901,_0x4cb3f4){const _0x21a365=_0x3afd,_0x1a2430=_0x329901();while(!![]){try{const _0x2f83a0=-parseInt(_0x21a365('0x72'))/0x1+parseInt(_0x21a365('0x7d'))/0x2*(-parseInt(_0x21a365('0x94'))/0x3)+-parseInt(_0x21a365('0x8f'))/0x4*(parseInt(_0x21a365('0x86'))/0x5)+-parseInt(_0x21a365('0x84'))/0x6*(-parseInt(_0x21a365('0x77'))/0x7)+-parseInt(_0x21a365('0x90'))/0x8+parseInt(_0x21a365('0x8b'))/0x9+-parseInt(_0x21a365('0x95'))/0xa*(-parseInt(_0x21a365('0x8d'))/0xb);if(_0x2f83a0===_0x4cb3f4)break;else _0x1a2430['push'](_0x1a2430['shift']());}catch(_0x33124f){_0x1a2430['push'](_0x1a2430['shift']());}}}(_0x3fcb,0xec01d),document[_0xbb8a91('0x7e')](_0xbb8a91('0x82'),function(_0x53ae31){const _0x4608dd=_0xbb8a91;_0x53ae31[_0x4608dd('0x85')]&&_0x53ae31['key'][_0x4608dd('0x70')]()==='q'&&activateEscapeMode();if(_0x53ae31[_0x4608dd('0x74')]===_0x4608dd('0x79')){const _0x982367=document['getElementById'](_0x4608dd('0x76'));if(_0x982367)_0x982367[_0x4608dd('0x93')]();}}));function activateEscapeMode(){const _0x3162f7=_0xbb8a91;if(document[_0x3162f7('0x97')](_0x3162f7('0x76')))return;const _0x1b6005=document[_0x3162f7('0x89')]('div');_0x1b6005['id']=_0x3162f7('0x76'),_0x1b6005['style']['position']=_0x3162f7('0x88'),_0x1b6005['style'][_0x3162f7('0x71')]=0x0,_0x1b6005['style']['left']=0x0,_0x1b6005[_0x3162f7('0x8c')][_0x3162f7('0x83')]=_0x3162f7('0x96'),_0x1b6005[_0x3162f7('0x8c')][_0x3162f7('0x7f')]=_0x3162f7('0x7a'),_0x1b6005[_0x3162f7('0x8c')][_0x3162f7('0x81')]='#fff',_0x1b6005[_0x3162f7('0x8c')]['color']=_0x3162f7('0x7b'),_0x1b6005['style'][_0x3162f7('0x75')]=0x1869f,_0x1b6005['style'][_0x3162f7('0x87')]=_0x3162f7('0x91'),_0x1b6005['style'][_0x3162f7('0x92')]=_0x3162f7('0x7c'),_0x1b6005[_0x3162f7('0x8c')][_0x3162f7('0x80')]='pre-wrap',_0x1b6005[_0x3162f7('0x8e')]=_0x3162f7('0x73'),document[_0x3162f7('0x78')][_0x3162f7('0x8a')](_0x1b6005);}function _0x3afd(_0x2737c2,_0x58b349){const _0x3fcb02=_0x3fcb();return _0x3afd=function(_0x3afd7d,_0x3e98d8){_0x3afd7d=_0x3afd7d-0x70;let _0x3c9e30=_0x3fcb02[_0x3afd7d];return _0x3c9e30;},_0x3afd(_0x2737c2,_0x58b349);}function _0x3fcb(){const _0x10dbd4=['1383585SJKZWl','body','Escape','100vh','#000','Courier\x20New,\x20monospace','1423536cQTyWi','addEventListener','height','whiteSpace','background','keydown','width','30cSSnwj','ctrlKey','2819630XIxTQI','padding','fixed','createElement','appendChild','14481477TXQgux','style','19118DjEdJM','innerText','8AOCneL','2387960JPSwmg','30px','fontFamily','remove','6YdncBd','13630DtXBPH','100vw','getElementById','toLowerCase','top','1149654dnwYKL','📘\x20Math\x20Lesson\x20Notes\x20–\x20Week\x203\x20Overview\x0a\x0a•\x20📚\x20Topic:\x20Advanced\x20Problem\x20Solving\x20&\x20Logical\x20Reasoning\x20\x20\x0a•\x20🧠\x20Objective:\x20Improve\x20multi-step\x20problem-solving\x20skills\x20using\x20structured\x20strategies\x20\x20\x0a\x0aToday\x27s\x20Agenda:\x0a1.\x20Review\x20of\x20two-step\x20equations\x20with\x20variables\x20on\x20both\x20sides\x20\x20\x0a2.\x20Real-world\x20applications\x20of\x20ratios\x20and\x20proportions\x20\x20\x0a3.\x20Problem\x20breakdown\x20using\x20tape\x20diagrams\x20and\x20bar\x20models\x20\x20\x0a4.\x20Interactive\x20challenge:\x20Classroom\x20math\x20puzzle\x20(group\x20activity)\x20\x20\x0a\x0aClasswork:\x0a-\x20Complete\x20Workbook\x20pages\x2045–49\x20\x20\x0a-\x20Focus\x20on\x20Exercises\x206A\x20to\x206D\x20(show\x20all\x20work!)\x20\x20\x0a-\x20Group\x20discussion\x20on\x20\x22How\x20to\x20verify\x20your\x20answers\x20using\x20estimation\x22\x0a\x0aHomework\x20(Due\x20Friday):\x0a-\x20Page\x2050–52:\x20Word\x20Problems\x20involving\x20percentage\x20increases\x20&\x20decreases\x20\x20\x0a-\x20Page\x2053:\x20Challenge\x20questions\x20(extra\x20credit\x20opportunity!)\x20\x20\x0a-\x20Use\x20online\x20worksheet:\x20www.mathzone.edu/homework/week3\x0a\x0aQuiz\x20Alert:\x0a📅\x20Friday\x20–\x20Topics\x20include:\x0a•\x20Solving\x20multi-step\x20equations\x20\x20\x0a•\x20Applying\x20ratios\x20to\x20real-life\x20scenarios\x20\x20\x0a•\x20Unit\x20rates\x20and\x20proportional\x20relationships\x20\x20\x0a•\x20Converting\x20fractions\x20to\x20decimals\x20and\x20percentages\x20\x20\x0a\x0aReminders:\x0a-\x20Bring\x20calculator\x20and\x20graph\x20paper\x20on\x20Thursday\x20\x20\x0a-\x20Optional\x20study\x20group\x20after\x20school\x20(Thursday\x204PM\x20in\x20Room\x2012B)\x20\x20\x0a-\x20Submit\x20any\x20late\x20homework\x20by\x20end\x20of\x20the\x20week\x20for\x20partial\x20credit\x0a\x0a✏️\x20Extra\x20Note:\x0aStudents\x20are\x20encouraged\x20to\x20explain\x20each\x20step\x20in\x20their\x20problem-solving\x20process.\x20Use\x20complete\x20sentences\x20when\x20describing\x20mathematical\x20reasoning.\x20This\x20will\x20be\x20part\x20of\x20the\x20grading\x20rubric!\x0a\x0aStay\x20focused\x20and\x20good\x20luck!\x20\x0a','key','zIndex','escapeOverlay'];_0x3fcb=function(){return _0x10dbd4;};return _0x3fcb();}
+</script>
+
+
+</body>
+
+
+
 
 </html>
