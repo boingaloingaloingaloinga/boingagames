@@ -52,6 +52,138 @@
       gap: 10px;
     }
 
+  /* ---------- Statistics button + panel ---------- */
+#statsBtn {
+  position: fixed;
+  top: 14px;
+  right: 58px; /* sits just left of the gear */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#statsBtn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+}
+
+#statsOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+}
+
+#statsOverlay.active {
+  display: flex;
+}
+
+#statsOverlay .settings-panel {
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-card {
+  flex: 1;
+  text-align: center;
+  padding: 12px 6px;
+  border: 2px solid #ffcc00;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stat-value {
+  display: block;
+  font-size: 26px;
+}
+
+.stat-label {
+  font-size: 13px;
+}
+
+.stats-controls {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+#statsSearch,
+#statsSort {
+  padding: 8px;
+  background: transparent;
+  border: 3px solid yellow;
+  color: white;
+  outline: none;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+#statsSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+#statsSort option {
+  background: #1e1e2f;
+}
+
+.stats-game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #555;
+  font-size: 14px;
+}
+
+.stats-game-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-game-nums {
+  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stats-empty {
+  text-align: center;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.stats-disclaimer {
+  font-size: 11px;
+  opacity: 0.8;
+  margin: 12px 0 0 0;
+}
+
     .boinga-container img {
       height: 50px;
     }
@@ -521,13 +653,13 @@
       position: fixed;
       top: 14px;
       right: 14px;
-      width: 42px;
-      height: 42px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: #1e1e2f;
       border: 2px solid #ffcc00;
       color: #ffcc00;
-      font-size: 22px;
+      font-size: 19px;
       line-height: 1;
       cursor: pointer;
       display: flex;
@@ -664,6 +796,7 @@
 
   <!-- ================= Settings (gear icon always floats top-right) ================= -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
+  <button id="statsBtn" title="Statistics">📊</button>
 
   <div id="settingsOverlay">
     <div class="settings-panel">
@@ -687,6 +820,41 @@
     </div>
   </div>
 
+  <div id="statsOverlay">
+  <div class="settings-panel">
+    <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
+    <h2>Statistics</h2>
+
+    <div class="stats-summary">
+      <div class="stat-card">
+        <span class="stat-value" id="statSiteTime">0s</span>
+        <span class="stat-label">Time on site</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="statTotalOpens">0</span>
+        <span class="stat-label">Games opened</span>
+      </div>
+    </div>
+
+    <h3>Game Stats</h3>
+    <div class="stats-controls">
+      <input type="text" id="statsSearch" placeholder="Search played games...">
+      <select id="statsSort">
+        <option value="time">Most playtime</option>
+        <option value="opens">Most opened</option>
+        <option value="name">A-Z</option>
+      </select>
+    </div>
+    <div id="statsGameList"></div>
+
+    <p class="stats-disclaimer">
+      * Games that open on other websites (like Club Penguin and Crazy Cattle 3D) are not included.<br>
+      * All statistics start from 10/2/2026.<br>
+      * Stats are saved in this browser only.
+    </p>
+  </div>
+</div>
+
   <!-- ================= Header ================= -->
   <div class="boinga-container">
     <img src="https://files.catbox.moe/vbm3pi.gif" alt="Boinga GIF">
@@ -699,7 +867,7 @@
   <p class="changelog">CHANGELOG:</p>
   <p class="changelog">9/22/2026 Movies - Added Iron Man! 🤖</p>
   <p class="changelog">10/1/2026 Games - Added EarthBound Beginnings, Star Fox 64, and Metal Gear (original)! 🌎🦊⚙️</p>
-  <p class="changelog">10/2/2026 Adjustments - It's been made so all games will be played on the site, rather than going to individual game links. This will be useful for future updates.</p>
+  <p class="changelog">10/2/2026 Adjustments - Added Statistics! This allows you to see info about things you've done on the site. Also, games are now all on the site rather than redirects (with the exception of fully off-site games), so tab cloaking fully works and also makes it so statistics works better.</p>
 
   <p class="blake">Random Boinga Hater Of The Day: 9/30/2026 Dana</p>
   <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
@@ -1153,13 +1321,15 @@
       frame.src = url;
       overlay.classList.add('active');
       document.body.style.overflow = 'hidden';
-      frame.focus(); // so keyboard controls work right away
+      frame.focus();
+      if (window.Stats) Stats.gameOpened(url);
     }
 
     function closeGame() {
       overlay.classList.remove('active');
       frame.src = 'about:blank'; // unloads the game so audio stops
       document.body.style.overflow = '';
+      if (window.Stats) Stats.gameClosed();
     }
 
     window.openGame = openGame; // so other scripts (Pokemon links) can use it
@@ -1177,6 +1347,160 @@
 
       e.preventDefault();
       openGame(href);
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    const KEY = 'siteStats';
+    const AWAY_CAP = 120; // seconds of off-tab time that still count
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY));
+        if (d && d.games) return d;
+      } catch (e) {}
+      return { siteTime: 0, totalOpens: 0, games: {} };
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    const data = load();
+    let currentId = null;
+    let hiddenAt = null;
+    let ticks = 0;
+
+    function addTime(sec) {
+      data.siteTime += sec;
+      if (currentId && data.games[currentId]) data.games[currentId].time += sec;
+    }
+
+    // Count a second whenever the tab is visible (playing a game counts too)
+    setInterval(function () {
+      if (document.visibilityState === 'visible') {
+        addTime(1);
+        if (++ticks % 5 === 0) save();
+      }
+    }, 1000);
+
+    // Off-tab time only counts up to AWAY_CAP seconds
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now();
+        save();
+      } else if (hiddenAt) {
+        const away = (Date.now() - hiddenAt) / 1000;
+        hiddenAt = null;
+        addTime(Math.min(away, AWAY_CAP));
+        save();
+      }
+    });
+    window.addEventListener('pagehide', save);
+
+    // Work out which game a URL belongs to
+    function gameInfo(url) {
+      const m = url.match(/games\/([^\/?#]*)/);
+      const slug = m && m[1] ? decodeURIComponent(m[1]) : 'clusterrush';
+      const link = Array.from(document.querySelectorAll('#games a'))
+        .find(a => a.getAttribute('href') === url) || document.getElementById(slug + '-link');
+      const img = link && link.querySelector('img');
+      return { id: slug, name: img ? img.alt : slug };
+    }
+
+    function gameOpened(url) {
+      const info = gameInfo(url);
+      const g = data.games[info.id] || (data.games[info.id] = { name: info.name, opens: 0, time: 0 });
+      g.name = info.name;
+      g.opens++;
+      data.totalOpens++;
+      currentId = info.id;
+      save();
+    }
+
+    function gameClosed() {
+      currentId = null;
+      save();
+    }
+
+    window.Stats = { gameOpened: gameOpened, gameClosed: gameClosed };
+
+    // ---------- UI ----------
+    function fmt(s) {
+      s = Math.floor(s);
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      if (h) return h + 'h ' + m + 'm';
+      if (m) return m + 'm ' + sec + 's';
+      return sec + 's';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('statsBtn');
+      const overlay = document.getElementById('statsOverlay');
+      const closeBtn = document.getElementById('statsCloseBtn');
+      const siteTimeEl = document.getElementById('statSiteTime');
+      const opensEl = document.getElementById('statTotalOpens');
+      const search = document.getElementById('statsSearch');
+      const sort = document.getElementById('statsSort');
+      const list = document.getElementById('statsGameList');
+      let refresh = null;
+
+      function render() {
+        siteTimeEl.textContent = fmt(data.siteTime);
+        opensEl.textContent = data.totalOpens;
+
+        const q = search.value.toLowerCase().trim();
+        const rows = Object.values(data.games).filter(g => g.name.toLowerCase().includes(q));
+
+        if (sort.value === 'time') rows.sort((a, b) => b.time - a.time);
+        else if (sort.value === 'opens') rows.sort((a, b) => b.opens - a.opens);
+        else rows.sort((a, b) => a.name.localeCompare(b.name));
+
+        list.innerHTML = '';
+        if (rows.length === 0) {
+          const p = document.createElement('p');
+          p.className = 'stats-empty';
+          p.textContent = Object.keys(data.games).length === 0
+            ? 'No games played yet!'
+            : 'No played games match your search.';
+          list.appendChild(p);
+          return;
+        }
+
+        rows.forEach(g => {
+          const row = document.createElement('div');
+          row.className = 'stats-game-row';
+
+          const name = document.createElement('span');
+          name.className = 'stats-game-name';
+          name.textContent = g.name;
+
+          const nums = document.createElement('span');
+          nums.className = 'stats-game-nums';
+          nums.textContent = fmt(g.time) + ' · opened ' + g.opens + 'x';
+
+          row.appendChild(name);
+          row.appendChild(nums);
+          list.appendChild(row);
+        });
+      }
+
+      function open() {
+        overlay.classList.add('active');
+        render();
+        refresh = setInterval(render, 1000); // live-updating numbers
+      }
+      function close() {
+        overlay.classList.remove('active');
+        clearInterval(refresh);
+      }
+
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+      search.addEventListener('input', render);
+      sort.addEventListener('change', render);
     });
   })();
 </script>
