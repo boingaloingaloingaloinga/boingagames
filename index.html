@@ -72,6 +72,56 @@
       50%      { transform: translateY(-5px); }
     }
 
+    /* ---------- Fullscreen game overlay ---------- */
+#gameOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647; /* max z-index: always above everything, including the settings gear */
+  background: #000;
+}
+
+#gameOverlay.active {
+  display: block;
+}
+
+#gameFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+/* Same look as #codeInputBar .closeBtn, just smaller and a bit see-through */
+#gameCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffcc00;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  z-index: 2;
+  transition: opacity 0.2s;
+}
+
+#gameCloseBtn:hover {
+  opacity: 1;
+  color: #1e1e2f;
+  background: #ffcc00;
+}
+
     p.quote {
       font-size: 24px;
       font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -649,7 +699,7 @@
   <p class="changelog">CHANGELOG:</p>
   <p class="changelog">9/22/2026 Movies - Added Iron Man! 🤖</p>
   <p class="changelog">10/1/2026 Games - Added EarthBound Beginnings, Star Fox 64, and Metal Gear (original)! 🌎🦊⚙️</p>
-  <p class="changelog">10/1/2026 Adjustments - PolyTrack and Cuphead has been fixed! FNAF Games have been re-added! Hollow Knight and Silksong have been taken off for now. 🏎️🐻😔</p>
+  <p class="changelog">10/2/2026 Adjustments - It's been made so all games will be played on the site, rather than going to individual game links. This will be useful for future updates.</p>
 
   <p class="blake">Random Boinga Hater Of The Day: 9/30/2026 Dana</p>
   <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
@@ -1085,7 +1135,51 @@
     <img src="xp-window.jpg" alt="Windows XP Window" class="xp-window-image">
   </div>
 
+<div id="gameOverlay">
+  <iframe id="gameFrame" allow="fullscreen; autoplay; gamepad; clipboard-write; cross-origin-isolated" allowfullscreen></iframe>
+  <div id="gameCloseBtn" title="Close game">&times;</div>
+</div>
+
   <!-- ================= Scripts ================= -->
+
+  <!-- Game overlay -->
+<script>
+  (function () {
+    const overlay = document.getElementById('gameOverlay');
+    const frame = document.getElementById('gameFrame');
+    const closeBtn = document.getElementById('gameCloseBtn');
+
+    function openGame(url) {
+      frame.src = url;
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      frame.focus(); // so keyboard controls work right away
+    }
+
+    function closeGame() {
+      overlay.classList.remove('active');
+      frame.src = 'about:blank'; // unloads the game so audio stops
+      document.body.style.overflow = '';
+    }
+
+    window.openGame = openGame; // so other scripts (Pokemon links) can use it
+    closeBtn.addEventListener('click', closeGame);
+
+    // Intercept clicks on game links (main grid + favorites bar)
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.game-star')) return;
+      const a = e.target.closest('#games a, #favorites-bar a');
+      if (!a) return;
+
+      const href = a.getAttribute('href');
+      if (!href) return;                             // Pokemon links handle themselves
+      if (/^https?:\/\//i.test(href)) return;        // external sites open normally
+
+      e.preventDefault();
+      openGame(href);
+    });
+  })();
+</script>
 
   <!-- Favorites (star) system -->
   <script>
@@ -1440,21 +1534,21 @@
       event.preventDefault();
       const choice = confirm('OK for Normal, Cancel for Randomizer.');
       const baseURL = 'games/firered/';
-      window.location.href = choice ? baseURL : baseURL + 'random/';
+      openGame(choice ? baseURL : baseURL + 'random/');
     });
 
     document.getElementById('gold-link').addEventListener('click', function (event) {
       event.preventDefault();
       const choice = confirm('Press OK for Normal, Cancel for Randomized.');
       const baseURL = 'games/gold/';
-      window.location.href = choice ? baseURL : baseURL + 'random/';
+      openGame(choice ? baseURL : baseURL + 'random/');
     });
 
     document.getElementById('sapphire-link').addEventListener('click', function (event) {
       event.preventDefault();
       const choice = confirm('Press OK for Normal, Cancel for Randomized.');
       const baseURL = 'games/sapphire/';
-      window.location.href = choice ? baseURL : baseURL + 'random/';
+      openGame(choice ? baseURL : baseURL + 'random/');
     });
   </script>
 
