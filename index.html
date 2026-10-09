@@ -389,7 +389,9 @@
     /* ---------- Game grid + favorites ---------- */
     #games a,
     #favorites-bar a {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: 96px;
       height: 96px;
       margin: 10px;
@@ -401,6 +403,7 @@
     #favorites-bar a img {
       width: 100%;
       height: 100%;
+      object-fit: contain;
       display: block;
       filter: brightness(1);
       transition: filter 0.2s ease-in-out;
@@ -874,8 +877,8 @@
   <p class="changelog">Give me ideas on what game/movies to add by responding to this google form: https://forms.gle/1kUNCniLmzzH4sBt6</p>
   <p class="changelog">CHANGELOG:</p>
   <p class="changelog">9/22/2026 Movies - Added Iron Man! 🤖</p>
-  <p class="changelog">10/8/2026 Games - Added Super Mario RPG and Super Metroid! 🔥👽</p>
-  <p class="changelog">10/8/2026 Adjustments - Minor code adjustments. ⌨️</p>
+  <p class="changelog">10/9/2026 Games - Added Vex 1 & 2! 🏃</p>
+  <p class="changelog">10/9/2026 Adjustments - Centered and re-arranged games. ⚙️</p>
 
   <p class="blake">Random Boinga Hater Of The Day: 10/9/2026 Packson Jarks Jr.</p>
   <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
@@ -932,8 +935,10 @@
   <!-- ================= Games ================= -->
   <div id="games">
     <a href="games/bob-the-robber-2/"><img src="images/bob-the-robber-2.png" width="96" height="96" alt="Bob The Robber 2"></a>
-    <a href="games/vex7/"><img src="images/vex7.jpeg" width="96" height="96" alt="vex 7"></a>
-    <a href="games/vex6/"><img src="images/vex6.jpeg" width="96" height="96" alt="vex 6"></a>
+    <a href="games/vex/"><img src="images/vex.jpg" width="96" height="96" alt="Vex"></a>
+    <a href="games/vex2/"><img src="images/vex2.jpg" width="96" height="96" alt="Vex 2"></a>
+    <a href="games/vex6/"><img src="images/vex6.jpeg" width="96" height="96" alt="Vex 6"></a>
+    <a href="games/vex7/"><img src="images/vex7.jpeg" width="96" height="96" alt="Vex 7"></a>
     <a href="games/retro-bowl/"><img src="images/retro-bowl.jpg" width="96" height="96" alt="Retro Bowl"></a>
     <a href="games/drive-mad/"><img src="images/drive-mad.jpg" width="96" height="96" alt="Drive Mad"></a>
     <a href="games/slope/"><img src="images/slope.jpg" width="96" height="96" alt="Slope"></a>
