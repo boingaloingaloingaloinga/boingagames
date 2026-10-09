@@ -389,9 +389,7 @@
     /* ---------- Game grid + favorites ---------- */
     #games a,
     #favorites-bar a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-block;
       width: 96px;
       height: 96px;
       margin: 10px;
@@ -403,7 +401,6 @@
     #favorites-bar a img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
       display: block;
       filter: brightness(1);
       transition: filter 0.2s ease-in-out;
@@ -422,7 +419,7 @@
     #games a:hover,
     #favorites-bar a:hover {
       transform: scale(1.1);
-    }
+    } 
 
     .game-star {
       position: absolute;
@@ -878,7 +875,7 @@
   <p class="changelog">CHANGELOG:</p>
   <p class="changelog">9/22/2026 Movies - Added Iron Man! 🤖</p>
   <p class="changelog">10/9/2026 Games - Added Vex 1 & 2! 🏃</p>
-  <p class="changelog">10/9/2026 Adjustments - Centered and re-arranged games. ⚙️</p>
+  <p class="changelog">10/9/2026 Adjustments - Re-arranged games. ⚙️</p>
 
   <p class="blake">Random Boinga Hater Of The Day: 10/9/2026 Packson Jarks Jr.</p>
   <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
