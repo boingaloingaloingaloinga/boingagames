@@ -792,176 +792,175 @@
       border-color: #ffd700;
     }
 
+    /* ---------- Halloween theme (limited time) ---------- */
+    .theme-btn[hidden] { display: none; }
+
+    /* LIMITED tag sits under the label so the themes panel's overflow:hidden can't clip it */
+    .theme-btn-limited {
+      border: 1px dashed #ff7518;
+      background: linear-gradient(160deg, rgba(255,117,24,.18), rgba(90,0,120,.28));
+      color: #ff9a3c;
+      animation: hw-btn-glow 2.4s ease-in-out infinite;
+    }
+    .theme-btn-limited::after {
+      content: 'LIMITED';
+      font: bold 9px Arial, sans-serif;
+      letter-spacing: .5px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: #ff7518;
+      color: #1a0a00;
+    }
+    @keyframes hw-btn-glow {
+      0%, 100% { box-shadow: inset 0 0 3px rgba(255,117,24,.35); }
+      50%      { box-shadow: inset 0 0 12px rgba(255,117,24,.85); }
+    }
+
+    /* Red cursor */
+    body.halloween {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M3 2v17l5-4.5 3.5 7.5 3-1.5-3.5-7H18z' fill='%23d40000' stroke='%23300000' stroke-width='1.5' stroke-linejoin='round'/></svg>") 3 2, auto;
+    }
+
+    /* Title: red spooky font + glow (no drips) */
+    body.halloween h1 {
+      font-family: 'Creepster', 'Comic Sans MS', cursive;
+      font-weight: normal;
+      letter-spacing: 4px;
+      color: #c40000;
+      -webkit-text-stroke: 2px #3a0000;
+      animation: boinga-bounce 1.8s ease-in-out infinite, hw-glow 3s ease-in-out infinite;
+    }
+    @keyframes hw-glow {
+      0%, 100% { text-shadow: 0 2px 0 #5a0000, 0 0 14px rgba(255,0,0,.7), 0 0 30px rgba(140,0,0,.8); }
+      50%      { text-shadow: 0 3px 0 #5a0000, 0 0 22px rgba(255,30,30,.95), 0 0 46px rgba(170,0,0,.9); }
+    }
+
+    /* Purple mascots -> red. Tweak the degrees if the shade is off */
+    body.halloween .boinga-container img { filter: hue-rotate(70deg); }
+
+    /* Page text + tiles */
+    body.halloween p.quote,
+    body.halloween p.changelog,
+    body.halloween .rating-result { color: #ff9a3c; }
+    body.halloween .content hr { background-color: #ff7518; }
+    body.halloween #games a:hover,
+    body.halloween #favorites-bar a:hover {
+      transform: scale(1.1) rotate(-3deg);
+      filter: drop-shadow(0 0 10px #ff7518);
+    }
+    body.halloween .settings-panel {
+      border-color: #ff7518;
+      color: #ff7518;
+      box-shadow: 0 0 30px rgba(255,117,24,.35);
+    }
+    body.halloween .stat-card { border-color: #ff7518; }
+
+    /* Effects layer */
+    #halloweenFX {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .hw-vignette {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 160px 50px rgba(0,0,0,.8);
+      animation: hw-flicker 5s steps(1, end) infinite;
+    }
+    @keyframes hw-flicker {
+      0% { opacity: 1; } 8% { opacity: .88; } 12% { opacity: 1; }
+      40% { opacity: .94; } 44% { opacity: .82; } 48% { opacity: 1; }
+      75% { opacity: .92; } 100% { opacity: 1; }
+    }
+    .hw-fog {
+      position: absolute;
+      left: -20%;
+      right: -20%;
+      bottom: 0;
+      height: 40vh;
+      background:
+        radial-gradient(ellipse at 30% 100%, rgba(200,180,255,.22), transparent 60%),
+        radial-gradient(ellipse at 70% 100%, rgba(255,140,60,.16), transparent 60%);
+      animation: hw-fog 12s ease-in-out infinite alternate;
+    }
+    @keyframes hw-fog {
+      from { transform: translateX(-5%); opacity: .7; }
+      to   { transform: translateX(5%);  opacity: 1; }
+    }
+    .hw-web { position: absolute; top: 0; width: 140px; height: 140px; opacity: .5; }
+    .hw-web-tl { left: 0; }
+    .hw-web-tr { right: 0; transform: scaleX(-1); }
+    .hw-spider {
+      position: absolute;
+      top: 0;
+      left: 9vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 12vh;
+      animation: hw-dangle 7s ease-in-out infinite;
+    }
+    .hw-thread { flex: 1; width: 1px; background: rgba(255,255,255,.6); }
+    .hw-bug { font-size: 22px; line-height: 1; }
+    @keyframes hw-dangle {
+      0%, 100% { height: 8vh; }
+      50%      { height: 26vh; }
+    }
+
+    /* Lightning strike on activation */
+    .hw-lightning {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10000;
+    }
+    .hw-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #fff 0%, rgba(190,210,255,.75) 55%, rgba(190,210,255,.35) 100%);
+      opacity: 0;
+      animation: hw-flash 1s linear forwards;
+    }
+    .hw-lightning svg {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      animation: hw-bolt 1s linear forwards;
+    }
+    .hw-bolt {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px #bcd4ff) drop-shadow(0 0 18px #7aa7ff);
+    }
+    .hw-bolt-branch { stroke-width: 1.8; }
+    @keyframes hw-flash {
+      0%   { opacity: 0; }
+      4%   { opacity: .85; }
+      10%  { opacity: .15; }
+      16%  { opacity: .7; }
+      30%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    @keyframes hw-bolt {
+      0%   { opacity: 0; }
+      3%   { opacity: 1; }
+      10%  { opacity: .3; }
+      15%  { opacity: 1; }
+      28%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
     /* ---------- Disable-animations preference (set from the Settings menu) ---------- */
     .no-animations,
     .no-animations * {
       animation: none !important;
       transition: none !important;
     }
-    
-/* ---------- Halloween theme (limited time) ---------- */
-.theme-btn[hidden] { display: none; }
-
-/* LIMITED tag now sits under the label instead of hanging off the corner,
-   so the themes panel's overflow:hidden can't clip it */
-.theme-btn-limited {
-  border: 1px dashed #ff7518;
-  background: linear-gradient(160deg, rgba(255,117,24,.18), rgba(90,0,120,.28));
-  color: #ff9a3c;
-  animation: hw-btn-glow 2.4s ease-in-out infinite;
-}
-.theme-btn-limited::after {
-  content: 'LIMITED';
-  font: bold 9px Arial, sans-serif;
-  letter-spacing: .5px;
-  padding: 2px 6px;
-  border-radius: 8px;
-  background: #ff7518;
-  color: #1a0a00;
-}
-@keyframes hw-btn-glow {
-  0%, 100% { box-shadow: inset 0 0 3px rgba(255,117,24,.35); }
-  50%      { box-shadow: inset 0 0 12px rgba(255,117,24,.85); }
-}
-
-/* Red cursor */
-body.halloween {
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M3 2v17l5-4.5 3.5 7.5 3-1.5-3.5-7H18z' fill='%23d40000' stroke='%23300000' stroke-width='1.5' stroke-linejoin='round'/></svg>") 3 2, auto;
-}
-
-/* Title: red spooky font + glow (no drips) */
-body.halloween h1 {
-  font-family: 'Creepster', 'Comic Sans MS', cursive;
-  font-weight: normal;
-  letter-spacing: 4px;
-  color: #c40000;
-  -webkit-text-stroke: 2px #3a0000;
-  animation: boinga-bounce 1.8s ease-in-out infinite, hw-glow 3s ease-in-out infinite;
-}
-@keyframes hw-glow {
-  0%, 100% { text-shadow: 0 2px 0 #5a0000, 0 0 14px rgba(255,0,0,.7), 0 0 30px rgba(140,0,0,.8); }
-  50%      { text-shadow: 0 3px 0 #5a0000, 0 0 22px rgba(255,30,30,.95), 0 0 46px rgba(170,0,0,.9); }
-}
-
-/* Purple mascots -> red. Tweak the degrees if the shade is off (see note below) */
-body.halloween .boinga-container img { filter: hue-rotate(70deg); }
-
-/* Page text + tiles */
-body.halloween p.quote,
-body.halloween p.changelog,
-body.halloween .rating-result { color: #ff9a3c; }
-body.halloween .content hr { background-color: #ff7518; }
-body.halloween #games a:hover,
-body.halloween #favorites-bar a:hover {
-  transform: scale(1.1) rotate(-3deg);
-  filter: drop-shadow(0 0 10px #ff7518);
-}
-body.halloween .settings-panel {
-  border-color: #ff7518;
-  color: #ff7518;
-  box-shadow: 0 0 30px rgba(255,117,24,.35);
-}
-body.halloween .stat-card { border-color: #ff7518; }
-
-/* Effects layer */
-#halloweenFX {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  overflow: hidden;
-}
-.hw-vignette {
-  position: absolute;
-  inset: 0;
-  box-shadow: inset 0 0 160px 50px rgba(0,0,0,.8);
-  animation: hw-flicker 5s steps(1, end) infinite;
-}
-@keyframes hw-flicker {
-  0% { opacity: 1; } 8% { opacity: .88; } 12% { opacity: 1; }
-  40% { opacity: .94; } 44% { opacity: .82; } 48% { opacity: 1; }
-  75% { opacity: .92; } 100% { opacity: 1; }
-}
-.hw-fog {
-  position: absolute;
-  left: -20%;
-  right: -20%;
-  bottom: 0;
-  height: 40vh;
-  background:
-    radial-gradient(ellipse at 30% 100%, rgba(200,180,255,.22), transparent 60%),
-    radial-gradient(ellipse at 70% 100%, rgba(255,140,60,.16), transparent 60%);
-  animation: hw-fog 12s ease-in-out infinite alternate;
-}
-@keyframes hw-fog {
-  from { transform: translateX(-5%); opacity: .7; }
-  to   { transform: translateX(5%);  opacity: 1; }
-}
-.hw-web { position: absolute; top: 0; width: 140px; height: 140px; opacity: .5; }
-.hw-web-tl { left: 0; }
-.hw-web-tr { right: 0; transform: scaleX(-1); }
-.hw-spider {
-  position: absolute;
-  top: 0;
-  left: 9vw;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 12vh;
-  animation: hw-dangle 7s ease-in-out infinite;
-}
-.hw-thread { flex: 1; width: 1px; background: rgba(255,255,255,.6); }
-.hw-bug { font-size: 22px; line-height: 1; }
-@keyframes hw-dangle {
-  0%, 100% { height: 8vh; }
-  50%      { height: 26vh; }
-}
-
-/* Lightning strike on activation */
-.hw-lightning {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 10000;
-}
-.hw-flash {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, #fff 0%, rgba(190,210,255,.75) 55%, rgba(190,210,255,.35) 100%);
-  opacity: 0;
-  animation: hw-flash 1s linear forwards;
-}
-.hw-lightning svg {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  animation: hw-bolt 1s linear forwards;
-}
-.hw-bolt {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 3;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 6px #bcd4ff) drop-shadow(0 0 18px #7aa7ff);
-}
-.hw-bolt-branch { stroke-width: 1.8; }
-@keyframes hw-flash {
-  0%   { opacity: 0; }
-  4%   { opacity: .85; }
-  10%  { opacity: .15; }
-  16%  { opacity: .7; }
-  30%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-@keyframes hw-bolt {
-  0%   { opacity: 0; }
-  3%   { opacity: 1; }
-  10%  { opacity: .3; }
-  15%  { opacity: 1; }
-  28%  { opacity: 0; }
-  100% { opacity: 0; }
-}
   </style>
 </head>
 <body>
@@ -1039,9 +1038,9 @@ body.halloween .stat-card { border-color: #ff7518; }
   <p class="changelog">CHANGELOG:</p>
   <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
   <p class="changelog">10/28/2026 Games - Added Super Smash Bros. Melee! 👊</p>
-  <p class="changelog">10/15/2026 Adjustments - The Boingaloing mascot is back. 😊</p>
+  <p class="changelog">10/29/2026 Adjustments - IT'S ALMOST HALLOWEEN... 🎃</p>
 
-  <p class="blake">Random Boinga Hater Of The Day: 10/26/2026 Jason R.</p>
+  <p class="blake">Random Boinga Hater Of The Day: 10/30/2026 Freddy F.</p>
   <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
 
   <!-- ================= Themes ================= -->
@@ -1906,126 +1905,126 @@ body.halloween .stat-card { border-color: #ff7518; }
     const toggleThemesBtn = document.getElementById('toggle-themes-btn');
     const backgroundUpload = document.getElementById('background-upload');
     const xpWindow = document.getElementById('xp-window');
-    
-/* ---------- Halloween (limited-time) ---------- */
-const HALLOWEEN_UNLOCKED_KEY = 'halloween.unlocked';
-const HALLOWEEN_AUTO_YEAR_KEY = 'halloween.autoYear';
-const halloweenBtn = document.getElementById('halloween-theme-btn');
-const HALLOWEEN_QUOTE = '"BOOingaloingaloingaloinga.."';
-let playHalloweenIntro = false; // set to true right before applyTheme('halloween') to play the lightning
 
-function isHalloweenWindow(date) {
-  return date.getMonth() === 9 && (date.getDate() === 24 || date.getDate() === 31);
-}
+    /* ---------- Halloween (limited-time) ---------- */
+    const HALLOWEEN_UNLOCKED_KEY = 'halloween.unlocked';
+    const HALLOWEEN_AUTO_YEAR_KEY = 'halloween.autoYear';
+    const halloweenBtn = document.getElementById('halloween-theme-btn');
+    const HALLOWEEN_QUOTE = '"BOOingaloingaloingaloinga.."';
+    let playHalloweenIntro = false; // set to true right before applyTheme('halloween') to play the lightning
 
-function showHalloweenButton() {
-  halloweenBtn.hidden = false;
-  const mh = themesSection.style.maxHeight;
-  if (mh && mh !== '0px') themesSection.style.maxHeight = themesSection.scrollHeight + 'px';
-}
-
-function playLightning() {
-  // Skip if animations are off in Settings, or the OS asks for reduced motion
-  if (document.documentElement.classList.contains('no-animations')) return;
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-  const w = window.innerWidth, h = window.innerHeight;
-
-  // Build a jagged bolt from the top of the screen
-  let x = w * (0.2 + Math.random() * 0.6), y = 0;
-  const pts = [[x, y]];
-  while (y < h * 0.75) {
-    y += 25 + Math.random() * 45;
-    x += (Math.random() - 0.5) * 90;
-    pts.push([x, y]);
-  }
-  const toStr = (arr) => arr.map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ');
-
-  // One fork branching off the middle of the bolt
-  const forkStart = pts[Math.floor(pts.length / 2)];
-  const dir = Math.random() < 0.5 ? -1 : 1;
-  const branch = [forkStart];
-  let bx = forkStart[0], by = forkStart[1];
-  for (let i = 0; i < 5; i++) {
-    by += 20 + Math.random() * 30;
-    bx += dir * (15 + Math.random() * 35);
-    branch.push([bx, by]);
-  }
-
-  const el = document.createElement('div');
-  el.className = 'hw-lightning';
-  el.innerHTML =
-    '<div class="hw-flash"></div>' +
-    '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-    '<polyline class="hw-bolt" points="' + toStr(pts) + '"/>' +
-    '<polyline class="hw-bolt hw-bolt-branch" points="' + toStr(branch) + '"/>' +
-    '</svg>';
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 1200);
-}
-
-function startHalloween() {
-  const intro = playHalloweenIntro;
-  playHalloweenIntro = false;
-
-  document.body.classList.add('halloween');
-
-  // Load the spooky title font only when needed
-  if (!document.getElementById('halloween-font')) {
-    const l = document.createElement('link');
-    l.id = 'halloween-font';
-    l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=Creepster&display=swap';
-    document.head.appendChild(l);
-  }
-
-  const quote = document.querySelector('p.quote');
-  if (quote) {
-    if (!quote.dataset.orig) quote.dataset.orig = quote.textContent;
-    quote.textContent = HALLOWEEN_QUOTE;
-  }
-
-  if (!document.getElementById('halloweenFX')) {
-    const web = (cls) =>
-      '<svg class="hw-web ' + cls + '" viewBox="0 0 120 120" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1">' +
-      '<path d="M0 0 L120 0 M0 0 L110 55 M0 0 L85 85 M0 0 L55 110 M0 0 L0 120"/>' +
-      '<path d="M30 0 Q13 13 0 30 M60 0 Q27 27 0 60 M90 0 Q40 40 0 90 M120 0 Q54 54 0 120"/></svg>';
-
-    const fx = document.createElement('div');
-    fx.id = 'halloweenFX';
-    fx.innerHTML =
-      '<div class="hw-fog"></div><div class="hw-vignette"></div>' +
-      web('hw-web-tl') + web('hw-web-tr') +
-      '<div class="hw-spider"><span class="hw-thread"></span><span class="hw-bug">🕷️</span></div>';
-    document.body.appendChild(fx);
-  }
-
-  if (intro) playLightning();
-}
-
-function clearHalloween() {
-  document.body.classList.remove('halloween');
-  const fx = document.getElementById('halloweenFX');
-  if (fx) fx.remove();
-  const quote = document.querySelector('p.quote');
-  if (quote && quote.dataset.orig) quote.textContent = quote.dataset.orig;
-}
-
-function checkHalloween() {
-  const now = new Date();
-  if (!isHalloweenWindow(now)) return;
-  const year = String(now.getFullYear());
-  try {
-    localStorage.setItem(HALLOWEEN_UNLOCKED_KEY, 'true');   // permanent unlock
-    showHalloweenButton();
-    if (localStorage.getItem(HALLOWEEN_AUTO_YEAR_KEY) !== year) {
-      localStorage.setItem(HALLOWEEN_AUTO_YEAR_KEY, year); // only auto-activate once per year
-      localStorage.setItem('selectedTheme', 'halloween');
-      playHalloweenIntro = true;                           // lightning on auto-activation
-      applyTheme('halloween');
+    function isHalloweenWindow(date) {
+      return date.getMonth() === 9 && (date.getDate() === 29 || date.getDate() === 31);
     }
-  } catch (e) {}
-}
+
+    function showHalloweenButton() {
+      halloweenBtn.hidden = false;
+      const mh = themesSection.style.maxHeight;
+      if (mh && mh !== '0px') themesSection.style.maxHeight = themesSection.scrollHeight + 'px';
+    }
+
+    function playLightning() {
+      // Skip if animations are off in Settings, or the OS asks for reduced motion
+      if (document.documentElement.classList.contains('no-animations')) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const w = window.innerWidth, h = window.innerHeight;
+
+      // Build a jagged bolt from the top of the screen
+      let x = w * (0.2 + Math.random() * 0.6), y = 0;
+      const pts = [[x, y]];
+      while (y < h * 0.75) {
+        y += 25 + Math.random() * 45;
+        x += (Math.random() - 0.5) * 90;
+        pts.push([x, y]);
+      }
+      const toStr = (arr) => arr.map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ');
+
+      // One fork branching off the middle of the bolt
+      const forkStart = pts[Math.floor(pts.length / 2)];
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      const branch = [forkStart];
+      let bx = forkStart[0], by = forkStart[1];
+      for (let i = 0; i < 5; i++) {
+        by += 20 + Math.random() * 30;
+        bx += dir * (15 + Math.random() * 35);
+        branch.push([bx, by]);
+      }
+
+      const el = document.createElement('div');
+      el.className = 'hw-lightning';
+      el.innerHTML =
+        '<div class="hw-flash"></div>' +
+        '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+        '<polyline class="hw-bolt" points="' + toStr(pts) + '"/>' +
+        '<polyline class="hw-bolt hw-bolt-branch" points="' + toStr(branch) + '"/>' +
+        '</svg>';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
+
+    function startHalloween() {
+      const intro = playHalloweenIntro;
+      playHalloweenIntro = false;
+
+      document.body.classList.add('halloween');
+
+      // Load the spooky title font only when needed
+      if (!document.getElementById('halloween-font')) {
+        const l = document.createElement('link');
+        l.id = 'halloween-font';
+        l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?family=Creepster&display=swap';
+        document.head.appendChild(l);
+      }
+
+      const quote = document.querySelector('p.quote');
+      if (quote) {
+        if (!quote.dataset.orig) quote.dataset.orig = quote.textContent;
+        quote.textContent = HALLOWEEN_QUOTE;
+      }
+
+      if (!document.getElementById('halloweenFX')) {
+        const web = (cls) =>
+          '<svg class="hw-web ' + cls + '" viewBox="0 0 120 120" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1">' +
+          '<path d="M0 0 L120 0 M0 0 L110 55 M0 0 L85 85 M0 0 L55 110 M0 0 L0 120"/>' +
+          '<path d="M30 0 Q13 13 0 30 M60 0 Q27 27 0 60 M90 0 Q40 40 0 90 M120 0 Q54 54 0 120"/></svg>';
+
+        const fx = document.createElement('div');
+        fx.id = 'halloweenFX';
+        fx.innerHTML =
+          '<div class="hw-fog"></div><div class="hw-vignette"></div>' +
+          web('hw-web-tl') + web('hw-web-tr') +
+          '<div class="hw-spider"><span class="hw-thread"></span><span class="hw-bug">🕷️</span></div>';
+        document.body.appendChild(fx);
+      }
+
+      if (intro) playLightning();
+    }
+
+    function clearHalloween() {
+      document.body.classList.remove('halloween');
+      const fx = document.getElementById('halloweenFX');
+      if (fx) fx.remove();
+      const quote = document.querySelector('p.quote');
+      if (quote && quote.dataset.orig) quote.textContent = quote.dataset.orig;
+    }
+
+    function checkHalloween() {
+      const now = new Date();
+      if (!isHalloweenWindow(now)) return;
+      const year = String(now.getFullYear());
+      try {
+        localStorage.setItem(HALLOWEEN_UNLOCKED_KEY, 'true');   // permanent unlock
+        showHalloweenButton();
+        if (localStorage.getItem(HALLOWEEN_AUTO_YEAR_KEY) !== year) {
+          localStorage.setItem(HALLOWEEN_AUTO_YEAR_KEY, year); // only auto-activate once per year
+          localStorage.setItem('selectedTheme', 'halloween');
+          playHalloweenIntro = true;                           // lightning on auto-activation
+          applyTheme('halloween');
+        }
+      } catch (e) {}
+    }
 
     toggleThemesBtn.addEventListener('click', () => {
       if (themesSection.style.maxHeight === '0px' || themesSection.style.maxHeight === '') {
@@ -2145,14 +2144,14 @@ function checkHalloween() {
       }
     }
 
-document.querySelectorAll('.theme-btn').forEach(button => {
-  button.addEventListener('click', () => {
-    const theme = button.getAttribute('data-theme');
-    if (theme === 'halloween') playHalloweenIntro = true;   // <-- add this
-    localStorage.setItem('selectedTheme', theme);
-    applyTheme(theme);
-  });
-});
+    document.querySelectorAll('.theme-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const theme = button.getAttribute('data-theme');
+        if (theme === 'halloween') playHalloweenIntro = true;
+        localStorage.setItem('selectedTheme', theme);
+        applyTheme(theme);
+      });
+    });
 
     backgroundUpload.addEventListener('change', (event) => {
       const file = event.target.files[0];
@@ -2212,21 +2211,14 @@ document.querySelectorAll('.theme-btn').forEach(button => {
     });
   </script>
 
-  <!-- Movies button -->
-  <script>
-    document.getElementById('moviesBtn').addEventListener('click', function () {
-      window.location.href = 'movies/';
-    });
-  </script>
-
   <!-- Rating joke -->
   <script>
     document.getElementById('submitRating').onclick = function () {
-  const ratingResult = document.getElementById('ratingResult');
-  ratingResult.textContent = document.body.classList.contains('halloween')
-    ? "Sorry.. these ratings are too SCARY for me to find!"
-    : "Thank you for rating.. You gave us.. Uh.. Hold On.. I need to find the ratings.. Give me a second.. almost got them wait no that's not it.. Hold on.. I think this is wait no.. Maybe is it this one? Nope nope, not ratings.. Give me time to think about this.";
-};
+      const ratingResult = document.getElementById('ratingResult');
+      ratingResult.textContent = document.body.classList.contains('halloween')
+        ? "Sorry.. these ratings are too SCARY for me to find!"
+        : "Thank you for rating.. You gave us.. Uh.. Hold On.. I need to find the ratings.. Give me a second.. almost got them wait no that's not it.. Hold on.. I think this is wait no.. Maybe is it this one? Nope nope, not ratings.. Give me time to think about this.";
+    };
   </script>
 
   <!-- Secret codes (click Curious George to open) -->
