@@ -5,7 +5,7 @@
    Leave it empty ('') to turn accounts off — the rest of the site still works.
    ===================================================================== */
 window.BOINGA_CONFIG = {
-  API_BASE: '',
+  API_BASE: 'https://boinga-accounts.boingagames.workers.dev',
   // Ask first-time visitors if they want an account
   ASK_TO_SIGN_UP: true,
   // How often (seconds) the site tells the server you're online
