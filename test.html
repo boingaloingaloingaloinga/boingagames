@@ -1,123 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-layout="genres">
 <head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BoingaGames</title>
-<meta name="description" content="Boingaloingaloinga!">
-<link rel="icon" href="bg.png" type="image/png">
-<link rel="stylesheet" href="/main.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4L47F1FSJF"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-4L47F1FSJF');
+  </script>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BoingaGames</title>
+  <link rel="icon" href="bg.png" type="image/png">
+  <script src="js/early.js"></script>
+
+  <link rel="stylesheet" href="/main.css">
+  <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.2.0/css/all.css">
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/library.css">
+  <link rel="stylesheet" href="css/accounts.css">
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1706522083410497" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<header class="hero">
-  <div class="hero-flyer">
-    <span class="tape" aria-hidden="true"></span>
-    <h1 class="misprint">BOINGA</h1>
-    <span class="hero-sticker" aria-hidden="true">
-      <img src="https://files.catbox.moe/vbm3pi.gif" alt="">
-    </span>
-  </div>
-  <p class="quote">"Boingaloingaloinga!"</p>
+  <!-- ================= Top corners ================= -->
+  <div id="accountCorner"></div> <!-- filled in by js/account/ui.js -->
+  <button id="settingsGearBtn" title="Settings">⚙</button>
+  <button id="statsBtn" title="Statistics">📊</button>
 
-  <span class="hater-badge">Random Boinga Hater Of The Day: idk</span>
+  <!-- ================= Settings ================= -->
+  <div id="settingsOverlay">
+    <div class="settings-panel">
+      <span class="settings-close-btn" id="settingsCloseBtn">&times;</span>
+      <h2>Settings</h2>
 
-  <div class="hero-links">
-    <a class="ticket-btn primary" href="movies/">Movies →</a>
-    <a class="ticket-btn" href="https://forms.gle/gU3bP4VYG3JZJ4JJ9" target="_blank" rel="noopener">Suggest a game</a>
-  </div>
-
-  <div class="ticker-wrap">
-    <div class="ticker" role="marquee" aria-label="Changelog">
-      <div class="ticker-track">
-        <span><b>8/3/2026</b> Adjustment — added a favorites shelf</span>
-        <span><b>8/3/2026</b> Games — none, looool</span>
-        <span><b>4/7/2026</b> Movies — added Madagascar and Madagascar: Escape 2 Africa</span>
-        <span><b>8/3/2026</b> Adjustment — added a favorites shelf</span>
-        <span><b>8/3/2026</b> Games — none, looool</span>
-        <span><b>4/7/2026</b> Movies — added Madagascar and Madagascar: Escape 2 Africa</span>
-      </div>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-
-  <div class="toolbar">
-    <div class="search-field">
-      <input type="text" id="gameSearch" placeholder="Search..." aria-label="Search games">
-    </div>
-    <button id="sortBtn" class="toolbar-btn" aria-pressed="false">Sort: Default</button>
-
-    <div class="theme-pop-wrap">
-      <button id="toggle-themes-btn" class="toolbar-btn">Theme</button>
-      <div id="theme-pop" class="theme-pop">
-        <h3>Pick a theme</h3>
-        <div id="swatch-grid" class="swatch-grid"></div>
-        <div class="upload-row">
-          <label for="background-upload">Or upload a custom background</label>
-          <input type="file" id="background-upload" accept="image/*">
+      <div class="settings-row">
+        <label>Game layout</label>
+        <div class="seg" id="settingsLayout">
+          <button data-layout="genres">Genres</button>
+          <button data-layout="classic">Classic</button>
         </div>
       </div>
-    </div>
 
-    <p id="result-count" class="result-count"></p>
+      <div class="settings-row settings-row-inline">
+        <label for="settingsAnimToggle">Disable site animations</label>
+        <input type="checkbox" id="settingsAnimToggle">
+      </div>
+
+      <div class="settings-row">
+        <label for="settingsTitleInput">Tab title</label>
+        <input type="text" id="settingsTitleInput" placeholder="BoingaGames">
+      </div>
+
+      <div class="settings-row">
+        <label for="settingsFaviconInput">Tab icon</label>
+        <input type="file" id="settingsFaviconInput" accept="image/*">
+      </div>
+    </div>
   </div>
 
-  <section class="favorites">
-    <div class="favorites-head">
-      <h2>Your favorites</h2>
-      <span id="favorites-count"></span>
-    </div>
-    <div id="favorites-shelf" class="favorites-shelf"></div>
-  </section>
+  <!-- ================= Statistics ================= -->
+  <div id="statsOverlay">
+    <div class="settings-panel">
+      <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
+      <h2>Statistics</h2>
 
-  <section>
-    <div class="grid-heading">
-      <h2>All games</h2>
-    </div>
-    <div id="games"></div>
-  </section>
-
-  <footer class="footer">
-    <div class="rating-section">
-      <h2>Rate this website</h2>
-      <div class="rating-row">
-        <input type="number" id="ratingInput" placeholder="1–5" min="1" max="5">
-        <button id="submitRating" class="toolbar-btn">Submit</button>
+      <div class="stats-summary">
+        <div class="stat-card">
+          <span class="stat-value" id="statSiteTime">0s</span>
+          <span class="stat-label">Time on site</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="statTotalOpens">0</span>
+          <span class="stat-label">Games opened</span>
+        </div>
       </div>
-      <p id="ratingResult" class="rating-result"></p>
+
+      <h3>Game Stats</h3>
+      <div class="stats-controls">
+        <input type="text" id="statsSearch" placeholder="Search played games...">
+        <select id="statsSort">
+          <option value="time">Most playtime</option>
+          <option value="opens">Most opened</option>
+          <option value="name">A-Z</option>
+        </select>
+      </div>
+      <div id="statsGameList"></div>
+
+      <p class="stats-disclaimer">
+        * Games that open on other websites (like Club Penguin and Crazy Cattle 3D) are not included.<br>
+        * All statistics start from 10/2/2026.<br>
+        * Stats are saved in this browser only.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= Full game list ================= -->
+  <div id="fullListOverlay" class="overlay">
+    <div class="settings-panel">
+      <span class="settings-close-btn" id="fullListClose">&times;</span>
+      <h2>All Games (<span id="fullListCount"></span>)</h2>
+      <input type="text" id="fullListSearch" placeholder="Filter the list...">
+      <div id="fullListJump"></div>
+      <div id="fullList"></div>
+    </div>
+  </div>
+
+  <!-- ================= Header ================= -->
+  <div class="boinga-container">
+    <img src="boinga.gif" alt="Boinga GIF">
+    <h1>BOINGA</h1>
+    <img src="boinga.gif" alt="Boinga GIF">
+  </div>
+  <p class="quote">"Boingaloingaloingaloinga!"</p>
+
+  <p class="changelog">Give me ideas on what game/movies to add by responding to this google form: https://forms.gle/1kUNCniLmzzH4sBt6</p>
+  <p class="changelog">CHANGELOG:</p>
+  <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
+  <p class="changelog">11/6/2026 Games - Added Half-Life 2! λ</p>
+  <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
+  <p class="changelog">11/6/2026 BIG UPDATE - Accounts! Make a profile, add friends and chat (no email needed). Games are now sorted by genre (switch back to the old look in Settings).</p>
+
+  <p class="blake">Random Boinga Hater Of The Day: 11/6/2026 Abram H.</p>
+  <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
+
+  <!-- ================= Themes ================= -->
+  <div id="themes-container">
+    <div class="themes-header">
+      <h2>Themes</h2>
+      <button id="toggle-themes-btn">+</button>
     </div>
 
-    <div class="credits">
-      <img class="credits-thumb" src="bg.png" alt="" aria-hidden="true">
-      <button id="george-entrance" class="credits-thumb" aria-label="George">
-        <img src="curious-george.png" alt="">
-      </button>
-      <p class="credits-text">the best website ever made ever</p>
+    <div id="themes" style="max-height: 0; overflow: hidden; transition: max-height 0.5s ease;">
+      <button class="theme-btn theme-btn-limited" id="halloween-theme-btn" data-theme="halloween" hidden><span class="theme-swatch theme-swatch-plain">🎃</span>Halloween</button>
+      <button class="theme-btn" data-theme="default"><span class="theme-swatch" style="background: linear-gradient(135deg, #1e1e2f, #3a3b5b);"></span>Default</button>
+      <button class="theme-btn" data-theme="blossom"><span class="theme-swatch" style="background: linear-gradient(135deg, #ffafcc, #ffcad4);"></span>Blossom</button>
+      <button class="theme-btn" data-theme="iridium"><span class="theme-swatch" style="background: linear-gradient(135deg, #333, #666);"></span>Iridium</button>
+      <button class="theme-btn" data-theme="sunset"><span class="theme-swatch" style="background: linear-gradient(135deg, #ff7e5f, #feb47b);"></span>Sunset</button>
+      <button class="theme-btn" data-theme="forest"><span class="theme-swatch" style="background: linear-gradient(135deg, #228B22, #014421);"></span>Forest</button>
+      <button class="theme-btn" data-theme="ocean"><span class="theme-swatch" style="background: linear-gradient(135deg, #064273, #76b6c4);"></span>Ocean</button>
+      <button class="theme-btn" data-theme="volcano"><span class="theme-swatch" style="background: linear-gradient(135deg, #823661, #4E2728);"></span>Volcanic</button>
+      <button class="theme-btn" data-theme="flame"><span class="theme-swatch" style="background: linear-gradient(135deg, #e9d022, #e60b09);"></span>Flame</button>
+      <button class="theme-btn" data-theme="cotton"><span class="theme-swatch" style="background: linear-gradient(135deg, #E9B7CE, #D3F3F1);"></span>Cotton Candy</button>
+      <button class="theme-btn" data-theme="aurora"><span class="theme-swatch" style="background: linear-gradient(135deg, #2E1A47, #16A085);"></span>Aurora</button>
+      <button class="theme-btn" data-theme="meadow"><span class="theme-swatch" style="background: linear-gradient(135deg, #56AB2F, #A8E063);"></span>Meadow</button>
+      <button class="theme-btn" data-theme="yinyang"><span class="theme-swatch" style="background: linear-gradient(135deg, #E6DADA, #274046);"></span>Yin-Yang</button>
+      <button class="theme-btn" data-theme="desert"><span class="theme-swatch" style="background: linear-gradient(135deg, #FCEABB, #E1B850);"></span>Desert</button>
+      <button class="theme-btn" data-theme="mist"><span class="theme-swatch" style="background: linear-gradient(135deg, #757F9A, #D7DDE8);"></span>Mist</button>
+      <button class="theme-btn" data-theme="space"><span class="theme-swatch theme-swatch-plain">✦</span>Space</button>
+      <button class="theme-btn" data-theme="george"><span class="theme-swatch theme-swatch-plain">🐵</span>Curious George</button>
+      <button class="theme-btn" data-theme="xp"><span class="theme-swatch theme-swatch-plain">🖥️</span>Windows XP</button>
+
+      <div id="upload-theme-container">
+        <label for="background-upload">Custom Background</label>
+        <input type="file" id="background-upload" accept="image/*">
+      </div>
     </div>
+  </div>
+
+  <audio id="background-music" loop></audio>
+
+  <!-- ================= Games: genre layout ================= -->
+  <section id="library">
+    <div class="lib-top">
+      <div class="lib-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="libSearch" placeholder="Search games…" autocomplete="off" aria-label="Search games">
+        <button id="libClear" title="Clear search" hidden>&times;</button>
+      </div>
+      <button class="lib-pill" id="fullListBtn"><i class="fa-solid fa-list"></i> Full game list</button>
+    </div>
+    <nav class="lib-chips" id="libChips" aria-label="Genres"></nav>
+    <div id="libFavSlot"></div>
+    <div id="libRows"></div>
+    <div id="libResults" hidden></div>
+  </section>
+
+  <!-- ================= Games: classic layout ================= -->
+  <section id="classic">
+    <div class="toolbar">
+      <div id="searchContainer">
+        <input type="text" id="gameSearch" placeholder="Search games...">
+      </div>
+      <button id="sortBtn">Sort: Default</button>
+      <button class="movies-btn" id="classicFullListBtn">Full game list</button>
+    </div>
+    <div id="classicFavSlot">
+      <div id="favorites-bar"></div>
+    </div>
+    <div id="games"></div> <!-- filled from js/games.js -->
+  </section>
+
+  <img id="curiousGeorge" src="curious-george.png" width="768" height="768" alt="Curious George" class="center" loading="lazy">
+
+  <!-- ================= Rating joke ================= -->
+  <div class="rating-section">
+    <h2>Rate this website:</h2>
+    <input type="number" id="ratingInput" placeholder="Enter a rating (1-5)">
+    <button id="submitRating">Submit Rating</button>
+    <div id="ratingResult" class="rating-result"></div>
+  </div>
+
+  <footer class="site-footer">
+    <a href="terms.html">Terms of Service</a> ·
+    <a href="privacy.html">Privacy Policy</a>
   </footer>
 
-</main>
-
-<div id="cheat-console" class="cheat-console">
-  <div class="cheat-console-inner">
-    <button id="cheat-close" class="cheat-close" aria-label="Close">&times;</button>
-    <div class="cheat-row">
-      <input type="text" id="codeInput" placeholder="Enter your code…" autocomplete="off">
-      <button id="submitCode">Enter</button>
-    </div>
-    <p id="codeMessage" class="cheat-message"></p>
+  <!-- ================= Secret code bar ================= -->
+  <div id="codeInputBar">
+    <span class="closeBtn">&times;</span>
+    <input type="text" id="codeInput" placeholder="Enter your code...">
+    <button id="submitCode">Enter</button>
+    <div class="message" id="message"></div>
   </div>
-</div>
 
-<audio id="background-music" loop></audio>
+  <div id="xp-window">
+    <img src="xp-window.jpg" alt="Windows XP Window" class="xp-window-image">
+  </div>
 
-<script src="app.js"></script>
+  <div id="gameOverlay">
+    <iframe id="gameFrame" allow="fullscreen; autoplay; gamepad; clipboard-write; cross-origin-isolated" allowfullscreen></iframe>
+    <div id="gameCloseBtn" title="Close game">&times;</div>
+  </div>
+
+  <!-- ================= Scripts ================= -->
+  <script src="js/config.js"></script>
+  <script src="js/games.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/overlay.js"></script>
+  <script src="js/library.js"></script>
+  <script src="js/themes.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/extras.js"></script>
+
+  <script src="js/account/api.js"></script>
+  <script src="js/account/ui.js"></script>
+  <script src="js/account/profile.js"></script>
+  <script src="js/account/social.js"></script>
+  <script src="js/account/presence.js"></script>
 </body>
 </html>

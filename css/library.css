@@ -1,0 +1,368 @@
+/* =====================================================================
+   Game library: genre layout, clean search, chips, hover box, full list
+   ===================================================================== */
+
+/* Show only the chosen layout (set on <html> by js/early.js + settings) */
+html[data-layout="classic"] #library { display: none; }
+html[data-layout="genres"] #classic { display: none; }
+
+/* ---------- Tiles (all layouts) ---------- */
+.game-tile {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  position: relative;
+  border-radius: 12px;
+  transition: transform 0.2s ease-in-out;
+}
+.game-tile img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 12px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.25);
+  filter: brightness(1);
+  transition: filter 0.2s ease-in-out;
+}
+.game-tile:hover { transform: scale(1.1); z-index: 2; }
+.game-tile:hover img { filter: brightness(1.25); }
+.game-tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.game-tile:hover .game-star { opacity: 1; }
+body.halloween .game-tile:hover { transform: scale(1.1) rotate(-3deg); filter: drop-shadow(0 0 10px #ff7518); }
+
+.tile-ext {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+/* ---------- Hover name box ---------- */
+#gameTip {
+  position: fixed;
+  z-index: 10050;
+  max-width: 260px;
+  padding: 7px 12px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent);
+  font: 14px 'Comic Sans MS', cursive, sans-serif;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+#gameTip.show { opacity: 1; transform: translateY(0); }
+#gameTip::after {
+  content: '';
+  position: absolute;
+  left: var(--arrow-x, 50%);
+  top: 100%;
+  margin-left: -7px;
+  border: 7px solid transparent;
+  border-top-color: var(--accent);
+}
+#gameTip.below::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--accent); }
+
+/* ---------- Library frame ---------- */
+#library, #classic {
+  max-width: 1180px;
+  margin: 10px auto 30px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.lib-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 10px 0 14px;
+}
+
+.lib-search {
+  position: relative;
+  width: min(520px, 100%);
+}
+.lib-search > i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  pointer-events: none;
+}
+#libSearch {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 44px 12px 44px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(20, 20, 35, 0.55);
+  color: #fff;
+  font: 16px Arial, sans-serif;
+  outline: none;
+  backdrop-filter: blur(4px);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
+}
+#libSearch::placeholder { color: rgba(255, 255, 255, 0.6); }
+#libSearch:focus { box-shadow: 0 0 0 4px rgba(255, 204, 0, 0.25); background: rgba(20, 20, 35, 0.75); }
+#libClear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--accent);
+  font-size: 20px;
+  cursor: pointer;
+}
+#libClear:hover { background: rgba(255, 255, 255, 0.1); }
+
+.lib-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--accent);
+  font: 15px 'Comic Sans MS', cursive, sans-serif;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.lib-pill:hover { box-shadow: 0 0 14px rgba(255, 204, 0, 0.5); transform: translateY(-2px); }
+
+/* ---------- Genre chips ---------- */
+.lib-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 4px 10px;
+  margin-bottom: 8px;
+  scrollbar-width: thin;
+  justify-content: safe center;
+}
+.lib-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(20, 20, 35, 0.55);
+  color: #fff;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.lib-chip i { color: var(--accent); font-size: 13px; }
+.lib-chip em { font-style: normal; font-size: 12px; opacity: 0.6; }
+.lib-chip:hover { border-color: var(--accent); }
+.lib-chip.active { background: var(--accent); border-color: var(--accent); color: #1e1e2f; }
+.lib-chip.active i { color: #1e1e2f; }
+
+/* Favorites bar sits inside the library frame now */
+#libFavSlot #favorites-bar, #classicFavSlot #favorites-bar { gap: 6px; }
+#favorites-bar .game-tile { margin: 6px; }
+
+/* ---------- Genre rows ---------- */
+.lib-row { margin: 18px 0 8px; }
+.lib-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 6px;
+}
+.lib-row-head h3 {
+  margin: 0;
+  font: 22px 'Comic Sans MS', cursive, sans-serif;
+}
+.lib-row-head h3 i { font-size: 18px; margin-right: 4px; }
+.lib-row-head h3 em { font-style: normal; font-size: 14px; opacity: 0.6; margin-left: 4px; }
+.lib-see-all {
+  background: none;
+  border: none;
+  color: inherit;
+  font: 14px Arial, sans-serif;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.lib-see-all:hover { opacity: 1; text-decoration: underline; }
+
+.lib-track { position: relative; }
+.lib-strip {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 8px;
+  padding: 14px 8px 16px;
+  scrollbar-width: none;
+}
+.lib-strip::-webkit-scrollbar { display: none; }
+.lib-strip .game-tile { scroll-snap-align: start; }
+
+.lib-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--panel);
+  color: var(--accent);
+  font: bold 26px/1 Arial, sans-serif;
+  padding: 0 0 3px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.lib-arrow.prev { left: -6px; }
+.lib-arrow.next { right: -6px; }
+.lib-arrow:hover { transform: translateY(-50%) scale(1.1); }
+.lib-arrow.hidden { opacity: 0; pointer-events: none; }
+@media (hover: none) { .lib-arrow { display: none; } }
+
+/* ---------- Search / genre results ---------- */
+.lib-results-head {
+  text-align: center;
+  font: 18px 'Comic Sans MS', cursive, sans-serif;
+  margin: 18px 0 6px;
+}
+.lib-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  padding: 12px 0;
+}
+.lib-empty { text-align: center; font-size: 16px; margin: 30px 0; }
+
+/* ---------- Classic layout extras ---------- */
+#classic #games { text-align: center; }
+#classic #games .game-tile { margin: 10px; }
+#classic #games .game-tile img { border-radius: 0; }
+
+/* ---------- Full game list ---------- */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+}
+.overlay.active { display: flex; }
+
+#fullListOverlay .settings-panel {
+  max-width: 640px;
+  height: min(86vh, 820px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+#fullListSearch {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  outline: none;
+  font: 15px Arial, sans-serif;
+}
+#fullListJump {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 3px;
+  margin: 10px 0 6px;
+}
+#fullListJump button {
+  min-width: 24px;
+  padding: 3px 4px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent);
+  font: bold 12px Arial, sans-serif;
+  cursor: pointer;
+}
+#fullListJump button:hover { background: var(--accent); color: var(--panel); }
+#fullList {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  padding-right: 4px;
+}
+.fl-group h4 {
+  position: sticky;
+  top: 0;
+  margin: 8px 0 2px;
+  padding: 4px 6px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-size: 16px;
+  z-index: 1;
+}
+.fl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
+  font: 14px Arial, sans-serif;
+}
+.fl-row:hover { background: rgba(255, 204, 0, 0.12); }
+.fl-row img { width: 32px; height: 32px; border-radius: 6px; object-fit: cover; flex: 0 0 auto; }
+.fl-name { flex: 1; min-width: 0; color: #fff; }
+.fl-ext { font-size: 11px; opacity: 0.7; }
+.fl-tags { font-size: 11px; opacity: 0.65; text-align: right; white-space: nowrap; }
+@media (max-width: 560px) { .fl-tags { display: none; } }
+
+/* ---------- Settings: layout switch ---------- */
+.seg {
+  display: flex;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.seg button {
+  flex: 1;
+  padding: 7px 10px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font: 14px 'Comic Sans MS', cursive, sans-serif;
+  cursor: pointer;
+}
+.seg button.active { background: var(--accent); color: var(--panel); }

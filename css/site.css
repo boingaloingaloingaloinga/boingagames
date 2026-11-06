@@ -1,0 +1,939 @@
+/* =====================================================================
+   BoingaGames — core site styles (header, overlays, themes, settings, easter eggs)
+   Library (game grid) styles: css/library.css    Account styles: css/accounts.css
+   ===================================================================== */
+
+/* Shared colours. Themes like Halloween override --accent. */
+:root {
+  --accent: #ffcc00;
+  --accent-strong: #ffd700;
+  --panel: #1e1e2f;
+  --panel-2: #2a2b45;
+  --line: #555;
+  --text-soft: rgba(255, 255, 255, 0.75);
+}
+body.halloween { --accent: #ff7518; --accent-strong: #ff9a3c; }
+/* ---------- Base ---------- */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+  transition: background 0.5s, color 0.5s;
+  background: linear-gradient(135deg, #1e1e2f, #3a3b5b);
+  color: #ffcc00;
+}
+
+/* ---------- Header / Boinga banner ---------- */
+.boinga-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+  /* ---------- Statistics button + panel ---------- */
+#statsBtn {
+  position: fixed;
+  top: 14px;
+  right: 58px; /* sits just left of the gear */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#statsBtn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+}
+
+#statsOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+}
+
+#statsOverlay.active {
+  display: flex;
+}
+
+#statsOverlay .settings-panel {
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-card {
+  flex: 1;
+  text-align: center;
+  padding: 12px 6px;
+  border: 2px solid #ffcc00;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stat-value {
+  display: block;
+  font-size: 26px;
+}
+
+.stat-label {
+  font-size: 13px;
+}
+
+.stats-controls {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+#statsSearch,
+#statsSort {
+  padding: 8px;
+  background: transparent;
+  border: 3px solid yellow;
+  color: white;
+  outline: none;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+#statsSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+#statsSort option {
+  background: #1e1e2f;
+}
+
+.stats-game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #555;
+  font-size: 14px;
+}
+
+.stats-game-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-game-nums {
+  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stats-empty {
+  text-align: center;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.stats-disclaimer {
+  font-size: 11px;
+  opacity: 0.8;
+  margin: 12px 0 0 0;
+}
+
+.boinga-container img {
+  height: 50px;
+}
+
+h1 {
+  font-size: 72px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ffcc00;
+  -webkit-text-stroke-width: 3px;
+  -webkit-text-stroke-color: #d4a900;
+  text-align: center;
+  margin: 20px 0 10px 0;
+  animation: boinga-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes boinga-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* ---------- Fullscreen game overlay ---------- */
+#gameOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647; /* max z-index: always above everything, including the settings gear */
+  background: #000;
+}
+
+#gameOverlay.active {
+  display: block;
+}
+
+#gameFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+/* Same look as #codeInputBar .closeBtn, just smaller and a bit see-through */
+#gameCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffcc00;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  z-index: 2;
+  transition: opacity 0.2s;
+}
+
+#gameCloseBtn:hover {
+  opacity: 1;
+  color: #1e1e2f;
+  background: #ffcc00;
+}
+
+p.quote {
+  font-size: 24px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ffcc00;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+p.blake {
+  font-size: 24px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ff2b2b;
+  text-align: center;
+  margin: 0 0 30px 0;
+  text-shadow: 0 0 6px #ff0000, 0 0 16px #ff0000, 0 0 30px #990000;
+  animation: hater-flicker 3s infinite ease-in-out;
+}
+
+@keyframes hater-flicker {
+  0%, 100% { text-shadow: 0 0 6px #ff0000, 0 0 16px #ff0000, 0 0 30px #990000; }
+  50%      { text-shadow: 0 0 10px #ff3333, 0 0 24px #ff0000, 0 0 40px #cc0000; }
+}
+
+p.haterform {
+  font-size: 16px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ff2b2b;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+p.changelog {
+  font-size: 12px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ffcc00;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+p.left {
+  font-size: 36px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #FF0000;
+  text-align: center;
+  margin: 0 0 30px 0;
+}
+
+.content hr {
+  border: none;
+  height: 2px;
+  background-color: #ffcc00;
+  margin: 40px 0;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- Toolbar (movies / search / sort) ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px auto 25px auto;
+}
+
+.movies-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: yellow;
+  background-color: #1e1e2f;
+  border: 2px solid yellow;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+
+.movies-btn:hover {
+  color: #ffd700;
+  border-color: #ffd700;
+  box-shadow: 0 0 14px 3px rgba(255, 204, 0, 0.65);
+  transform: translateY(-2px);
+}
+
+#searchContainer {
+  text-align: center;
+}
+
+#gameSearch {
+  width: 260px;
+  max-width: 60vw;
+  padding: 8px;
+  background: transparent;
+  border: 3px solid yellow;
+  color: white;
+  outline: none;
+}
+
+#gameSearch::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+#sortBtn {
+  padding: 8px 12px;
+  background: transparent;
+  border: 3px solid yellow;
+  color: white;
+  cursor: pointer;
+}
+
+@keyframes sortPress {
+  0%   { transform: scale(1); background-color: transparent; }
+  40%  { transform: scale(0.92); background-color: rgba(255, 204, 0, 0.35); }
+  100% { transform: scale(1); background-color: transparent; }
+}
+
+#sortBtn.pressed {
+  animation: sortPress 0.3s ease;
+}
+
+/* ---------- Game grid + favorites ---------- */
+#games a,
+#favorites-bar a {
+  display: inline-block;
+  width: 96px;
+  height: 96px;
+  margin: 10px;
+  position: relative;
+  transition: transform 0.2s ease-in-out;
+}
+
+#games a img,
+#favorites-bar a img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: brightness(1);
+  transition: filter 0.2s ease-in-out;
+}
+
+#games a:hover img,
+#favorites-bar a:hover img {
+  filter: brightness(1.25);
+}
+
+:not(#games):not(#favorites-bar) img {
+  transform: none !important;
+  transition: none !important;
+}
+
+#games a:hover,
+#favorites-bar a:hover {
+  transform: scale(1.1);
+} 
+
+.game-star {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  font-size: 18px;
+  color: #ffd700;
+  -webkit-text-stroke: 1px #333;
+  cursor: pointer;
+  opacity: 0;
+  z-index: 5;
+  pointer-events: auto;
+  user-select: none;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.game-star:hover {
+  transform: scale(1.2);
+}
+
+#games a:hover .game-star,
+#favorites-bar a:hover .game-star,
+.game-star.favorited {
+  opacity: 1;
+}
+
+#favorites-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+}
+
+.favorites-empty {
+  margin: 0;
+  color: #FFFF00;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+}
+
+/* ---------- Secret code bar ---------- */
+#codeInputBar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #000;
+  padding: 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+#codeInputBar input[type="text"] {
+  padding: 10px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  width: 300px;
+}
+
+#codeInputBar button {
+  padding: 10px;
+  font-size: 18px;
+  background-color: #ffcc00;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#codeInputBar .closeBtn {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  color: #ffcc00;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+}
+
+#codeInputBar .closeBtn:hover {
+  color: #1e1e2f;
+  background: #ffcc00;
+}
+
+#codeInputBar .message {
+  font-size: 18px;
+  margin-top: 10px;
+  color: #ffcc00;
+}
+
+#codeInputBar .error {
+  color: red;
+}
+
+/* ---------- Windows XP easter-egg window ---------- */
+#xp-window {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.xp-window-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- Rating section ---------- */
+.rating-section {
+  text-align: center;
+  margin: 40px 0;
+}
+
+.rating-section input {
+  padding: 10px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.rating-section button {
+  padding: 10px;
+  font-size: 18px;
+  background-color: #ffcc00;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.rating-result {
+  margin-top: 20px;
+  font-size: 24px;
+  color: #ffcc00;
+}
+
+/* ---------- Themes panel ---------- */
+#themes-container {
+  text-align: center;
+}
+
+.themes-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#toggle-themes-btn {
+  font-size: 1em;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+#upload-theme-container {
+  margin-top: 10px;
+}
+
+#background-upload {
+  margin-left: 10px;
+}
+
+#themes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  padding: 0;
+}
+
+.theme-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 10px 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ffcc00;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #555;
+  border-radius: 8px;
+  transition: background-color 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.theme-btn:hover {
+  background-color: rgba(255, 204, 0, 0.15);
+  border-color: #ffcc00;
+  transform: translateY(-2px);
+}
+
+.theme-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+
+.theme-swatch-plain {
+  background: none !important;
+  border-color: transparent;
+  box-shadow: none;
+  font-size: 24px;
+}
+
+/* ---------- Settings gear + overlay ---------- */
+#settingsGearBtn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 19px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#settingsGearBtn:hover {
+  transform: rotate(60deg);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+}
+
+#settingsOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+}
+
+#settingsOverlay.active {
+  display: flex;
+}
+
+.settings-panel {
+  position: relative;
+  width: 90%;
+  max-width: 420px;
+  background: #1e1e2f;
+  border: 3px solid #ffcc00;
+  border-radius: 10px;
+  padding: 25px 28px;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #ffcc00;
+  box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+}
+
+.settings-panel h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.settings-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.settings-row {
+  margin: 18px 0;
+}
+
+.settings-row label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.settings-row-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.settings-row-inline label {
+  margin-bottom: 0;
+}
+
+.settings-row input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+.settings-row input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: #ffcc00;
+  cursor: pointer;
+}
+
+/* ---------- Secret code bar "glitch" animations ---------- */
+@keyframes glitchIn {
+  0%   { opacity: 0; transform: translate(-8px, 6px) skewX(8deg); filter: hue-rotate(90deg) saturate(3); }
+  15%  { opacity: 1; transform: translate(6px, -4px) skewX(-6deg); }
+  30%  { transform: translate(-5px, 3px) skewX(4deg); filter: hue-rotate(-60deg); }
+  45%  { transform: translate(4px, -2px) skewX(-3deg); }
+  60%  { transform: translate(-2px, 2px) skewX(2deg); filter: none; }
+  100% { opacity: 1; transform: translate(0, 0) skewX(0); filter: none; }
+}
+
+@keyframes glitchOut {
+  0%   { opacity: 1; transform: translate(0, 0) skewX(0); filter: none; }
+  25%  { transform: translate(5px, -3px) skewX(-4deg); filter: hue-rotate(60deg); }
+  50%  { transform: translate(-6px, 4px) skewX(6deg); filter: hue-rotate(-90deg) saturate(3); }
+  75%  { opacity: 0.4; transform: translate(3px, -2px) skewX(3deg); }
+  100% { opacity: 0; transform: translate(-8px, 6px) skewX(-8deg); }
+}
+
+#codeInputBar.glitch-in {
+  animation: glitchIn 0.35s steps(3, end);
+}
+
+#codeInputBar.glitch-out {
+  animation: glitchOut 0.35s steps(3, end);
+}
+
+/* ---------- Misc ---------- */
+button:hover {
+  color: #ffd700;
+  border-color: #ffd700;
+}
+
+/* ---------- Halloween theme (limited time) ---------- */
+.theme-btn[hidden] { display: none; }
+
+/* LIMITED tag sits under the label so the themes panel's overflow:hidden can't clip it */
+.theme-btn-limited {
+  border: 1px dashed #ff7518;
+  background: linear-gradient(160deg, rgba(255,117,24,.18), rgba(90,0,120,.28));
+  color: #ff9a3c;
+  animation: hw-btn-glow 2.4s ease-in-out infinite;
+}
+.theme-btn-limited::after {
+  content: 'LIMITED';
+  font: bold 9px Arial, sans-serif;
+  letter-spacing: .5px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #ff7518;
+  color: #1a0a00;
+}
+@keyframes hw-btn-glow {
+  0%, 100% { box-shadow: inset 0 0 3px rgba(255,117,24,.35); }
+  50%      { box-shadow: inset 0 0 12px rgba(255,117,24,.85); }
+}
+
+/* Red cursor */
+body.halloween {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M3 2v17l5-4.5 3.5 7.5 3-1.5-3.5-7H18z' fill='%23d40000' stroke='%23300000' stroke-width='1.5' stroke-linejoin='round'/></svg>") 3 2, auto;
+}
+
+/* Title: red spooky font + glow (no drips) */
+body.halloween h1 {
+  font-family: 'Creepster', 'Comic Sans MS', cursive;
+  font-weight: normal;
+  letter-spacing: 4px;
+  color: #c40000;
+  -webkit-text-stroke: 2px #3a0000;
+  animation: boinga-bounce 1.8s ease-in-out infinite, hw-glow 3s ease-in-out infinite;
+}
+@keyframes hw-glow {
+  0%, 100% { text-shadow: 0 2px 0 #5a0000, 0 0 14px rgba(255,0,0,.7), 0 0 30px rgba(140,0,0,.8); }
+  50%      { text-shadow: 0 3px 0 #5a0000, 0 0 22px rgba(255,30,30,.95), 0 0 46px rgba(170,0,0,.9); }
+}
+
+/* Purple mascots -> red. Tweak the degrees if the shade is off */
+body.halloween .boinga-container img { filter: hue-rotate(70deg); }
+
+/* Page text + tiles */
+body.halloween p.quote,
+body.halloween p.changelog,
+body.halloween .rating-result { color: #ff9a3c; }
+body.halloween .content hr { background-color: #ff7518; }
+body.halloween #games a:hover,
+body.halloween #favorites-bar a:hover {
+  transform: scale(1.1) rotate(-3deg);
+  filter: drop-shadow(0 0 10px #ff7518);
+}
+body.halloween .settings-panel {
+  border-color: #ff7518;
+  color: #ff7518;
+  box-shadow: 0 0 30px rgba(255,117,24,.35);
+}
+body.halloween .stat-card { border-color: #ff7518; }
+
+/* Effects layer */
+#halloweenFX {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.hw-vignette {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 160px 50px rgba(0,0,0,.8);
+  animation: hw-flicker 5s steps(1, end) infinite;
+}
+@keyframes hw-flicker {
+  0% { opacity: 1; } 8% { opacity: .88; } 12% { opacity: 1; }
+  40% { opacity: .94; } 44% { opacity: .82; } 48% { opacity: 1; }
+  75% { opacity: .92; } 100% { opacity: 1; }
+}
+.hw-fog {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: 0;
+  height: 40vh;
+  background:
+    radial-gradient(ellipse at 30% 100%, rgba(200,180,255,.22), transparent 60%),
+    radial-gradient(ellipse at 70% 100%, rgba(255,140,60,.16), transparent 60%);
+  animation: hw-fog 12s ease-in-out infinite alternate;
+}
+@keyframes hw-fog {
+  from { transform: translateX(-5%); opacity: .7; }
+  to   { transform: translateX(5%);  opacity: 1; }
+}
+.hw-web { position: absolute; top: 0; width: 140px; height: 140px; opacity: .5; }
+.hw-web-tl { left: 0; }
+.hw-web-tr { right: 0; transform: scaleX(-1); }
+.hw-spider {
+  position: absolute;
+  top: 0;
+  left: 9vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 12vh;
+  animation: hw-dangle 7s ease-in-out infinite;
+}
+.hw-thread { flex: 1; width: 1px; background: rgba(255,255,255,.6); }
+.hw-bug { font-size: 22px; line-height: 1; }
+@keyframes hw-dangle {
+  0%, 100% { height: 8vh; }
+  50%      { height: 26vh; }
+}
+
+/* Lightning strike on activation */
+.hw-lightning {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+}
+.hw-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, #fff 0%, rgba(190,210,255,.75) 55%, rgba(190,210,255,.35) 100%);
+  opacity: 0;
+  animation: hw-flash 1s linear forwards;
+}
+.hw-lightning svg {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: hw-bolt 1s linear forwards;
+}
+.hw-bolt {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px #bcd4ff) drop-shadow(0 0 18px #7aa7ff);
+}
+.hw-bolt-branch { stroke-width: 1.8; }
+@keyframes hw-flash {
+  0%   { opacity: 0; }
+  4%   { opacity: .85; }
+  10%  { opacity: .15; }
+  16%  { opacity: .7; }
+  30%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@keyframes hw-bolt {
+  0%   { opacity: 0; }
+  3%   { opacity: 1; }
+  10%  { opacity: .3; }
+  15%  { opacity: 1; }
+  28%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* ---------- Disable-animations preference (set from the Settings menu) ---------- */
+.no-animations,
+.no-animations * {
+  animation: none !important;
+  transition: none !important;
+}
+  
