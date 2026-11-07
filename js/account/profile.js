@@ -45,6 +45,15 @@
         h('div', { class: 'prof-status ' + u.status }, h('span', { class: 'acct-dot inline ' + u.status }), statusText),
         h('div', { class: 'prof-joined' }, 'Joined ' + new Date(u.createdAt * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })));
 
+      if (u.music) {
+        const m = u.music;
+        info.appendChild(h('button', { class: 'prof-music', title: 'Play this song', onclick: () => {
+          if (window.Music) Music.playOne({ id: m.id, title: m.title, artist: m.artist, cover: m.cover, duration: 0 });
+        } },
+          m.cover ? h('img', { src: m.cover, alt: '' }) : h('span', { class: 'prof-noimg' }),
+          h('span', { class: 'prof-music-text' }, h('small', null, '🎵 Listening to'), h('strong', null, m.title), m.artist ? h('span', null, m.artist) : null),
+          h('span', { class: 'prof-music-play' }, '▶')));
+      }
       if (u.bio) info.appendChild(h('p', { class: 'prof-bio' }, u.bio));
       else if (isSelf) info.appendChild(h('p', { class: 'prof-bio empty' }, 'No bio yet. Click Edit profile to add one.'));
 
@@ -70,9 +79,29 @@
         });
       }
 
+      // Favorite games (from their star button), clickable to play
+      const favs = h('div', { class: 'prof-activity prof-favs' }, h('h3', null, '⭐ Favorite games'));
+      if (u.favorites === null) {
+        favs.appendChild(h('p', { class: 'acct-empty' }, '🔒 ' + u.username + ' keeps their favorites private.'));
+      } else {
+        const list = (u.favorites || []).map(id => window.Library && Library.byId[id]).filter(Boolean);
+        if (!list.length) favs.appendChild(h('p', { class: 'acct-empty' }, isSelf ? 'Star games on the home page and they show up here!' : 'No favorites yet.'));
+        else {
+          const grid = h('div', { class: 'prof-fav-grid' });
+          list.forEach(g => {
+            const t = Library.makeTile(g);
+            t.querySelector('.game-star').remove();
+            t.addEventListener('click', () => m.close());
+            grid.appendChild(t);
+          });
+          favs.appendChild(grid);
+        }
+      }
+
       body.appendChild(banner);
       body.appendChild(head);
       body.appendChild(info);
+      body.appendChild(favs);
       body.appendChild(act);
     }
 
@@ -183,6 +212,7 @@
 
     function uploader(kind, label) {
       const err = UI.errorBox();
+      if (Account.saver.uploads === false) setTimeout(() => err.show('Uploads are paused right now to keep BoingaGames free. Try again tomorrow.'), 0);
       const input = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
       const pick = h('button', { class: 'acct-btn primary', onclick: () => input.click() }, label);
       input.addEventListener('change', () => {
@@ -297,6 +327,8 @@
     body.appendChild(section('Privacy',
       toggle('showActivity', 'Show my activity', 'Your most played games on your profile'),
       toggle('showGame', 'Show what I\'m playing', 'Shows the game you\'re in, and off-site games you just went to'),
+      toggle('showFavorites', 'Show my favorite games', 'The games you starred, on your profile'),
+      toggle('showMusic', 'Show what I\'m listening to', '"Listening to …" on your profile and status'),
       toggle('appearOffline', 'Always appear offline', 'Nobody will see you as active or away'),
       blockedList()));
 

@@ -107,6 +107,7 @@
     saveFavorites(favs);
     renderFavorites(favs);
     updateStars(favs);
+    document.dispatchEvent(new CustomEvent('boinga:favorites', { detail: favs }));
   }
 
   /* ------------------------------------------------------- launching games */
@@ -501,7 +502,7 @@
     });
   }
 
-  window.Library = { byId: byId, launch: launch, openFullList: openFullList };
+  window.Library = { byId: byId, launch: launch, openFullList: openFullList, getFavorites: getFavorites, makeTile: makeTile };
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

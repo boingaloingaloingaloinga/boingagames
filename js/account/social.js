@@ -1,16 +1,23 @@
-/* Friends drawer + direct messages. window.Social */
+/* =====================================================================
+   Friends drawer: friends, group chats, requests, add people,
+   and the chat view (direct messages + group chats share it).
+   window.Social = { open, close, openChat(user), openGroup(id), shareTo(onPick) }
+   ===================================================================== */
 (function () {
   const { h } = window.UI;
-  const cfg = window.BOINGA_CONFIG || {};
 
-  let drawer = null;       // root element
-  let content = null;      // area that swaps between list + chat
+  let drawer = null, content = null;
   let tab = 'friends';
   let data = { friends: [], incoming: [], outgoing: [] };
+  let gdata = { groups: [], invites: [] };
   let listTimer = null;
-  let chat = null;         // { user, lastId, firstId, timer, el... }
+  let chat = null; // the open conversation
+  const GROUP_MIN = 3, GROUP_MAX = 15;
 
-  /* ------------------------------------------------------------ drawer */
+  const pollMs = () => Math.max(3, (Account.saver && Account.saver.chatPoll) || 3) * 1000;
+  const uploadsOn = () => !Account.saver || Account.saver.uploads !== false;
+
+  /* ============================================================ DRAWER */
 
   function ensureDrawer() {
     if (drawer) return;
@@ -43,7 +50,8 @@
 
   async function refreshList() {
     try {
-      data = await Api.get('/api/friends');
+      const [f, g] = await Promise.all([Api.get('/api/friends'), Api.get('/api/groups')]);
+      data = f; gdata = g;
       if (!chat && drawer && drawer.classList.contains('open')) renderList();
     } catch (e) { /* shown on next render */ }
   }
@@ -56,18 +64,22 @@
   }
 
   function renderList() {
+    if (!content) return;
     content.innerHTML = '';
     content.appendChild(header('Friends'));
-    const reqCount = data.incoming.length;
-    const tabs = h('div', { class: 'seg social-tabs' },
-      h('button', { class: tab === 'friends' ? 'active' : '', onclick: () => { tab = 'friends'; renderList(); } }, 'Friends' + (data.friends.length ? ' (' + data.friends.length + ')' : '')),
-      h('button', { class: tab === 'requests' ? 'active' : '', onclick: () => { tab = 'requests'; renderList(); } },
-        'Requests', reqCount ? h('span', { class: 'acct-badge inline' }, String(reqCount)) : null),
-      h('button', { class: tab === 'add' ? 'active' : '', onclick: () => { tab = 'add'; renderList(); } }, 'Add'));
-    content.appendChild(tabs);
+    const reqCount = data.incoming.length + gdata.invites.length;
+    const groupUnread = gdata.groups.reduce((n, g) => n + (g.unread || 0), 0);
+    const tabBtn = (key, label, badge) => h('button', { class: tab === key ? 'active' : '', onclick: () => { tab = key; renderList(); } },
+      label, badge ? h('span', { class: 'acct-badge inline' }, String(badge)) : null);
+    content.appendChild(h('div', { class: 'seg social-tabs' },
+      tabBtn('friends', 'Friends', data.friends.reduce((n, f) => n + (f.unread || 0), 0)),
+      tabBtn('groups', 'Groups', groupUnread),
+      tabBtn('requests', 'Requests', reqCount),
+      tabBtn('add', 'Add')));
     const body = h('div', { class: 'social-body' });
     content.appendChild(body);
     if (tab === 'friends') friendsTab(body);
+    else if (tab === 'groups') groupsTab(body);
     else if (tab === 'requests') requestsTab(body);
     else addTab(body);
   }
@@ -107,11 +119,51 @@
     });
   }
 
-  function requestsTab(body) {
-    if (!data.incoming.length && !data.outgoing.length) {
-      body.appendChild(h('p', { class: 'social-empty' }, 'No friend requests right now.'));
+  function groupRow(g, right, onclick) {
+    const sub = g.active
+      ? g.memberCount + ' members'
+      : 'Waiting for people to join (' + g.memberCount + '/' + GROUP_MIN + ')';
+    const row = h('div', { class: 'social-row' + (onclick ? ' clickable' : '') },
+      UI.groupIconEl(g, 40),
+      h('div', { class: 'social-row-main' }, h('span', { class: 'acct-name group-name' }, g.name), h('div', { class: 'social-sub' }, sub)),
+      right || null);
+    if (onclick) row.addEventListener('click', e => { if (!e.target.closest('button')) onclick(); });
+    return row;
+  }
+
+  function groupsTab(body) {
+    body.appendChild(h('button', { class: 'acct-btn primary wide social-new-group', onclick: newGroup }, '＋ New group chat'));
+    if (!gdata.groups.length) {
+      body.appendChild(h('p', { class: 'social-empty' }, 'No group chats yet. Make one with 2 to 14 of your friends!'));
       return;
     }
+    gdata.groups.forEach(g => {
+      body.appendChild(groupRow(g, g.unread ? h('span', { class: 'acct-badge inline' }, String(g.unread)) : null, () => openGroup(g.id)));
+    });
+  }
+
+  function requestsTab(body) {
+    if (!data.incoming.length && !data.outgoing.length && !gdata.invites.length) {
+      body.appendChild(h('p', { class: 'social-empty' }, 'No requests or invites right now.'));
+      return;
+    }
+    if (gdata.invites.length) body.appendChild(h('div', { class: 'social-group' }, 'Group chat invites'));
+    gdata.invites.forEach(g => {
+      const yes = h('button', { class: 'acct-btn small primary' }, 'Join');
+      const no = h('button', { class: 'acct-btn small' }, 'Decline');
+      yes.addEventListener('click', () => UI.busy(yes, async () => {
+        try { await Api.post('/api/groups/' + g.id + '/respond', { accept: true }); UI.toast('You joined ' + g.name + '!', 'good'); await refreshList(); Presence.beat(true); }
+        catch (e) { UI.toast(e.message, 'bad'); }
+      }));
+      no.addEventListener('click', () => UI.busy(no, async () => {
+        try { await Api.post('/api/groups/' + g.id + '/respond', { accept: false }); await refreshList(); Presence.beat(true); }
+        catch (e) { UI.toast(e.message, 'bad'); }
+      }));
+      const who = g.members.map(m => m.username).slice(0, 3).join(', ') + (g.members.length > 3 ? '…' : '');
+      const row = groupRow(g, h('div', { class: 'social-right' }, yes, no));
+      row.querySelector('.social-sub').textContent = 'With ' + who;
+      body.appendChild(row);
+    });
     if (data.incoming.length) body.appendChild(h('div', { class: 'social-group' }, 'Wants to be your friend'));
     data.incoming.forEach(u => {
       const yes = h('button', { class: 'acct-btn small primary' }, 'Accept');
@@ -182,45 +234,287 @@
     });
   }
 
-  /* -------------------------------------------------------------- chat */
+  /* ========================================================= GROUPS */
+
+  // Friend picker used by "New group" and "Invite friends"
+  function friendPicker(exclude, max) {
+    const chosen = new Set();
+    const counter = h('span', { class: 'acct-hint' });
+    const filter = h('input', { type: 'search', placeholder: 'Filter friends…', maxlength: 20 });
+    const list = h('div', { class: 'pick-list' });
+    const draw = () => {
+      const q = filter.value.trim().toLowerCase();
+      list.innerHTML = '';
+      const friends = data.friends.filter(f => !exclude.has(f.id) && f.username.toLowerCase().includes(q));
+      if (!friends.length) list.appendChild(h('p', { class: 'acct-hint center' }, data.friends.length ? 'No matching friends.' : 'Add some friends first!'));
+      friends.forEach(f => {
+        const box = h('input', { type: 'checkbox' });
+        box.checked = chosen.has(f.id);
+        box.addEventListener('change', () => {
+          if (box.checked && chosen.size >= max) { box.checked = false; UI.toast('That\'s the most people a group can have.'); return; }
+          box.checked ? chosen.add(f.id) : chosen.delete(f.id);
+          counter.textContent = chosen.size + ' selected';
+        });
+        list.appendChild(h('label', { class: 'pick-row' }, box, UI.avatarEl(f, 30, true), UI.nameEl(f)));
+      });
+    };
+    filter.addEventListener('input', draw);
+    draw();
+    counter.textContent = '0 selected';
+    return { el: h('div', { class: 'pick' }, filter, list, counter), chosen };
+  }
+
+  async function newGroup() {
+    if (!data.friends.length) await refreshList();
+    const err = UI.errorBox();
+    const name = h('input', { type: 'text', maxlength: 40, placeholder: 'Group name' });
+    const picker = friendPicker(new Set(), GROUP_MAX - 1);
+    const btn = h('button', { class: 'acct-btn primary wide' }, 'Create group');
+    const body = h('div', { class: 'acct-form' },
+      name,
+      h('p', { class: 'acct-hint' }, 'Pick 2 to 14 friends. Everyone has to accept the invite, and the chat opens once 3 people are in.'),
+      picker.el, err, btn);
+    const m = UI.modal({ title: 'New group chat', body });
+    setTimeout(() => name.focus(), 30);
+    btn.addEventListener('click', () => UI.busy(btn, async () => {
+      err.show('');
+      if (picker.chosen.size < GROUP_MIN - 1) return err.show('Pick at least 2 friends.');
+      try {
+        const r = await Api.post('/api/groups', { name: name.value, userIds: [...picker.chosen] });
+        m.close();
+        UI.toast('Group created! Invites sent.', 'good');
+        await refreshList();
+        openGroup(r.group.id);
+      } catch (e) { err.show(e.message); }
+    }));
+  }
+
+  async function groupInfo(groupId) {
+    const body = h('div', { class: 'ginfo' }, h('div', { class: 'acct-loading' }, 'Loading…'));
+    const m = UI.modal({ title: 'Group', body, wide: true });
+    async function load() {
+      let g;
+      try { g = (await Api.get('/api/groups/' + groupId)).group; } catch (e) { body.innerHTML = ''; body.appendChild(h('p', { class: 'acct-error' }, e.message)); return; }
+      render(g);
+      if (chat && chat.kind === 'group' && chat.id === g.id) setChatGroup(g);
+    }
+    function render(g) {
+      body.innerHTML = '';
+      const isOwner = g.ownerId === Account.user.id;
+      const act = (label, cls, fn) => {
+        const b = h('button', { class: 'acct-btn small ' + (cls || '') }, label);
+        b.addEventListener('click', () => UI.busy(b, async () => { try { await fn(); } catch (e) { UI.toast(e.message, 'bad'); } }));
+        return b;
+      };
+
+      // Icon + name
+      const iconInput = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
+      iconInput.addEventListener('change', async () => {
+        const file = iconInput.files[0]; iconInput.value = '';
+        if (!file) return;
+        try {
+          await UI.checkImage(file, UI.IMAGE_RULES.group);
+          if (isOwner) { await Api.post('/api/groups/' + g.id + '/icon', file); UI.toast('Group icon changed!', 'good'); }
+          else { await Api.post('/api/groups/' + g.id + '/suggest-icon', file); UI.toast('Icon suggested! The owner will decide.', 'good'); }
+          load();
+        } catch (e) { UI.toast(e.message, 'bad'); }
+      });
+      const nameInput = h('input', { type: 'text', maxlength: 40, value: g.name });
+      const iconBtns = h('div', { class: 'acct-row-btns left' },
+        act(isOwner ? 'Change icon' : 'Suggest icon', '', async () => {
+          if (!uploadsOn()) throw new Error('Uploads are paused right now to keep BoingaGames free.');
+          iconInput.click();
+        }),
+        isOwner && g.icon ? act('Remove icon', '', async () => { await Api.del('/api/groups/' + g.id + '/icon'); load(); }) : null);
+      body.appendChild(h('section', { class: 'edit-sec' },
+        h('div', { class: 'ginfo-top' }, UI.groupIconEl(g, 84),
+          h('div', { class: 'ginfo-name' },
+            h('div', { class: 'edit-inline' }, nameInput,
+              act(isOwner ? 'Rename' : 'Suggest', 'primary', async () => {
+                if (isOwner) { await Api.patch('/api/groups/' + g.id, { name: nameInput.value }); UI.toast('Renamed!', 'good'); }
+                else { await Api.post('/api/groups/' + g.id + '/suggest', { name: nameInput.value }); UI.toast('Name suggested! The owner will decide.', 'good'); }
+                load();
+              })),
+            h('p', { class: 'acct-hint' }, isOwner ? 'You made this group, so you can rename it, change the icon and remove people.'
+              : 'Only the group owner can change the name and icon, but you can suggest new ones.'),
+            iconBtns)),
+        iconInput));
+
+      // Suggestions (owner decides)
+      if (isOwner && g.suggestions && g.suggestions.length) {
+        const sec = h('section', { class: 'edit-sec' }, h('h3', null, 'Suggestions'));
+        g.suggestions.forEach(s => sec.appendChild(suggestionRow(g, s, load)));
+        body.appendChild(sec);
+      }
+
+      // Members
+      const mem = h('section', { class: 'edit-sec' }, h('h3', null, 'Members (' + g.memberCount + '/' + GROUP_MAX + ')'));
+      if (!g.active) mem.appendChild(h('p', { class: 'acct-hint' }, 'Chat opens once at least 3 people have joined.'));
+      g.members.forEach(u => {
+        const right = h('div', { class: 'social-right' },
+          u.id === g.ownerId ? h('span', { class: 'ginfo-owner' }, 'Owner') : null,
+          isOwner && u.id !== Account.user.id ? act('Remove', 'danger', async () => {
+            if (!confirm('Remove ' + u.username + ' from the group?')) return;
+            await Api.post('/api/groups/' + g.id + '/kick', { userId: u.id }); load();
+          }) : null);
+        mem.appendChild(personRow(u, UI.statusLine(u), right, () => Profile.view(u.username)));
+      });
+      if (g.invited.length) {
+        mem.appendChild(h('div', { class: 'social-group' }, 'Invited (waiting)'));
+        g.invited.forEach(u => {
+          mem.appendChild(personRow(u, 'Hasn\'t joined yet', isOwner ? h('div', { class: 'social-right' },
+            act('Cancel', '', async () => { await Api.post('/api/groups/' + g.id + '/kick', { userId: u.id }); load(); })) : null));
+        });
+      }
+      if (isOwner) {
+        mem.appendChild(act('Invite friends', 'primary', async () => {
+          if (!data.friends.length) await refreshList();
+          const exclude = new Set(g.members.concat(g.invited).map(u => u.id));
+          const picker = friendPicker(exclude, GROUP_MAX - exclude.size);
+          const err = UI.errorBox();
+          const send = h('button', { class: 'acct-btn primary wide' }, 'Send invites');
+          const im = UI.modal({ title: 'Invite friends', body: h('div', { class: 'acct-form' }, picker.el, err, send) });
+          send.addEventListener('click', () => UI.busy(send, async () => {
+            try { await Api.post('/api/groups/' + g.id + '/invite', { userIds: [...picker.chosen] }); im.close(); UI.toast('Invites sent!', 'good'); load(); }
+            catch (e) { err.show(e.message); }
+          }));
+        }));
+      }
+      body.appendChild(mem);
+
+      // Leave
+      body.appendChild(h('section', { class: 'edit-sec' },
+        act('Leave group', 'danger', async () => {
+          const msg = isOwner && g.memberCount > 1 ? 'Leave the group? The longest-standing member becomes the new owner.' : 'Leave the group?';
+          if (!confirm(msg)) return;
+          await Api.post('/api/groups/' + g.id + '/leave');
+          m.close();
+          if (chat && chat.kind === 'group' && chat.id === g.id) closeChat();
+          refreshList();
+        })));
+    }
+    load();
+  }
+
+  function suggestionRow(g, s, after) {
+    const yes = h('button', { class: 'acct-btn small primary' }, 'Use it');
+    const no = h('button', { class: 'acct-btn small' }, 'Pass');
+    const decide = accept => async () => {
+      try { await Api.post('/api/groups/' + g.id + '/suggestions/' + s.id, { accept }); after && after(); }
+      catch (e) { UI.toast(e.message, 'bad'); }
+    };
+    yes.addEventListener('click', () => UI.busy(yes, decide(true)));
+    no.addEventListener('click', () => UI.busy(no, decide(false)));
+    return h('div', { class: 'sugg-row' },
+      s.kind === 'icon' ? h('img', { class: 'sugg-icon', src: Api.media(s.value) || 'boinga.gif', alt: '' }) : h('span', { class: 'sugg-name' }, '“' + s.value + '”'),
+      s.by ? h('span', { class: 'acct-hint' }, 'from ' + s.by) : null,
+      h('div', { class: 'social-right' }, yes, no));
+  }
+
+  /* ========================================================== CHAT */
 
   function openChat(user) {
+    startChat({ kind: 'dm', id: user.id, user,
+      path: '/api/messages/' + user.id, readPath: '/api/messages/' + user.id + '/read' });
+  }
+
+  async function openGroup(id) {
+    let g = gdata.groups.find(x => x.id === id);
+    try { g = (await Api.get('/api/groups/' + id)).group; } catch (e) { if (!g) return UI.toast(e.message, 'bad'); }
+    startChat({ kind: 'group', id: g.id, group: g,
+      path: '/api/groups/' + g.id + '/messages', readPath: '/api/groups/' + g.id + '/read' });
+  }
+
+  function setChatGroup(g) {
+    if (!chat || chat.kind !== 'group') return;
+    chat.group = g;
+    chat.members = new Map(g.members.concat(g.invited).map(u => [u.id, u]));
+    chat.pending = new Set((g.suggestions || []).map(s => s.id));
+    if (chat.headTitle) { chat.headTitle.textContent = g.name; chat.headSub.textContent = g.memberCount + ' members'; }
+    if (chat.headIcon) { const icon = UI.groupIconEl(g, 34); chat.headIcon.replaceWith(icon); chat.headIcon = icon; }
+    updateComposerLock();
+    // keep suggestion buttons in sync: remove answered ones, add ones that are still waiting
+    const isOwner = g.ownerId === Account.user.id;
+    chat.list.querySelectorAll('.chat-system[data-suggestion]').forEach(el => {
+      const sid = Number(el.dataset.suggestion);
+      const btns = el.querySelector('.sugg-btns');
+      if (btns && (!chat.pending.has(sid) || !isOwner)) btns.remove();
+      if (!btns && isOwner && chat.pending.has(sid)) {
+        const s = (g.suggestions || []).find(x => x.id === sid);
+        if (s) { const row = suggestionRow(g, s, refreshOpenGroup); row.classList.add('sugg-btns'); el.appendChild(row); }
+      }
+    });
+  }
+
+  async function refreshOpenGroup() {
+    if (!chat || chat.kind !== 'group') return;
+    const c = chat;
+    try { const g = (await Api.get('/api/groups/' + c.id)).group; if (chat === c) setChatGroup(g); } catch (e) {}
+    poll();
+  }
+
+  function updateComposerLock() {
+    if (!chat || !chat.composer) return;
+    const locked = chat.kind === 'group' && !chat.group.active;
+    chat.composer.classList.toggle('locked', locked);
+    chat.lockNote.hidden = !locked;
+    if (locked) chat.lockNote.textContent = 'This chat opens once at least 3 people have joined (' + chat.group.memberCount + '/' + GROUP_MIN + ' so far).';
+    chat.attachBtn.disabled = !uploadsOn();
+    chat.attachBtn.title = uploadsOn() ? 'Attach an image or GIF file' : 'Image uploads are paused right now (data saver). GIFs still work!';
+  }
+
+  function startChat(conv) {
     if (!Account.user) return;
     open();
     closeChat(true);
     content.innerHTML = '';
-    const back = h('button', { class: 'social-back', title: 'Back', onclick: () => { closeChat(); } }, '‹');
-    const who = h('button', { class: 'chat-who', onclick: () => Profile.view(user.username) },
-      UI.avatarEl(user, 34, true),
-      h('div', null, UI.nameEl(user), h('div', { class: 'social-sub ' + user.status }, UI.statusLine(user))));
+    const back = h('button', { class: 'social-back', title: 'Back', onclick: () => closeChat() }, '‹');
+    let who;
+    conv.headIcon = null;
+    if (conv.kind === 'dm') {
+      who = h('button', { class: 'chat-who', onclick: () => Profile.view(conv.user.username) },
+        UI.avatarEl(conv.user, 34, true),
+        h('div', null, UI.nameEl(conv.user), h('div', { class: 'social-sub ' + conv.user.status }, UI.statusLine(conv.user))));
+    } else {
+      conv.headIcon = UI.groupIconEl(conv.group, 34);
+      conv.headTitle = h('span', { class: 'acct-name group-name' }, conv.group.name);
+      conv.headSub = h('div', { class: 'social-sub' }, conv.group.memberCount + ' members');
+      who = h('button', { class: 'chat-who', title: 'Group info', onclick: () => groupInfo(conv.id) },
+        conv.headIcon, h('div', null, conv.headTitle, conv.headSub));
+    }
     const head = h('div', { class: 'social-head chat-head' }, back, who,
+      conv.kind === 'group' ? h('button', { class: 'social-mini', title: 'Group info', onclick: () => groupInfo(conv.id), html: '<i class="fa-solid fa-circle-info"></i>' }) : null,
       h('button', { class: 'social-x', title: 'Close', onclick: close }, '×'));
 
     const list = h('div', { class: 'chat-list' }, h('div', { class: 'acct-loading' }, 'Loading…'));
     const older = h('button', { class: 'chat-older', hidden: true }, 'Load older messages');
 
     const fileInput = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
-    const attachBtn = h('button', { class: 'chat-attach', title: 'Attach an image or GIF', onclick: () => fileInput.click(), html: '<i class="fa-solid fa-image"></i>' });
-    const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: 1000, placeholder: 'Message ' + user.username + '…' });
+    const attachBtn = h('button', { class: 'chat-attach', title: 'Attach an image', onclick: () => fileInput.click(), html: '<i class="fa-solid fa-image"></i>' });
+    const gifBtn = h('button', { class: 'chat-attach chat-gif-btn', title: 'Send a GIF' }, 'GIF');
+    const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: 1000,
+      placeholder: conv.kind === 'dm' ? 'Message ' + conv.user.username + '…' : 'Message ' + conv.group.name + '…' });
     const sendBtn = h('button', { class: 'chat-send', title: 'Send', html: '<i class="fa-solid fa-paper-plane"></i>' });
     const pending = h('div', { class: 'chat-pending', hidden: true });
     const err = UI.errorBox();
-    const composer = h('div', { class: 'chat-compose' }, pending, err,
-      h('div', { class: 'chat-compose-row' }, attachBtn, text, sendBtn), fileInput,
-      h('div', { class: 'chat-note' }, 'Images & GIFs are deleted from the server after a while to save space.'));
+    const lockNote = h('div', { class: 'chat-lock', hidden: true });
+    const composer = h('div', { class: 'chat-compose' }, lockNote, pending, err,
+      h('div', { class: 'chat-compose-row' }, attachBtn, gifBtn, text, sendBtn), fileInput,
+      h('div', { class: 'chat-note' }, 'Uploaded images are deleted from the server after a while to save space.'));
 
     content.appendChild(head);
     content.appendChild(h('div', { class: 'chat-scroll' }, older, list));
     content.appendChild(composer);
 
-    chat = { user, lastId: 0, firstId: 0, list, text, attachment: null, timer: null, ids: new Set() };
+    chat = Object.assign(conv, { lastId: 0, firstId: 0, list, text, attachment: null, timer: null, ids: new Set(),
+      composer, lockNote, attachBtn, members: new Map(), pending: new Set(), lastSender: null });
+    if (conv.kind === 'group') setChatGroup(conv.group); else updateComposerLock();
     const scroller = list.parentNode;
 
     text.addEventListener('input', () => { text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 120) + 'px'; });
-    text.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
-    });
-    sendBtn.addEventListener('click', send);
+    text.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+    sendBtn.addEventListener('click', () => send());
+    gifBtn.addEventListener('click', () => GifPicker.open(gifBtn, gif => send({ gif })));
 
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files[0];
@@ -245,23 +539,21 @@
     }
 
     let sending = false;
-    async function send() {
+    async function send(extra) {
       if (sending || !chat) return;
-      const body = text.value.trim();
-      if (!body && !chat.attachment) return;
+      const body = extra ? '' : text.value.trim();
+      if (!extra && !body && !chat.attachment) return;
       sending = true;
       sendBtn.disabled = true;
       err.show('');
       try {
-        let key = null;
-        if (chat.attachment) {
+        const payload = Object.assign({ body }, extra || {});
+        if (!extra && chat.attachment) {
           if (!chat.attachment.key) chat.attachment.key = (await Api.post('/api/upload/chat', chat.attachment.file)).key;
-          key = chat.attachment.key;
+          payload.attachment = chat.attachment.key;
         }
-        const r = await Api.post('/api/messages/' + user.id, { body, attachment: key });
-        text.value = '';
-        text.style.height = 'auto';
-        clearAttachment();
+        const r = await Api.post(chat.path, payload);
+        if (!extra) { text.value = ''; text.style.height = 'auto'; clearAttachment(); }
         addMessages([r.message], true);
       } catch (e) {
         err.show(e.message);
@@ -271,21 +563,23 @@
         text.focus();
       }
     }
+    chat.send = send;
 
     older.addEventListener('click', () => UI.busy(older, async () => {
-      const r = await Api.get('/api/messages/' + user.id + '?before=' + chat.firstId);
+      const r = await Api.get(chat.path + '?before=' + chat.firstId);
       const prevH = scroller.scrollHeight;
       prependMessages(r.messages);
       scroller.scrollTop = scroller.scrollHeight - prevH;
       older.hidden = r.messages.length < 50;
     }));
 
+    const c = chat;
     (async function initial() {
       try {
-        const r = await Api.get('/api/messages/' + user.id);
-        if (!chat || chat.user !== user) return;
+        const r = await Api.get(c.path);
+        if (chat !== c) return;
         list.innerHTML = '';
-        if (!r.messages.length) list.appendChild(h('p', { class: 'chat-empty' }, 'Say hi to ' + user.username + '! 👋'));
+        if (!r.messages.length) list.appendChild(h('p', { class: 'chat-empty' }, c.kind === 'dm' ? 'Say hi to ' + c.user.username + '! 👋' : 'Say hi to the group! 👋'));
         addMessages(r.messages, true);
         older.hidden = r.messages.length < 50;
         markRead();
@@ -295,61 +589,130 @@
       }
     })();
 
-    chat.timer = setInterval(poll, 3000);
+    schedulePoll();
     setTimeout(() => text.focus(), 50);
+  }
+
+  function schedulePoll() {
+    if (!chat) return;
+    clearTimeout(chat.timer);
+    chat.timer = setTimeout(async () => { await poll(); schedulePoll(); }, pollMs());
   }
 
   async function poll() {
     if (!chat || document.visibilityState !== 'visible') return;
     const c = chat;
     try {
-      const r = await Api.get('/api/messages/' + c.user.id + '?after=' + c.lastId);
+      const r = await Api.get(c.path + '?after=' + c.lastId);
       if (chat !== c) return;
-      if (r.messages.length) { addMessages(r.messages, false); markRead(); }
+      if (r.messages.length) {
+        // something changed in the group (join/leave/rename/suggestion): refresh details first
+        if (c.kind === 'group' && r.messages.some(m => m.kind === 'system')) {
+          try { const g = (await Api.get('/api/groups/' + c.id)).group; if (chat === c) setChatGroup(g); } catch (e) {}
+        }
+        if (chat !== c) return;
+        addMessages(r.messages, false);
+        markRead();
+      }
     } catch (e) {
-      if (e.status === 403) { UI.toast('You are no longer friends with ' + c.user.username + '.'); closeChat(); }
+      if (e.status === 403) {
+        UI.toast(c.kind === 'dm' ? 'You are no longer friends with ' + c.user.username + '.' : "You're no longer in this group.");
+        closeChat();
+      }
     }
   }
 
   function markRead() {
     if (!chat) return;
-    const id = chat.user.id;
-    Api.post('/api/messages/' + id + '/read').then(() => {
-      const c = Object.assign({}, Account.counts);
-      const n = (c.unreadBy && c.unreadBy[id]) || 0;
+    const c = chat;
+    Api.post(c.readPath).then(() => {
+      const counts = Object.assign({}, Account.counts);
+      const bag = c.kind === 'dm' ? 'unreadBy' : 'groupUnread';
+      const n = (counts[bag] && counts[bag][c.id]) || 0;
       if (n) {
-        c.unreadBy = Object.assign({}, c.unreadBy); delete c.unreadBy[id];
-        c.unread = Math.max(0, c.unread - n);
-        Account.setCounts(c);
+        counts[bag] = Object.assign({}, counts[bag]); delete counts[bag][c.id];
+        counts.unread = Math.max(0, counts.unread - n);
+        Account.setCounts(counts);
       }
-      const f = data.friends.find(x => x.id === id); if (f) f.unread = 0;
+      const f = (c.kind === 'dm' ? data.friends : gdata.groups).find(x => x.id === c.id); if (f) f.unread = 0;
     }).catch(() => {});
   }
 
+  function senderOf(id) {
+    if (Account.user && id === Account.user.id) return Account.user;
+    if (chat && chat.kind === 'dm' && chat.user.id === id) return chat.user;
+    return (chat && chat.members.get(id)) || { id, username: 'Former member', avatarHue: 0, status: 'offline' };
+  }
+
   function messageEl(msg) {
+    if (msg.kind === 'system') {
+      const el = h('div', { class: 'chat-system' }, msg.body);
+      const meta = msg.meta || {};
+      if (meta.suggestion) {
+        el.dataset.suggestion = meta.suggestion;
+        if (meta.kind === 'icon' && Api.media(meta.value)) el.appendChild(h('img', { class: 'sugg-icon', src: Api.media(meta.value), alt: '' }));
+        const isOwner = chat && chat.kind === 'group' && chat.group.ownerId === Account.user.id;
+        if (isOwner && chat.pending.has(meta.suggestion)) {
+          const s = { id: meta.suggestion, kind: meta.kind, value: meta.value, by: '' };
+          const row = suggestionRow(chat.group, s, refreshOpenGroup);
+          row.classList.add('sugg-btns');
+          el.appendChild(row);
+        }
+      }
+      return el;
+    }
     const mine = msg.from === Account.user.id;
     const bubble = h('div', { class: 'chat-bubble' });
     if (msg.deleted) bubble.appendChild(h('em', { class: 'chat-deleted' }, 'Message deleted'));
     if (msg.attachment) {
-      if (msg.attachment.expired) {
-        bubble.appendChild(h('div', { class: 'chat-expired' }, '🖼️ This image expired'));
+      if (msg.attachment.expired || !Api.media(msg.attachment.key)) {
+        bubble.appendChild(h('div', { class: 'chat-expired' }, msg.attachment.expired ? '🖼️ This image expired' : '🖼️ Image hidden (data saver)'));
       } else {
         const src = Api.media(msg.attachment.key);
         const img = h('img', { src, alt: 'Image', loading: 'lazy', class: 'chat-img' });
         if (msg.attachment.w && msg.attachment.h) {
-          const w = Math.min(240, msg.attachment.w);
-          img.style.width = w + 'px';
+          img.style.width = Math.min(240, msg.attachment.w) + 'px';
           img.style.aspectRatio = msg.attachment.w + ' / ' + msg.attachment.h;
         }
         img.onerror = () => img.replaceWith(h('div', { class: 'chat-expired' }, '🖼️ This image expired'));
         bubble.appendChild(h('a', { href: src, target: '_blank', rel: 'noopener noreferrer' }, img));
       }
     }
+    if (msg.gif) {
+      const img = h('img', { src: msg.gif.url, alt: 'GIF', loading: 'lazy', class: 'chat-img chat-gif' });
+      if (msg.gif.w && msg.gif.h) {
+        img.style.width = Math.min(220, msg.gif.w) + 'px';
+        img.style.aspectRatio = msg.gif.w + ' / ' + msg.gif.h;
+      }
+      bubble.classList.add('has-gif');
+      bubble.appendChild(img);
+    }
+    if (msg.kind === 'playlist' && msg.meta) {
+      const p = msg.meta;
+      bubble.classList.add('has-card');
+      bubble.appendChild(h('button', { class: 'chat-playlist', onclick: () => window.Music && Music.openPlaylist(p.id) },
+        p.cover ? h('img', { src: p.cover, alt: '' }) : h('span', { class: 'chat-playlist-noimg' }, '🎵'),
+        h('span', { class: 'chat-playlist-text' },
+          h('small', null, 'Playlist'), h('strong', null, p.name), h('span', null, p.count + ' songs · by ' + p.by)),
+        h('span', { class: 'chat-playlist-open' }, 'Open')));
+    }
     if (msg.body) bubble.appendChild(h('div', { class: 'chat-body' }, msg.body));
 
     const time = new Date(msg.at * 1000);
-    const row = h('div', { class: 'chat-msg ' + (mine ? 'mine' : 'theirs'), 'data-id': msg.id, title: time.toLocaleString() },
-      bubble);
+    const row = h('div', { class: 'chat-msg ' + (mine ? 'mine' : 'theirs'), 'data-id': msg.id, title: time.toLocaleString() });
+    // In groups, show who's talking when the sender changes
+    if (chat && chat.kind === 'group' && !mine) {
+      const u = senderOf(msg.from);
+      const showName = chat.lastSender !== msg.from;
+      const wrap = h('div', { class: 'chat-from' },
+        showName ? h('button', { class: 'chat-from-name', onclick: () => u.username !== 'Former member' && Profile.view(u.username) }, UI.nameEl(u)) : null,
+        bubble);
+      row.appendChild(showName ? UI.avatarEl(u, 26, false) : h('span', { class: 'chat-avatar-space' }));
+      row.appendChild(wrap);
+    } else {
+      row.appendChild(bubble);
+    }
+    if (chat) chat.lastSender = msg.from;
     if (!msg.deleted) {
       const tools = h('div', { class: 'chat-tools' });
       if (mine) {
@@ -357,11 +720,11 @@
           if (!confirm('Delete this message?')) return;
           try {
             await Api.del('/api/messages/item/' + msg.id);
-            row.replaceWith(messageEl(Object.assign({}, msg, { deleted: true, body: '', attachment: null })));
+            row.replaceWith(messageEl(Object.assign({}, msg, { deleted: true, body: '', attachment: null, gif: null, kind: 'text' })));
           } catch (e) { UI.toast(e.message, 'bad'); }
         }, html: '<i class="fa-solid fa-trash"></i>' }));
       } else {
-        tools.appendChild(h('button', { title: 'Report', onclick: () => Profile.report(chat.user, msg.id), html: '<i class="fa-solid fa-flag"></i>' }));
+        tools.appendChild(h('button', { title: 'Report', onclick: () => Profile.report(senderOf(msg.from), msg.id), html: '<i class="fa-solid fa-flag"></i>' }));
       }
       row.appendChild(tools);
     }
@@ -389,14 +752,16 @@
       if (list.dataset.lastDay !== day) {
         list.appendChild(h('div', { class: 'chat-day' }, day));
         list.dataset.lastDay = day;
+        chat.lastSender = null;
       }
+      if (m.kind === 'system') chat.lastSender = null;
       list.appendChild(messageEl(m));
+      if (m.kind === 'system') chat.lastSender = null;
       chat.lastId = Math.max(chat.lastId, m.id);
       if (!chat.firstId || m.id < chat.firstId) chat.firstId = m.id;
     });
     if (forceScroll || nearBottom) {
       scroller.scrollTop = scroller.scrollHeight;
-      // images load later and change height
       list.querySelectorAll('img').forEach(img => { if (!img.complete) img.addEventListener('load', () => { if (forceScroll) scroller.scrollTop = scroller.scrollHeight; }, { once: true }); });
     }
   }
@@ -406,15 +771,17 @@
     const list = chat.list;
     const frag = document.createDocumentFragment();
     let lastDay = null;
+    const saved = chat.lastSender;
+    chat.lastSender = null;
     msgs.forEach(m => {
       if (chat.ids.has(m.id)) return;
       chat.ids.add(m.id);
       const day = dayLabel(m.at);
-      if (day !== lastDay) { frag.appendChild(h('div', { class: 'chat-day' }, day)); lastDay = day; }
+      if (day !== lastDay) { frag.appendChild(h('div', { class: 'chat-day' }, day)); lastDay = day; chat.lastSender = null; }
       frag.appendChild(messageEl(m));
       if (m.id < chat.firstId) chat.firstId = m.id;
     });
-    // drop the duplicate day divider at the old top
+    chat.lastSender = saved;
     const firstOld = list.firstElementChild;
     if (firstOld && firstOld.classList.contains('chat-day') && firstOld.textContent === lastDay) firstOld.remove();
     list.insertBefore(frag, list.firstChild);
@@ -422,26 +789,44 @@
 
   function closeChat(silent) {
     if (!chat) return;
-    clearInterval(chat.timer);
+    clearTimeout(chat.timer);
     if (chat.attachment) URL.revokeObjectURL(chat.attachment.url);
+    if (window.GifPicker) GifPicker.close();
     chat = null;
     if (!silent) { renderList(); refreshList(); }
   }
 
-  /* ------------------------------------------------------------- events */
+  /* ===================================================== SHARE TO CHAT */
+
+  // Lets the music player share a playlist into a DM or group chat
+  async function shareTo(payload, label) {
+    if (!Account.user) return AuthUI.open('login');
+    await refreshList();
+    const body = h('div', { class: 'pick-list share-list' });
+    const m = UI.modal({ title: 'Share ' + (label || ''), body });
+    const sendTo = (path, name) => async () => {
+      try { await Api.post(path, payload); m.close(); UI.toast('Shared with ' + name + '!', 'good'); }
+      catch (e) { UI.toast(e.message, 'bad'); }
+    };
+    if (!data.friends.length && !gdata.groups.length) body.appendChild(h('p', { class: 'acct-hint center' }, 'Add some friends first!'));
+    gdata.groups.filter(g => g.active).forEach(g => body.appendChild(groupRow(g, null, sendTo('/api/groups/' + g.id + '/messages', g.name))));
+    data.friends.forEach(f => body.appendChild(personRow(f, UI.statusLine(f), null, sendTo('/api/messages/' + f.id, f.username))));
+  }
+
+  /* ========================================================== EVENTS */
 
   document.addEventListener('boinga:user', e => { if (!e.detail) close(); });
   document.addEventListener('boinga:friendschanged', () => { if (drawer && drawer.classList.contains('open')) refreshList(); });
-  // Keep the open friends list's unread badges in sync with heartbeats
   document.addEventListener('boinga:counts', e => {
     if (!drawer || !drawer.classList.contains('open') || chat) return;
-    const by = e.detail.unreadBy || {};
+    const by = e.detail.unreadBy || {}, gby = e.detail.groupUnread || {};
     let changed = false;
     data.friends.forEach(f => { const n = by[f.id] || 0; if (n !== f.unread) { f.unread = n; changed = true; } });
-    if (changed || e.detail.requests !== data.incoming.length) refreshList();
+    gdata.groups.forEach(g => { const n = gby[g.id] || 0; if (n !== g.unread) { g.unread = n; changed = true; } });
+    if (changed || e.detail.requests !== data.incoming.length + gdata.invites.length) refreshList();
   });
-  // Close the drawer when a game opens
+  document.addEventListener('boinga:saver', () => { if (chat) updateComposerLock(); });
   document.addEventListener('boinga:gameopen', () => close());
 
-  window.Social = { open, close, openChat };
+  window.Social = { open, close, openChat, openGroup, shareTo };
 })();

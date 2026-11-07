@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-layout="genres">
+<html lang="en" data-layout="genres" data-header="compact">
 <head>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-4L47F1FSJF"></script>
   <script>
@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/site.css">
   <link rel="stylesheet" href="css/library.css">
   <link rel="stylesheet" href="css/accounts.css">
+  <link rel="stylesheet" href="css/music.css">
 
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1706522083410497" crossorigin="anonymous"></script>
 </head>
@@ -29,12 +30,21 @@
   <div id="accountCorner"></div> <!-- filled in by js/account/ui.js -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
   <button id="statsBtn" title="Statistics">📊</button>
+  <button id="musicBtn" title="Music" hidden>🎵</button>
 
   <!-- ================= Settings ================= -->
   <div id="settingsOverlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="settingsCloseBtn">&times;</span>
       <h2>Settings</h2>
+
+      <div class="settings-row">
+        <label>Header</label>
+        <div class="seg" id="settingsHeader">
+          <button data-header="compact">Compact</button>
+          <button data-header="original">Original</button>
+        </div>
+      </div>
 
       <div class="settings-row">
         <label>Game layout</label>
@@ -108,23 +118,39 @@
     </div>
   </div>
 
-  <!-- ================= Header ================= -->
-  <div class="boinga-container">
-    <img src="boinga.gif" alt="Boinga GIF">
-    <h1>BOINGA</h1>
-    <img src="boinga.gif" alt="Boinga GIF">
-  </div>
-  <p class="quote">"Boingaloingaloingaloinga!"</p>
+  <!-- ================= Header =================
+       Compact look by default; Settings → Header → Original brings back the full layout.
+       To post a new hater: change the date + name spans. New changelog lines go at the BOTTOM of the list. -->
+  <header id="siteHeader">
+    <div class="boinga-container">
+      <img src="boinga.gif" alt="Boinga GIF">
+      <h1>BOINGA</h1>
+      <img src="boinga.gif" alt="Boinga GIF">
+    </div>
+    <p class="quote">"Boingaloingaloingaloinga!"</p>
 
-  <p class="changelog">Give me ideas on what game/movies to add by responding to this google form: https://forms.gle/1kUNCniLmzzH4sBt6</p>
-  <p class="changelog">CHANGELOG:</p>
-  <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
-  <p class="changelog">11/6/2026 Games - Added Half-Life 2! λ</p>
-  <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
-  <p class="changelog">11/6/2026 BIG UPDATE - Accounts! Make a profile, add friends and chat (no email needed). Games are now sorted by genre (switch back to the old look in Settings).</p>
+    <div class="header-body">
+      <div class="hater-card">
+        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/6/2026</span> <span class="hater-name">Abram H.</span></p>
+        <p class="haterform"><span class="long">Random Boinga Hater Suggestion: </span><a href="https://forms.gle/iBhxB63vtXShfAmy8" target="_blank" rel="noopener" data-short="Suggest a hater →">https://forms.gle/iBhxB63vtXShfAmy8</a></p>
+      </div>
 
-  <p class="blake">Random Boinga Hater Of The Day: 11/6/2026 Abram H.</p>
-  <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
+      <div class="header-news">
+        <p class="changelog suggest"><span class="long">Give me ideas on what game/movies to add by responding to this google form: </span><a href="https://forms.gle/1kUNCniLmzzH4sBt6" target="_blank" rel="noopener" data-short="💡 Suggest a game or movie">https://forms.gle/1kUNCniLmzzH4sBt6</a></p>
+        <div class="changelog-box">
+          <p class="changelog changelog-title">CHANGELOG:</p>
+          <div class="changelog-list">
+            <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
+            <p class="changelog">11/6/2026 Games - Added Half-Life 2! λ</p>
+            <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
+            <p class="changelog">11/6/2026 BIG UPDATE - Accounts! Make a profile, add friends and chat (no email needed). Games are now sorted by genre (switch back to the old look in Settings).</p>
+            <p class="changelog">11/6/2026 BIG UPDATE 2 - Group chats, GIFs, music player with playlists, see your friends' favorite games, and a smaller header (the old one is in Settings).</p>
+          </div>
+          <button type="button" class="changelog-more" id="changelogMore">Show all updates</button>
+        </div>
+      </div>
+    </div>
+  </header>
 
   <!-- ================= Themes ================= -->
   <div id="themes-container">
@@ -238,7 +264,10 @@
   <script src="js/account/api.js"></script>
   <script src="js/account/ui.js"></script>
   <script src="js/account/profile.js"></script>
+  <script src="js/account/gifs.js"></script>
   <script src="js/account/social.js"></script>
+  <script src="js/account/admin.js"></script>
   <script src="js/account/presence.js"></script>
+  <script src="js/music.js"></script>
 </body>
 </html>

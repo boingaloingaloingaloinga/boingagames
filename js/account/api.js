@@ -51,6 +51,8 @@
     post: (p, b, o) => request('POST', p, b === undefined ? {} : b, o),
     patch: (p, b) => request('PATCH', p, b),
     del: (p, b) => request('DELETE', p, b),
-    media: key => (key ? BASE + '/media/' + key.split('/').map(encodeURIComponent).join('/') : '')
+    // Data saver can hide uploaded pictures (falls back to the default Boinga pictures)
+    mediaOn: true,
+    media: key => (key && window.Api.mediaOn ? BASE + '/media/' + key.split('/').map(encodeURIComponent).join('/') : '')
   };
 })();

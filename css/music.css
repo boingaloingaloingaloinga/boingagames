@@ -1,0 +1,198 @@
+/* =====================================================================
+   Music: top-right button, mini player bar, music panel
+   ===================================================================== */
+
+#musicBtn {
+  position: fixed;
+  top: 14px;
+  right: 102px; /* left of the stats button */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+#musicBtn[hidden] { display: none; }
+#musicBtn:hover { transform: scale(1.12); box-shadow: 0 0 12px rgba(255, 204, 0, 0.6); }
+
+/* The YouTube player is kept invisible: only our own UI and covers are shown */
+#ytBox {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ---------- Mini player bar ---------- */
+body.music-on { padding-bottom: 84px; }
+#musicBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10003;
+  height: 72px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: rgba(22, 22, 36, 0.97);
+  border-top: 2px solid var(--accent);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.45);
+  font-family: Arial, sans-serif;
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+#musicBar[hidden] { display: none; }
+.mb-now { display: flex; align-items: center; gap: 10px; min-width: 0; border: none; background: none; color: inherit; cursor: pointer; text-align: left; padding: 0; }
+.mb-cover { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; background: #2a2b45; flex: 0 0 auto; }
+.mb-text { min-width: 0; }
+.mb-title { font-weight: bold; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-artist { font-size: 12px; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-center { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.mb-controls { display: flex; align-items: center; gap: 10px; }
+.mb-btn {
+  width: 32px; height: 32px; border: none; border-radius: 50%; background: transparent; color: #fff;
+  font-size: 15px; cursor: pointer; opacity: 0.85;
+}
+.mb-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); color: #fff; }
+.mb-shuffle { opacity: 0.45; }
+.mb-shuffle.on { opacity: 1; background: rgba(255, 204, 0, 0.18); }
+.mb-play {
+  width: 40px; height: 40px; border: none; border-radius: 50%; background: var(--accent); color: var(--panel);
+  font-size: 16px; cursor: pointer;
+}
+.mb-play:hover { color: var(--panel); transform: scale(1.06); }
+.mb-progress { display: flex; align-items: center; gap: 8px; width: 100%; }
+.mb-time { font-size: 11px; color: var(--text-soft); min-width: 34px; text-align: center; font-variant-numeric: tabular-nums; }
+.mb-right { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.mb-vol-icon { font-size: 14px; }
+.mb-vol { width: 100px; }
+
+/* Range sliders in the accent colour */
+#musicBar input[type="range"] {
+  -webkit-appearance: none; appearance: none; flex: 1; height: 5px; border-radius: 3px; cursor: pointer; outline: none;
+  background: linear-gradient(to right, var(--accent) var(--fill, 0%), rgba(255, 255, 255, 0.18) var(--fill, 0%));
+}
+#musicBar input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: #fff; }
+#musicBar input[type="range"]::-moz-range-thumb { width: 13px; height: 13px; border-radius: 50%; background: #fff; border: none; }
+#musicBar input.mb-vol { flex: 0 0 100px; }
+
+@media (max-width: 700px) {
+  #musicBar { grid-template-columns: minmax(0, 1fr) auto; height: 76px; }
+  .mb-right { display: none; }
+  .mb-center { gap: 2px; }
+  .mb-progress { position: absolute; left: 0; right: 0; top: -9px; gap: 0; }
+  .mb-progress .mb-time { display: none; }
+  .mb-controls { gap: 4px; }
+}
+
+/* ---------- Music panel ---------- */
+.music-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(460px, 100vw);
+  z-index: 10004;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 3px solid var(--accent);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+  transform: translateX(105%);
+  transition: transform 0.28s ease;
+  font-family: Arial, sans-serif;
+  color: #fff;
+}
+.music-panel.open { transform: none; }
+body.music-on .music-panel { bottom: 72px; }
+.mp-head { display: flex; align-items: center; gap: 8px; padding: 14px 14px 8px; }
+.mp-head h2 { flex: 1; margin: 0; font: 22px 'Comic Sans MS', cursive, sans-serif; color: var(--accent); }
+.mp-searchbar { position: relative; margin: 0 14px 8px; }
+.mp-searchbar i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--accent); }
+.mp-search {
+  width: 100%; box-sizing: border-box; padding: 10px 14px 10px 38px; border: 2px solid var(--accent); border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25); color: #fff; font: 15px Arial, sans-serif; outline: none;
+}
+.mp-saver { margin: 0 14px 8px; padding: 8px 10px; border-radius: 10px; background: rgba(61, 220, 132, 0.1); color: #c8ffe0; font-size: 13px; }
+.mp-saver[hidden] { display: none; }
+.mp-view { flex: 1; overflow-y: auto; padding: 4px 14px 24px; }
+.mp-hint { color: var(--text-soft); font-size: 13px; text-align: center; margin: 14px 0; }
+.mp-error { margin-top: 14px; }
+.mp-login { text-align: center; padding: 20px 10px; color: var(--text-soft); }
+.mp-title { font: 18px 'Comic Sans MS', cursive, sans-serif; color: var(--accent); margin: 6px 0 10px; }
+
+.mp-section { margin: 14px 0 6px; }
+.mp-section-head { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 6px; }
+.mp-section-head h3 { margin: 0; font: 17px 'Comic Sans MS', cursive, sans-serif; color: var(--accent); }
+.mp-section-head .lib-see-all { color: var(--accent); }
+
+.mp-top {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px; margin: 6px 0;
+  border: 2px solid var(--accent); border-radius: 14px; background: rgba(255, 204, 0, 0.06);
+  color: #fff; text-align: left; cursor: pointer; font: 14px Arial, sans-serif;
+}
+.mp-top:hover { background: rgba(255, 204, 0, 0.12); color: #fff; }
+.mp-top-img { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; }
+.mp-top-img.round { border-radius: 50%; }
+.mp-top div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mp-top small { color: var(--accent); font-size: 12px; }
+.mp-top strong { font-size: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-top span { color: var(--text-soft); }
+
+.mp-track { position: relative; display: flex; align-items: center; gap: 10px; padding: 6px 6px; border-radius: 10px; cursor: pointer; }
+.mp-track:hover { background: rgba(255, 204, 0, 0.08); }
+.mp-track.now .mp-track-title { color: var(--accent); }
+.mp-num { width: 20px; text-align: right; color: var(--text-soft); font-size: 12px; }
+.mp-cover { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: #2a2b45; flex: 0 0 auto; }
+.mp-track-main { flex: 1; min-width: 0; }
+.mp-track-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-track-sub { font-size: 12px; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-dur { font-size: 12px; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+.mp-more { width: 30px; height: 30px; border: none; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; font-size: 18px; opacity: 0.6; }
+.mp-more:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); color: #fff; }
+.mp-menu { top: auto; left: auto; right: 6px; margin-top: 4px; z-index: 6; min-width: 190px; }
+.mp-track .mp-menu { top: 40px; }
+.mp-actions .mp-menu { top: 44px; right: 0; }
+
+.mp-cards { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 12px; }
+.mp-card { flex: 0 0 124px; width: 124px; border: none; background: none; color: #fff; text-align: left; cursor: pointer; padding: 6px; border-radius: 10px; }
+.mp-grid .mp-card { width: auto; }
+.mp-card:hover { background: rgba(255, 204, 0, 0.08); color: #fff; }
+.mp-card-img { width: 100%; aspect-ratio: 1; border-radius: 8px; object-fit: cover; background: #2a2b45; display: block; }
+.mp-card-img.round { border-radius: 50%; }
+.mp-card-title { font-size: 13px; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-card-sub { font-size: 11px; color: var(--text-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mp-hero { display: flex; gap: 14px; align-items: flex-end; margin: 6px 0 12px; }
+.mp-hero-img { width: 140px; height: 140px; border-radius: 10px; object-fit: cover; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); flex: 0 0 auto; background: #2a2b45; }
+.mp-hero-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.mp-hero-text h3 { margin: 0; font: 22px 'Comic Sans MS', cursive, sans-serif; color: #fff; word-break: break-word; }
+.mp-hero-text small { color: var(--text-soft); font-size: 12px; }
+.mp-artists { font-size: 14px; }
+.mp-link { border: none; background: none; padding: 0; color: var(--accent); cursor: pointer; font: inherit; text-decoration: underline; }
+.mp-actions { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.mp-actions-extra { display: inline-flex; gap: 8px; position: relative; }
+
+.mp-artist-hero { position: relative; margin: 0 -14px 10px; min-height: 120px; display: flex; align-items: flex-end; overflow: hidden; }
+.mp-artist-banner { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55; }
+.mp-artist-name { position: relative; padding: 12px 14px; background: linear-gradient(transparent, rgba(30, 30, 47, 0.95)); width: 100%; }
+.mp-artist-name h3 { margin: 0; font: 28px 'Comic Sans MS', cursive, sans-serif; color: #fff; }
+.mp-artist-name small { color: var(--text-soft); }

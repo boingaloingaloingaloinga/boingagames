@@ -17,5 +17,9 @@
     // 'genres' (new) or 'classic' (the old single grid)
     var layout = localStorage.getItem('settings.layout') === 'classic' ? 'classic' : 'genres';
     document.documentElement.setAttribute('data-layout', layout);
+
+    // 'compact' (new) or 'original' header
+    var header = localStorage.getItem('settings.header') === 'original' ? 'original' : 'compact';
+    document.documentElement.setAttribute('data-header', header);
   } catch (e) {}
 })();

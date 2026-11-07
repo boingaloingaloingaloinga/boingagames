@@ -35,6 +35,11 @@
   }
 
   function nameEl(user, extraClass) {
+    // The site creator gets a crown + glowing gold name (set by the server, can't be faked)
+    if (user && user.admin) {
+      return h('span', { class: 'acct-name admin' + (extraClass ? ' ' + extraClass : ''), title: 'BoingaGames creator' },
+        h('span', { class: 'acct-crown', 'aria-label': 'Creator' }, '👑'), user.username);
+    }
     const el = h('span', { class: 'acct-name' + (extraClass ? ' ' + extraClass : '') }, user.username);
     const c = nameColor(user);
     if (c) el.style.color = c;
@@ -44,7 +49,7 @@
   function avatarEl(user, size, withStatus) {
     const wrap = h('span', { class: 'acct-avatar', style: { width: size + 'px', height: size + 'px' } });
     const img = h('img', { alt: '', draggable: 'false' });
-    if (user.avatar) {
+    if (user.avatar && Api.media(user.avatar)) {
       img.src = Api.media(user.avatar);
     } else {
       img.src = 'boinga.gif';
@@ -72,8 +77,20 @@
   // One line like "Playing Vex" / "Away" / "Just went to Club Penguin"
   function statusLine(user) {
     if (user.status !== 'offline' && user.game) return 'Playing ' + user.game.name;
+    if (user.status !== 'offline' && user.music) return '🎵 Listening to ' + user.music.title + (user.music.artist ? ' — ' + user.music.artist : '');
     if (user.external) return 'Just went to ' + user.external.name + ' · ' + ago(user.external.at);
     return statusLabel(user.status);
+  }
+
+  // Group chat icon: uploaded image, or a colour-shifted Boinga like profile pictures
+  function groupIconEl(group, size) {
+    const wrap = h('span', { class: 'acct-avatar group-icon', style: { width: size + 'px', height: size + 'px' } });
+    const img = h('img', { alt: '', draggable: 'false' });
+    const fallback = () => { img.src = 'boinga.gif'; img.style.filter = 'hue-rotate(' + (group.iconHue || 0) + 'deg)'; img.classList.add('default'); };
+    if (group.icon && Api.media(group.icon)) img.src = Api.media(group.icon); else fallback();
+    img.onerror = () => { img.onerror = null; fallback(); };
+    wrap.appendChild(img);
+    return wrap;
   }
 
   /* ---------- modals ---------- */
@@ -153,27 +170,43 @@
     });
   }
 
-  window.UI = { h, nameEl, nameColor, avatarEl, statusLabel, statusLine, ago, modal, toast, errorBox, busy, checkImage,
+  function fmtTime(sec) {
+    sec = Math.max(0, Math.floor(sec || 0));
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  window.UI = { h, nameEl, nameColor, avatarEl, groupIconEl, statusLabel, statusLine, ago, modal, toast, errorBox, busy, checkImage, fmtTime,
     IMAGE_RULES: {
       avatar: { maxMB: 4, minW: 128, minH: 128 },
       banner: { maxMB: 6, minW: 600, minH: 150 },
-      chat: { maxMB: 8, minW: 1, minH: 1 }
+      chat: { maxMB: 8, minW: 1, minH: 1 },
+      group: { maxMB: 4, minW: 128, minH: 128 }
     } };
 
   /* ------------------------------------------------------ account state */
 
   const Account = {
     user: null,
-    counts: { requests: 0, unread: 0, unreadBy: {} },
+    counts: { requests: 0, unread: 0, unreadBy: {}, groupUnread: {} },
+    // What the server says to switch off right now (data saver)
+    saver: { level: 0, heartbeat: 45, chatPoll: 3, uploads: true, music: true, media: true, notice: null },
     setUser(user) {
       Account.user = user;
       renderCorner();
       document.dispatchEvent(new CustomEvent('boinga:user', { detail: user }));
     },
     setCounts(c) {
-      Account.counts = { requests: c.requests || 0, unread: c.unread || 0, unreadBy: c.unreadBy || {} };
+      Account.counts = { requests: c.requests || 0, unread: c.unread || 0, unreadBy: c.unreadBy || {}, groupUnread: c.groupUnread || Account.counts.groupUnread || {} };
+      if (c.saver) Account.setSaver(c.saver);
       renderBadges();
       document.dispatchEvent(new CustomEvent('boinga:counts', { detail: Account.counts }));
+    },
+    setSaver(s) {
+      const changed = JSON.stringify(s) !== JSON.stringify(Account.saver);
+      Account.saver = Object.assign({}, Account.saver, s);
+      Api.mediaOn = Account.saver.media !== false;
+      if (changed) { renderSaverNotice(); document.dispatchEvent(new CustomEvent('boinga:saver', { detail: Account.saver })); }
     },
     async logout() {
       try { await Api.post('/api/auth/logout', {}, { noLogout: true }); } catch (e) {}
@@ -239,6 +272,7 @@
       item('fa-solid fa-id-badge', 'My profile', () => Profile.view(u.username)),
       item('fa-solid fa-pen', 'Edit profile', () => Profile.edit()),
       item('fa-solid fa-user-group', 'Friends & messages', () => Social.open()),
+      u.admin ? item('fa-solid fa-crown', 'Admin panel', () => window.AdminPanel && AdminPanel.open()) : null,
       item('fa-solid fa-right-from-bracket', 'Log out', () => Account.logout().then(() => toast('Logged out. See ya!')), 'danger'));
     corner.appendChild(menu);
     menuOpen = true;
@@ -408,12 +442,39 @@
     body.appendChild(h('button', { class: 'acct-link', onclick: () => { chosen = true; remember('never'); m.close(); } }, "Don't ask me again"));
   }
 
+  /* ------------------------------------------------------ data saver notice */
+
+  function renderSaverNotice() {
+    let bar = document.getElementById('saverNotice');
+    const s = Account.saver;
+    const key = 'boinga.saverDismissed';
+    let dismissed = '';
+    try { dismissed = localStorage.getItem(key) || ''; } catch (e) {}
+    const today = new Date().toISOString().slice(0, 10);
+    if (!s.notice || dismissed === today + ':' + s.level) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = h('div', { id: 'saverNotice', role: 'status' });
+      document.body.appendChild(bar);
+    }
+    bar.innerHTML = '';
+    bar.appendChild(h('span', null, '🌱 ' + s.notice));
+    bar.appendChild(h('button', { title: 'Hide', onclick: () => {
+      try { localStorage.setItem(key, today + ':' + s.level); } catch (e) {}
+      bar.remove();
+    } }, '×'));
+  }
+
+  async function loadStatus() {
+    try { const r = await Api.get('/api/status'); Account.setSaver(r.saver); } catch (e) {}
+  }
+
   /* ------------------------------------------------------ boot */
 
   async function boot() {
     if (!Api.enabled) return;
     document.documentElement.classList.add('accounts-on');
     renderCorner();
+    loadStatus();
     if (Api.getToken()) {
       try {
         const r = await Api.get('/api/me');

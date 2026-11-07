@@ -63,4 +63,29 @@ document.addEventListener('DOMContentLoaded', function () {
     showLayout();
   }));
   showLayout();
+
+  // Header: compact (new) or the original full one
+  const headerBtns = document.querySelectorAll('#settingsHeader button');
+  function showHeader() {
+    const current = document.documentElement.getAttribute('data-header');
+    headerBtns.forEach(b => b.classList.toggle('active', b.dataset.header === current));
+  }
+  headerBtns.forEach(b => b.addEventListener('click', function () {
+    localStorage.setItem('settings.header', b.dataset.header);
+    document.documentElement.setAttribute('data-header', b.dataset.header);
+    showHeader();
+  }));
+  showHeader();
+
+  // Compact header: "Show all updates" opens the full changelog
+  const more = document.getElementById('changelogMore');
+  const box = document.querySelector('.changelog-box');
+  if (more && box) {
+    const n = box.querySelectorAll('.changelog-list .changelog').length;
+    more.textContent = 'Show all updates (' + n + ')';
+    more.addEventListener('click', function () {
+      const open = box.classList.toggle('expanded');
+      more.textContent = open ? 'Show less' : 'Show all updates (' + n + ')';
+    });
+  }
 });

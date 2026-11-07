@@ -4,7 +4,9 @@
    offline = tab closed (or "always appear offline" is on) */
 (function () {
   const cfg = window.BOINGA_CONFIG || {};
-  const INTERVAL = Math.max(20, Number(cfg.HEARTBEAT_SECONDS) || 45) * 1000;
+  const BASE_INTERVAL = Math.max(20, Number(cfg.HEARTBEAT_SECONDS) || 45);
+  // The server can slow heartbeats down (data saver)
+  const interval = () => Math.max(BASE_INTERVAL, (window.Account && Account.saver && Account.saver.heartbeat) || 0) * 1000;
   const IDLE_AFTER = 5 * 60 * 1000;
 
   let game = null;           // { id, name } while the game overlay is open
@@ -13,6 +15,8 @@
   let lastSent = 0;
   let lastActivity = '';
   let lastActivitySent = 0;
+  let lastFavorites = null;
+  let lastMusic = null;
   let timer = null;
   let inflight = false;
 
@@ -26,9 +30,17 @@
     if (!Api.enabled || !window.Account || !Account.user) return;
     if (inflight && !extra) return;
     const s = state();
-    if (!force && !extra && s === lastState && Date.now() - lastSent < INTERVAL - 2000) return;
+    const music = window.Music ? Music.nowPlaying() : null;
+    const musicSig = music ? music.id : '';
+    if (!force && !extra && s === lastState && musicSig === lastMusic && Date.now() - lastSent < interval() - 2000) return;
 
-    const body = Object.assign({ state: s, game: game }, extra || {});
+    const body = Object.assign({ state: s, game: game, music: music }, extra || {});
+    lastMusic = musicSig;
+    // Favorite games, only when they changed
+    if (window.Library && Library.getFavorites) {
+      const favs = JSON.stringify(Library.getFavorites());
+      if (favs !== lastFavorites) { body.favorites = JSON.parse(favs); lastFavorites = favs; }
+    }
     // Send top played games when they change (at most every 5 minutes)
     if (window.Stats && Date.now() - lastActivitySent > 5 * 60 * 1000) {
       const top = Stats.top(5);
@@ -50,6 +62,7 @@
     stop();
     lastActivity = '';
     lastActivitySent = 0;
+    lastFavorites = null;
     beat(true);
     timer = setInterval(() => beat(false), 5000); // checks often, only sends on change or every INTERVAL
   }
@@ -74,6 +87,8 @@
   document.addEventListener('boinga:gameopen', e => { game = { id: e.detail.id, name: e.detail.name }; beat(true); });
   document.addEventListener('boinga:gameclose', () => { game = null; lastInput = Date.now(); beat(true); });
   document.addEventListener('boinga:user', e => { if (e.detail && !timer) start(); if (!e.detail) stop(); });
+  document.addEventListener('boinga:favorites', () => beat(true));
+  document.addEventListener('boinga:music', () => beat(false)); // sends when the song changes
 
   // Closing the tab: drop offline right away instead of waiting for the timeout
   window.addEventListener('pagehide', () => {
