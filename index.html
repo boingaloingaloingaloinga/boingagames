@@ -1,58 +1,978 @@
 <!DOCTYPE html>
-<html lang="en" data-layout="genres" data-header="compact">
+<html lang="en">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-4L47F1FSJF"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-4L47F1FSJF"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
+
     gtag('config', 'G-4L47F1FSJF');
   </script>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BoingaGames</title>
-  <link rel="icon" href="bg.png" type="image/png">
-  <script src="js/early.js"></script>
-
   <link rel="stylesheet" href="/main.css">
   <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.2.0/css/all.css">
-  <link rel="stylesheet" href="css/site.css">
-  <link rel="stylesheet" href="css/library.css">
-  <link rel="stylesheet" href="css/accounts.css">
-  <link rel="stylesheet" href="css/music.css">
+  <link rel="icon" href="bg.png" type="image/png">
+  <script>
+    /* ---------- uh ---------- */
+    (function () {
+      try {
+        var savedTitle = localStorage.getItem('settings.tabTitle');
+        if (savedTitle) document.title = savedTitle;
 
+        var savedFavicon = localStorage.getItem('settings.favicon');
+        if (savedFavicon) {
+          var link = document.querySelector('link[rel="icon"]');
+          if (link) link.href = savedFavicon;
+        }
+
+        if (localStorage.getItem('settings.animationsOff') === 'true') {
+          document.documentElement.classList.add('no-animations');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1706522083410497" crossorigin="anonymous"></script>
+
+  <style>
+    /* ---------- Base ---------- */
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      transition: background 0.5s, color 0.5s;
+      background: linear-gradient(135deg, #1e1e2f, #3a3b5b);
+      color: #ffcc00;
+    }
+
+    /* ---------- Header / Boinga banner ---------- */
+    .boinga-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+  /* ---------- Statistics button + panel ---------- */
+#statsBtn {
+  position: fixed;
+  top: 14px;
+  right: 58px; /* sits just left of the gear */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  color: #ffcc00;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10002;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#statsBtn:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+}
+
+#statsOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 10001;
+  align-items: center;
+  justify-content: center;
+}
+
+#statsOverlay.active {
+  display: flex;
+}
+
+#statsOverlay .settings-panel {
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.stat-card {
+  flex: 1;
+  text-align: center;
+  padding: 12px 6px;
+  border: 2px solid #ffcc00;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.stat-value {
+  display: block;
+  font-size: 26px;
+}
+
+.stat-label {
+  font-size: 13px;
+}
+
+.stats-controls {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+#statsSearch,
+#statsSort {
+  padding: 8px;
+  background: transparent;
+  border: 3px solid yellow;
+  color: white;
+  outline: none;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+#statsSearch {
+  flex: 1;
+  min-width: 0;
+}
+
+#statsSort option {
+  background: #1e1e2f;
+}
+
+.stats-game-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #555;
+  font-size: 14px;
+}
+
+.stats-game-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats-game-nums {
+  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.stats-empty {
+  text-align: center;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.stats-disclaimer {
+  font-size: 11px;
+  opacity: 0.8;
+  margin: 12px 0 0 0;
+}
+
+    .boinga-container img {
+      height: 50px;
+    }
+
+    h1 {
+      font-size: 72px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ffcc00;
+      -webkit-text-stroke-width: 3px;
+      -webkit-text-stroke-color: #d4a900;
+      text-align: center;
+      margin: 20px 0 10px 0;
+      animation: boinga-bounce 1.8s ease-in-out infinite;
+    }
+
+    @keyframes boinga-bounce {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-5px); }
+    }
+
+    /* ---------- Fullscreen game overlay ---------- */
+#gameOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647; /* max z-index: always above everything, including the settings gear */
+  background: #000;
+}
+
+#gameOverlay.active {
+  display: block;
+}
+
+#gameFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+
+/* Same look as #codeInputBar .closeBtn, just smaller and a bit see-through */
+#gameCloseBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: #ffcc00;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  z-index: 2;
+  transition: opacity 0.2s;
+}
+
+#gameCloseBtn:hover {
+  opacity: 1;
+  color: #1e1e2f;
+  background: #ffcc00;
+}
+
+    p.quote {
+      font-size: 24px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ffcc00;
+      text-align: center;
+      margin: 0 0 30px 0;
+    }
+
+    p.blake {
+      font-size: 24px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ff2b2b;
+      text-align: center;
+      margin: 0 0 30px 0;
+      text-shadow: 0 0 6px #ff0000, 0 0 16px #ff0000, 0 0 30px #990000;
+      animation: hater-flicker 3s infinite ease-in-out;
+    }
+
+    @keyframes hater-flicker {
+      0%, 100% { text-shadow: 0 0 6px #ff0000, 0 0 16px #ff0000, 0 0 30px #990000; }
+      50%      { text-shadow: 0 0 10px #ff3333, 0 0 24px #ff0000, 0 0 40px #cc0000; }
+    }
+
+    p.haterform {
+      font-size: 16px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ff2b2b;
+      text-align: center;
+      margin: 0 0 30px 0;
+    }
+
+    p.changelog {
+      font-size: 12px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ffcc00;
+      text-align: center;
+      margin: 0 0 30px 0;
+    }
+
+    p.left {
+      font-size: 36px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #FF0000;
+      text-align: center;
+      margin: 0 0 30px 0;
+    }
+
+    .content hr {
+      border: none;
+      height: 2px;
+      background-color: #ffcc00;
+      margin: 40px 0;
+    }
+
+    .center {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ---------- Toolbar (movies / search / sort) ---------- */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px auto 25px auto;
+    }
+
+    .movies-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: yellow;
+      background-color: #1e1e2f;
+      border: 2px solid yellow;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: box-shadow 0.25s ease, transform 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+
+    .movies-btn:hover {
+      color: #ffd700;
+      border-color: #ffd700;
+      box-shadow: 0 0 14px 3px rgba(255, 204, 0, 0.65);
+      transform: translateY(-2px);
+    }
+
+    #searchContainer {
+      text-align: center;
+    }
+
+    #gameSearch {
+      width: 260px;
+      max-width: 60vw;
+      padding: 8px;
+      background: transparent;
+      border: 3px solid yellow;
+      color: white;
+      outline: none;
+    }
+
+    #gameSearch::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #sortBtn {
+      padding: 8px 12px;
+      background: transparent;
+      border: 3px solid yellow;
+      color: white;
+      cursor: pointer;
+    }
+
+    @keyframes sortPress {
+      0%   { transform: scale(1); background-color: transparent; }
+      40%  { transform: scale(0.92); background-color: rgba(255, 204, 0, 0.35); }
+      100% { transform: scale(1); background-color: transparent; }
+    }
+
+    #sortBtn.pressed {
+      animation: sortPress 0.3s ease;
+    }
+
+    /* ---------- Game grid + favorites ---------- */
+    #games a,
+    #favorites-bar a {
+      display: inline-block;
+      width: 96px;
+      height: 96px;
+      margin: 10px;
+      position: relative;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    #games a img,
+    #favorites-bar a img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: brightness(1);
+      transition: filter 0.2s ease-in-out;
+    }
+
+    #games a:hover img,
+    #favorites-bar a:hover img {
+      filter: brightness(1.25);
+    }
+
+    :not(#games):not(#favorites-bar) img {
+      transform: none !important;
+      transition: none !important;
+    }
+
+    #games a:hover,
+    #favorites-bar a:hover {
+      transform: scale(1.1);
+    } 
+
+    .game-star {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      font-size: 18px;
+      color: #ffd700;
+      -webkit-text-stroke: 1px #333;
+      cursor: pointer;
+      opacity: 0;
+      z-index: 5;
+      pointer-events: auto;
+      user-select: none;
+      transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+    }
+
+    .game-star:hover {
+      transform: scale(1.2);
+    }
+
+    #games a:hover .game-star,
+    #favorites-bar a:hover .game-star,
+    .game-star.favorited {
+      opacity: 1;
+    }
+
+    #favorites-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      min-height: 96px;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+    }
+
+    .favorites-empty {
+      margin: 0;
+      color: #FFFF00;
+      font-size: 14px;
+      text-align: center;
+      width: 100%;
+    }
+
+    /* ---------- Secret code bar ---------- */
+    #codeInputBar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #000;
+      padding: 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    #codeInputBar input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      width: 300px;
+    }
+
+    #codeInputBar button {
+      padding: 10px;
+      font-size: 18px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #codeInputBar .closeBtn {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      line-height: 1;
+      color: #ffcc00;
+      background: #1e1e2f;
+      border: 2px solid #ffcc00;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    #codeInputBar .closeBtn:hover {
+      color: #1e1e2f;
+      background: #ffcc00;
+    }
+
+    #codeInputBar .message {
+      font-size: 18px;
+      margin-top: 10px;
+      color: #ffcc00;
+    }
+
+    #codeInputBar .error {
+      color: red;
+    }
+
+    /* ---------- Windows XP easter-egg window ---------- */
+    #xp-window {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .xp-window-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ---------- Rating section ---------- */
+    .rating-section {
+      text-align: center;
+      margin: 40px 0;
+    }
+
+    .rating-section input {
+      padding: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+
+    .rating-section button {
+      padding: 10px;
+      font-size: 18px;
+      background-color: #ffcc00;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .rating-result {
+      margin-top: 20px;
+      font-size: 24px;
+      color: #ffcc00;
+    }
+
+    /* ---------- Themes panel ---------- */
+    #themes-container {
+      text-align: center;
+    }
+
+    .themes-header {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #toggle-themes-btn {
+      font-size: 1em;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    #upload-theme-container {
+      margin-top: 10px;
+    }
+
+    #background-upload {
+      margin-left: 10px;
+    }
+
+    #themes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      padding: 0;
+    }
+
+    .theme-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      padding: 10px 6px;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ffcc00;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid #555;
+      border-radius: 8px;
+      transition: background-color 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .theme-btn:hover {
+      background-color: rgba(255, 204, 0, 0.15);
+      border-color: #ffcc00;
+      transform: translateY(-2px);
+    }
+
+    .theme-swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .theme-swatch-plain {
+      background: none !important;
+      border-color: transparent;
+      box-shadow: none;
+      font-size: 24px;
+    }
+
+    /* ---------- Settings gear + overlay ---------- */
+    #settingsGearBtn {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1e1e2f;
+      border: 2px solid #ffcc00;
+      color: #ffcc00;
+      font-size: 19px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10002;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #settingsGearBtn:hover {
+      transform: rotate(60deg);
+      box-shadow: 0 0 12px rgba(255, 204, 0, 0.6);
+    }
+
+    #settingsOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 10001;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #settingsOverlay.active {
+      display: flex;
+    }
+
+    .settings-panel {
+      position: relative;
+      width: 90%;
+      max-width: 420px;
+      background: #1e1e2f;
+      border: 3px solid #ffcc00;
+      border-radius: 10px;
+      padding: 25px 28px;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #ffcc00;
+      box-shadow: 0 0 30px rgba(255, 204, 0, 0.3);
+    }
+
+    .settings-panel h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .settings-close-btn {
+      position: absolute;
+      top: 8px;
+      right: 14px;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .settings-row {
+      margin: 18px 0;
+    }
+
+    .settings-row label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .settings-row-inline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .settings-row-inline label {
+      margin-bottom: 0;
+    }
+
+    .settings-row input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: none;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    .settings-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #ffcc00;
+      cursor: pointer;
+    }
+
+    /* ---------- Secret code bar "glitch" animations ---------- */
+    @keyframes glitchIn {
+      0%   { opacity: 0; transform: translate(-8px, 6px) skewX(8deg); filter: hue-rotate(90deg) saturate(3); }
+      15%  { opacity: 1; transform: translate(6px, -4px) skewX(-6deg); }
+      30%  { transform: translate(-5px, 3px) skewX(4deg); filter: hue-rotate(-60deg); }
+      45%  { transform: translate(4px, -2px) skewX(-3deg); }
+      60%  { transform: translate(-2px, 2px) skewX(2deg); filter: none; }
+      100% { opacity: 1; transform: translate(0, 0) skewX(0); filter: none; }
+    }
+
+    @keyframes glitchOut {
+      0%   { opacity: 1; transform: translate(0, 0) skewX(0); filter: none; }
+      25%  { transform: translate(5px, -3px) skewX(-4deg); filter: hue-rotate(60deg); }
+      50%  { transform: translate(-6px, 4px) skewX(6deg); filter: hue-rotate(-90deg) saturate(3); }
+      75%  { opacity: 0.4; transform: translate(3px, -2px) skewX(3deg); }
+      100% { opacity: 0; transform: translate(-8px, 6px) skewX(-8deg); }
+    }
+
+    #codeInputBar.glitch-in {
+      animation: glitchIn 0.35s steps(3, end);
+    }
+
+    #codeInputBar.glitch-out {
+      animation: glitchOut 0.35s steps(3, end);
+    }
+
+    /* ---------- Misc ---------- */
+    button:hover {
+      color: #ffd700;
+      border-color: #ffd700;
+    }
+
+    /* ---------- Halloween theme (limited time) ---------- */
+    .theme-btn[hidden] { display: none; }
+
+    /* LIMITED tag sits under the label so the themes panel's overflow:hidden can't clip it */
+    .theme-btn-limited {
+      border: 1px dashed #ff7518;
+      background: linear-gradient(160deg, rgba(255,117,24,.18), rgba(90,0,120,.28));
+      color: #ff9a3c;
+      animation: hw-btn-glow 2.4s ease-in-out infinite;
+    }
+    .theme-btn-limited::after {
+      content: 'LIMITED';
+      font: bold 9px Arial, sans-serif;
+      letter-spacing: .5px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: #ff7518;
+      color: #1a0a00;
+    }
+    @keyframes hw-btn-glow {
+      0%, 100% { box-shadow: inset 0 0 3px rgba(255,117,24,.35); }
+      50%      { box-shadow: inset 0 0 12px rgba(255,117,24,.85); }
+    }
+
+    /* Red cursor */
+    body.halloween {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M3 2v17l5-4.5 3.5 7.5 3-1.5-3.5-7H18z' fill='%23d40000' stroke='%23300000' stroke-width='1.5' stroke-linejoin='round'/></svg>") 3 2, auto;
+    }
+
+    /* Title: red spooky font + glow (no drips) */
+    body.halloween h1 {
+      font-family: 'Creepster', 'Comic Sans MS', cursive;
+      font-weight: normal;
+      letter-spacing: 4px;
+      color: #c40000;
+      -webkit-text-stroke: 2px #3a0000;
+      animation: boinga-bounce 1.8s ease-in-out infinite, hw-glow 3s ease-in-out infinite;
+    }
+    @keyframes hw-glow {
+      0%, 100% { text-shadow: 0 2px 0 #5a0000, 0 0 14px rgba(255,0,0,.7), 0 0 30px rgba(140,0,0,.8); }
+      50%      { text-shadow: 0 3px 0 #5a0000, 0 0 22px rgba(255,30,30,.95), 0 0 46px rgba(170,0,0,.9); }
+    }
+
+    /* Purple mascots -> red. Tweak the degrees if the shade is off */
+    body.halloween .boinga-container img { filter: hue-rotate(70deg); }
+
+    /* Page text + tiles */
+    body.halloween p.quote,
+    body.halloween p.changelog,
+    body.halloween .rating-result { color: #ff9a3c; }
+    body.halloween .content hr { background-color: #ff7518; }
+    body.halloween #games a:hover,
+    body.halloween #favorites-bar a:hover {
+      transform: scale(1.1) rotate(-3deg);
+      filter: drop-shadow(0 0 10px #ff7518);
+    }
+    body.halloween .settings-panel {
+      border-color: #ff7518;
+      color: #ff7518;
+      box-shadow: 0 0 30px rgba(255,117,24,.35);
+    }
+    body.halloween .stat-card { border-color: #ff7518; }
+
+    /* Effects layer */
+    #halloweenFX {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .hw-vignette {
+      position: absolute;
+      inset: 0;
+      box-shadow: inset 0 0 160px 50px rgba(0,0,0,.8);
+      animation: hw-flicker 5s steps(1, end) infinite;
+    }
+    @keyframes hw-flicker {
+      0% { opacity: 1; } 8% { opacity: .88; } 12% { opacity: 1; }
+      40% { opacity: .94; } 44% { opacity: .82; } 48% { opacity: 1; }
+      75% { opacity: .92; } 100% { opacity: 1; }
+    }
+    .hw-fog {
+      position: absolute;
+      left: -20%;
+      right: -20%;
+      bottom: 0;
+      height: 40vh;
+      background:
+        radial-gradient(ellipse at 30% 100%, rgba(200,180,255,.22), transparent 60%),
+        radial-gradient(ellipse at 70% 100%, rgba(255,140,60,.16), transparent 60%);
+      animation: hw-fog 12s ease-in-out infinite alternate;
+    }
+    @keyframes hw-fog {
+      from { transform: translateX(-5%); opacity: .7; }
+      to   { transform: translateX(5%);  opacity: 1; }
+    }
+    .hw-web { position: absolute; top: 0; width: 140px; height: 140px; opacity: .5; }
+    .hw-web-tl { left: 0; }
+    .hw-web-tr { right: 0; transform: scaleX(-1); }
+    .hw-spider {
+      position: absolute;
+      top: 0;
+      left: 9vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 12vh;
+      animation: hw-dangle 7s ease-in-out infinite;
+    }
+    .hw-thread { flex: 1; width: 1px; background: rgba(255,255,255,.6); }
+    .hw-bug { font-size: 22px; line-height: 1; }
+    @keyframes hw-dangle {
+      0%, 100% { height: 8vh; }
+      50%      { height: 26vh; }
+    }
+
+    /* Lightning strike on activation */
+    .hw-lightning {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10000;
+    }
+    .hw-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, #fff 0%, rgba(190,210,255,.75) 55%, rgba(190,210,255,.35) 100%);
+      opacity: 0;
+      animation: hw-flash 1s linear forwards;
+    }
+    .hw-lightning svg {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      animation: hw-bolt 1s linear forwards;
+    }
+    .hw-bolt {
+      fill: none;
+      stroke: #fff;
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px #bcd4ff) drop-shadow(0 0 18px #7aa7ff);
+    }
+    .hw-bolt-branch { stroke-width: 1.8; }
+    @keyframes hw-flash {
+      0%   { opacity: 0; }
+      4%   { opacity: .85; }
+      10%  { opacity: .15; }
+      16%  { opacity: .7; }
+      30%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+    @keyframes hw-bolt {
+      0%   { opacity: 0; }
+      3%   { opacity: 1; }
+      10%  { opacity: .3; }
+      15%  { opacity: 1; }
+      28%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    /* ---------- Disable-animations preference (set from the Settings menu) ---------- */
+    .no-animations,
+    .no-animations * {
+      animation: none !important;
+      transition: none !important;
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ================= Top corners ================= -->
-  <div id="accountCorner"></div> <!-- filled in by js/account/ui.js -->
+  <!-- ================= Settings (gear icon always floats top-right) ================= -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
   <button id="statsBtn" title="Statistics">📊</button>
-  <button id="musicBtn" title="Music" hidden>🎵</button>
 
-  <!-- ================= Settings ================= -->
   <div id="settingsOverlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="settingsCloseBtn">&times;</span>
       <h2>Settings</h2>
-
-      <div class="settings-row">
-        <label>Header</label>
-        <div class="seg" id="settingsHeader">
-          <button data-header="compact">Compact</button>
-          <button data-header="original">Original</button>
-        </div>
-      </div>
-
-      <div class="settings-row">
-        <label>Game layout</label>
-        <div class="seg" id="settingsLayout">
-          <button data-layout="genres">Genres</button>
-          <button data-layout="classic">Classic</button>
-        </div>
-      </div>
 
       <div class="settings-row settings-row-inline">
         <label for="settingsAnimToggle">Disable site animations</label>
@@ -71,86 +991,57 @@
     </div>
   </div>
 
-  <!-- ================= Statistics ================= -->
   <div id="statsOverlay">
-    <div class="settings-panel">
-      <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
-      <h2>Statistics</h2>
+  <div class="settings-panel">
+    <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
+    <h2>Statistics</h2>
 
-      <div class="stats-summary">
-        <div class="stat-card">
-          <span class="stat-value" id="statSiteTime">0s</span>
-          <span class="stat-label">Time on site</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-value" id="statTotalOpens">0</span>
-          <span class="stat-label">Games opened</span>
-        </div>
+    <div class="stats-summary">
+      <div class="stat-card">
+        <span class="stat-value" id="statSiteTime">0s</span>
+        <span class="stat-label">Time on site</span>
       </div>
-
-      <h3>Game Stats</h3>
-      <div class="stats-controls">
-        <input type="text" id="statsSearch" placeholder="Search played games...">
-        <select id="statsSort">
-          <option value="time">Most playtime</option>
-          <option value="opens">Most opened</option>
-          <option value="name">A-Z</option>
-        </select>
+      <div class="stat-card">
+        <span class="stat-value" id="statTotalOpens">0</span>
+        <span class="stat-label">Games opened</span>
       </div>
-      <div id="statsGameList"></div>
-
-      <p class="stats-disclaimer">
-        * Games that open on other websites (like Club Penguin and Crazy Cattle 3D) are not included.<br>
-        * All statistics start from 10/2/2026.<br>
-        * Stats are saved in this browser only.
-      </p>
     </div>
+
+    <h3>Game Stats</h3>
+    <div class="stats-controls">
+      <input type="text" id="statsSearch" placeholder="Search played games...">
+      <select id="statsSort">
+        <option value="time">Most playtime</option>
+        <option value="opens">Most opened</option>
+        <option value="name">A-Z</option>
+      </select>
+    </div>
+    <div id="statsGameList"></div>
+
+    <p class="stats-disclaimer">
+      * Games that open on other websites (like Club Penguin and Crazy Cattle 3D) are not included.<br>
+      * All statistics start from 10/2/2026.<br>
+      * Stats are saved in this browser only.
+    </p>
   </div>
+</div>
 
-  <!-- ================= Full game list ================= -->
-  <div id="fullListOverlay" class="overlay">
-    <div class="settings-panel">
-      <span class="settings-close-btn" id="fullListClose">&times;</span>
-      <h2>All Games (<span id="fullListCount"></span>)</h2>
-      <input type="text" id="fullListSearch" placeholder="Filter the list...">
-      <div id="fullListJump"></div>
-      <div id="fullList"></div>
-    </div>
+  <!-- ================= Header ================= -->
+  <div class="boinga-container">
+    <img src="boinga.gif" alt="Boinga GIF">
+    <h1>BOINGA</h1>
+    <img src="boinga.gif" alt="Boinga GIF">
   </div>
+  <p class="quote">"Boingaloingaloingaloinga!"</p>
 
-  <!-- ================= Header =================
-       Compact look by default; Settings → Header → Original brings back the full layout.
-       To post a new hater: change the date + name spans. New changelog lines go at the BOTTOM of the list. -->
-  <header id="siteHeader">
-    <div class="boinga-container">
-      <img src="boinga.gif" alt="Boinga GIF">
-      <h1>BOINGA</h1>
-      <img src="boinga.gif" alt="Boinga GIF">
-    </div>
-    <p class="quote">"Boingaloingaloingaloinga!"</p>
+  <p class="changelog">Give me ideas on what game/movies to add by responding to this google form: https://forms.gle/1kUNCniLmzzH4sBt6</p>
+  <p class="changelog">CHANGELOG:</p>
+  <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
+  <p class="changelog">11/6/2026 Games - Added Half-Life 2! λ</p>
+  <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
 
-    <div class="header-body">
-      <div class="hater-card">
-        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/6/2026</span> <span class="hater-name">Abram H.</span></p>
-        <p class="haterform"><span class="long">Random Boinga Hater Suggestion: </span><a href="https://forms.gle/iBhxB63vtXShfAmy8" target="_blank" rel="noopener" data-short="Suggest a hater →">https://forms.gle/iBhxB63vtXShfAmy8</a></p>
-      </div>
-
-      <div class="header-news">
-        <p class="changelog suggest"><span class="long">Give me ideas on what game/movies to add by responding to this google form: </span><a href="https://forms.gle/1kUNCniLmzzH4sBt6" target="_blank" rel="noopener" data-short="💡 Suggest a game or movie">https://forms.gle/1kUNCniLmzzH4sBt6</a></p>
-        <div class="changelog-box">
-          <p class="changelog changelog-title">CHANGELOG:</p>
-          <div class="changelog-list">
-            <p class="changelog">10/12/2026 Movies - Movies is gonna be down for a while. 😞</p>
-            <p class="changelog">11/6/2026 Games - Added Half-Life 2! λ</p>
-            <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
-            <p class="changelog">11/6/2026 BIG UPDATE - Accounts! Make a profile, add friends and chat (no email needed). Games are now sorted by genre (switch back to the old look in Settings).</p>
-            <p class="changelog">11/6/2026 BIG UPDATE 2 - Group chats, GIFs, music player with playlists, see your friends' favorite games, and a smaller header (the old one is in Settings).</p>
-          </div>
-          <button type="button" class="changelog-more" id="changelogMore">Show all updates</button>
-        </div>
-      </div>
-    </div>
-  </header>
+  <p class="blake">Random Boinga Hater Of The Day: 11/6/2026 Abram H.</p>
+  <p class="haterform">Random Boinga Hater Suggestion: https://forms.gle/iBhxB63vtXShfAmy8</p>
 
   <!-- ================= Themes ================= -->
   <div id="themes-container">
@@ -188,38 +1079,404 @@
 
   <audio id="background-music" loop></audio>
 
-  <!-- ================= Games: genre layout ================= -->
-  <section id="library">
-    <div class="lib-top">
-      <div class="lib-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="search" id="libSearch" placeholder="Search games…" autocomplete="off" aria-label="Search games">
-        <button id="libClear" title="Clear search" hidden>&times;</button>
-      </div>
-      <button class="lib-pill" id="fullListBtn"><i class="fa-solid fa-list"></i> Full game list</button>
-    </div>
-    <nav class="lib-chips" id="libChips" aria-label="Genres"></nav>
-    <div id="libFavSlot"></div>
-    <div id="libRows"></div>
-    <div id="libResults" hidden></div>
-  </section>
+  <!-- ================= Toolbar: movies / search / sort ================= -->
+  <div class="toolbar">
 
-  <!-- ================= Games: classic layout ================= -->
-  <section id="classic">
-    <div class="toolbar">
-      <div id="searchContainer">
-        <input type="text" id="gameSearch" placeholder="Search games...">
-      </div>
-      <button id="sortBtn">Sort: Default</button>
-      <button class="movies-btn" id="classicFullListBtn">Full game list</button>
+    <div id="searchContainer">
+      <input type="text" id="gameSearch" placeholder="Search games...">
     </div>
-    <div id="classicFavSlot">
-      <div id="favorites-bar"></div>
-    </div>
-    <div id="games"></div> <!-- filled from js/games.js -->
-  </section>
 
-  <img id="curiousGeorge" src="curious-george.png" width="768" height="768" alt="Curious George" class="center" loading="lazy">
+    <button id="sortBtn">Sort: Default</button>
+  </div>
+
+  <!-- ================= Favorites ================= -->
+  <div id="favorites-bar"></div>
+
+  <!-- ================= Games ================= -->
+  <div id="games">
+    <a href="games/bob-the-robber-2/"><img src="images/bob-the-robber-2.png" width="96" height="96" alt="Bob The Robber 2"></a>
+    <a href="games/vex/"><img src="images/vex.jpg" width="96" height="96" alt="Vex"></a>
+    <a href="games/vex2/"><img src="images/vex2.jpg" width="96" height="96" alt="Vex 2"></a>
+    <a href="games/vex6/"><img src="images/vex6.jpeg" width="96" height="96" alt="Vex 6"></a>
+    <a href="games/vex7/"><img src="images/vex7.jpeg" width="96" height="96" alt="Vex 7"></a>
+    <a href="games/retro-bowl/"><img src="images/retro-bowl.jpg" width="96" height="96" alt="Retro Bowl"></a>
+    <a href="games/drive-mad/"><img src="images/drive-mad.jpg" width="96" height="96" alt="Drive Mad"></a>
+    <a href="games/slope/"><img src="images/slope.jpg" width="96" height="96" alt="Slope"></a>
+    <a href="games/motox3m/"><img src="images/moto-x3m.jpg" width="96" height="96" alt="Moto x3m"></a>
+    <a href="games/motox3m2/"><img src="images/motox3m2.jpg" width="96" height="96" alt="Moto x3m 2"></a>
+    <a href="games/2048/"><img src="images/2048.jpg" width="96" height="96" alt="2048"></a>
+    <a href="games/paperio2/"><img src="images/paperio2.png" width="96" height="96" alt="Paperio 2"></a>
+    <a href="games/stickmanhook/"><img src="images/stickmanhook.jpg" width="96" height="96" alt="Stickman Hook"></a>
+    <a href="games/OvO/"><img src="images/ovo.png" width="96" height="96" alt="OvO"></a>
+    <a href="games/ovo2/"><img src="images/ovo2.avif" width="96" height="96" alt="OvO 2"></a>
+    <a href="games/cookieclicker/"><img src="images/PerfectCookie.webp" width="96" height="96" alt="Cookie Clicker"></a>
+    <a href="games/subwaysurfers/"><img src="images/subwaysurfers.jpg" width="96" height="96" alt="Subway Surfers"></a>
+    <a href="games/gdash/"><img src="images/gdash.png" width="96" height="96" alt="Geometry Dash"></a>
+    <a href="games/flappybird/"><img src="images/flappybird.png" width="96" height="96" alt="Flappy Bird"></a>
+    <a href="games/snake/"><img src="images/snake.png" width="96" height="96" alt="Snake"></a>
+    <a href="games/mc/"><img src="images/mc.png" width="96" height="96" alt="Minecraft Classic"></a>
+    <a href="games/worldshardestgame/"><img src="images/worldshardestgame.png" width="96" height="96" alt="World's Hardest Game"></a>
+    <a href="games/worldshardestgame2/"><img src="images/worldshardestgame2.jfif" width="96" height="96" alt="World's Hardest Game 2"></a>
+    <a href="games/theimpossiblequiz/"><img src="images/impossible.png" width="96" height="96" alt="The Impossible Quiz"></a>
+    <a href="games/tunnelrush/"><img src="images/tunnelrush.jpg" width="96" height="96" alt="Tunnel Rush"></a>
+    <a href="games/sortthecourt/"><img src="images/sortthecourt.webp" width="96" height="96" alt="Sort The Court"></a>
+    <a href="games/bitlife/"><img src="images/bitlife.webp" width="96" height="96" alt="BitLife"></a>
+    <a href="games/ducklife/"><img src="images/ducklife.png" width="96" height="96" alt="Duck Life"></a>
+    <a href="games/ducklife2/"><img src="images/ducklife2.png" width="96" height="96" alt="Duck Life 2"></a>
+    <a href="games/ducklife3/"><img src="images/ducklife3.png" width="96" height="96" alt="Duck Life 3"></a>
+    <a href="games/ducklife4/"><img src="images/ducklife4.png" width="96" height="96" alt="Duck Life 4"></a>
+    <a href="games/hackertype/"><img src="images/hackertype.png" width="96" height="96" alt="Hacker Typer"></a>
+    <a href="games/deathrun3d/"><img src="images/deathrun3d.png" width="96" height="96" alt="Death Run 3d"></a>
+    <a href="games/dino/"><img src="images/dino.png" width="96" height="96" alt="Dinosaur Game"></a>
+    <a href="games/basketrandom/"><img src="images/basketrandom.png" width="96" height="96" alt="Basket Random"></a>
+    <a href="games/soccerrandom/"><img src="images/soccerrandom.png" width="96" height="96" alt="Soccer Random"></a>
+    <a href="games/volley-random/"><img src="images/volley.png" width="96" height="96" alt="Volley Random"></a>
+    <a href="games/boxingrandom/"><img src="images/boxingrandom.jpg" width="96" height="96" alt="Boxing Random"></a>
+    <a href="games/fireboy/"><img src="images/fireboy.webp" width="96" height="96" alt="Fireboy and Watergirl"></a>
+    <a href="games/drawthehill/"><img src="images/drawthehill.png" width="96" height="96" alt="Draw The Hill"></a>
+    <a href="games/bottleflip/"><img src="images/bottleflip.png" width="96" height="96" alt="Bottle Flip"></a>
+    <a href="games/uno/"><img src="images/uno.png" width="96" height="96" alt="Uno"></a>
+    <a href="games/sandboxels/"><img src="images/sandboxels.png" width="96" height="96" alt="Sandboxels"></a>
+    <a href="games/bloxorz/"><img src="images/bloxorz.png" width="96" height="96" alt="Bloxorz"></a>
+    <a href="games/minesweeper/"><img src="images/minesweeper.webp" width="96" height="96" alt="Minesweeper"></a>
+    <a href="games/papaspizzeria/"><img src="images/papas.jfif" width="96" height="96" alt="Papa's Pizzeria"></a>
+    <a href="games/papasfreezeria/"><img src="images/freeze.jfif" width="96" height="96" alt="Papa's Freezeria"></a>
+    <a href="games/papaspancakeria/"><img src="images/pancake.jfif" width="96" height="96" alt="Papa's Pancakeria"></a>
+    <a href="games/papastacomia/"><img src="images/tacomia.jpg" width="96" height="96" alt="Papa's Tacomia"></a>
+    <a href="games/papassushiria/"><img src="images/sushiria.webp" width="96" height="96" alt="Papa's Sushiria"></a>
+    <a href="games/papasbakeria/"><img src="images/bakeria.jfif" width="96" height="96" alt="Papa's Bakeria"></a>
+    <a href="games/papaswingeria/"><img src="images/wingeria.jfif" width="96" height="96" alt="Papa's Wingeria"></a>
+    <a href="games/papaspastaria/"><img src="images/pastaria.jfif" width="96" height="96" alt="Papa's Pastaria"></a>
+    <a href="games/papashotdogeria/"><img src="images/papashotdogeria.webp" width="96" height="96" alt="Papa's Hotdogeria"></a>
+    <a href="games/papasdonuteria/"><img src="images/papasdonuteria.avif" width="96" height="96" alt="Papa's Donuteria"></a>
+    <a href="games/papasscooperia/"><img src="images/papasscooperia.jpg" width="96" height="96" alt="Papa's Scooperia"></a>
+    <a href="games/papascheeseria/"><img src="images/papascheeseria.jpeg" width="96" height="96" alt="Papa's Cheeseria"></a>
+    <a href="games/papascupcakeria/"><img src="images/papascupcakeria.avif" width="96" height="96" alt="Papa's Cupcakeria"></a>
+    <a href="games/smb/"><img src="images/mario.ico" width="96" height="96" alt="Super Mario Bros."></a>
+    <a href="games/smb2/"><img src="images/smb2.webp" width="96" height="96" alt="Super Mario Bros 2"></a>
+    <a href="games/smb3/"><img src="images/smb3.png" width="96" height="96" alt="Super Mario Bros 3"></a>
+    <a href="games/allstars/"><img src="images/allstars.png" width="96" height="96" alt="Super Mario All Stars"></a>
+    <a href="games/smw/"><img src="images/smw.png" width="96" height="96" alt="Super Mario World"></a>
+    <a href="games/yoshi/"><img src="images/yoshi.png" width="96" height="96" alt="Super Mario World 2 - Yoshi's Island"></a>
+    <a href="games/sml/"><img src="images/sml.png" width="96" height="96" alt="Super Mario Land"></a>
+    <a href="games/sml2/"><img src="images/sml2.webp" width="96" height="96" alt="Super Mario Land 2"></a>
+    <a href="games/sm64/"><img src="images/sm64.jpg" width="96" height="96" alt="Super Mario 64"></a>
+    <a href="games/sm63/"><img src="images/sm63.webp" width="96" height="96" alt="Super Mario 63"></a>
+    <a href="games/newmario/"><img src="images/newmario.jpeg" width="96" height="96" alt="New Super Mario Bros."></a>
+    <a href="games/mariorpg/"><img src="images/mariorpg.jpg" width="96" height="96" alt="Super Mario RPG"></a>
+    <a href="games/mlsuper/"><img src="images/mlsuper.webp" width="96" height="96" alt="Mario & Luigi: Superstar Saga"></a>
+    <a href="games/mlpartners/"><img src="images/mlpartners.webp" width="96" height="96" alt="Mario & Luigi: Partners In Time"></a>
+    <a href="games/mlbowser/"><img src="images/mlbowser.webp" width="96" height="96" alt="Mario & Luigi: Bowser's Inside Story"></a>
+    <a href="games/drmario/"><img src="images/drmario.png" width="96" height="96" alt="Dr.Mario"></a>
+    <a href="games/smk/"><img src="images/smk.webp" width="96" height="96" alt="Super Mario Kart"></a>
+    <a href="games/mk64/"><img src="images/mk64.webp" width="96" height="96" alt="Mario Kart 64"></a>
+    <a href="games/mksc/"><img src="images/mksc.webp" width="96" height="96" alt="Mario Kart Super Circuit"></a>
+    <a href="https://sadx.boingagames.workers.dev/mkdd/index.html"><img src="images/mkdd.webp" width="96" height="96" alt="Mario Kart: Double Dash!!"></a>
+    <a href="games/mkds/"><img src="images/mkds.jpg" width="96" height="96" alt="Mario Kart DS"></a>
+    <a href="games/mariopaint/"><img src="images/mariopaint.jpg" width="96" height="96" alt="Mario Paint"></a>
+    <a href="games/unfair/"><img src="images/unfair.jpg" width="96" height="96" alt="Unfair Mario"></a>
+    <a href="games/wario1/"><img src="images/wario1.png" width="96" height="96" alt="Wario Land"></a>
+    <a href="games/wario2/"><img src="images/wario2.jpg" width="96" height="96" alt="Wario Land 2"></a>
+    <a href="games/wario3/"><img src="images/wario3.jpg" width="96" height="96" alt="Wario Land 3"></a>
+    <a href="games/wario4/"><img src="images/wario4.png" width="96" height="96" alt="Wario Land 4"></a>
+    <a href="games/wariods/"><img src="images/wariods.png" width="96" height="96" alt="Wario Ware - Touched!"></a>
+    <a href="games/dkong/"><img src="images/dkong.jpg" width="96" height="96" alt="Donkey Kong"></a>
+    <a href="games/dkc/"><img src="images/dkc.jpg" width="96" height="96" alt="Donkey Kong Country"></a>
+    <a href="games/dkc2/"><img src="images/dkc2.png" width="96" height="96" alt="Donkey Kong Country 2"></a>
+    <a href="games/dkc3/"><img src="images/dkc3.png" width="96" height="96" alt="Donkey Kong Country 3"></a>
+    <a href="games/diddykongds/"><img src="images/diddykongds.jpg" width="96" height="96" alt="Diddy Kong Racing DS"></a>
+    <a href="games/zelda/"><img src="images/zelda.png" width="96" height="96" alt="The Legend Of Zelda"></a>
+    <a href="games/past/"><img src="images/past.jpg" width="96" height="96" alt="The Legend Of Zelda: A Link To The Past"></a>
+    <a href="games/oot/"><img src="images/oot.png" width="96" height="96" alt="The Legend Of Zelda: Ocarina Of Time"></a>
+    <a href="games/mm/"><img src="images/mm.png" width="96" height="96" alt="The Legend Of Zelda: Majora's Mask"></a>
+    <a href="https://sadx.boingagames.workers.dev/tww/index.html"><img src="images/tww.webp" width="96" height="96" alt="The Legend Of Zelda: Wind Waker"></a>
+    <a href="games/minish/"><img src="images/minish.webp" width="96" height="96" alt="The Legend Of Zelda: Minish Cap"></a>
+    <a href="games/kirby/"><img src="images/kirby.jpg" width="96" height="96" alt="Kirby Super Star"></a>
+    <a href="games/nightmare/"><img src="images/nightmare.jpg" width="96" height="96" alt="Kirby Nightmare In Dreamland"></a>
+    <a href="games/squeak/"><img src="images/squeak.webp" width="96" height="96" alt="Kirby: Squeak Squad"></a>
+    <a href="games/punch/"><img src="images/punch.png" width="96" height="96" alt="Punch Out!!!"></a>
+    <a href="games/banjo/"><img src="images/banjo.jpg" width="96" height="96" alt="Banjo Kazooie"></a>
+    <a href="games/smash/"><img src="images/smash.jpg" width="96" height="96" alt="Super Smash Bros."></a>
+    <a href="https://sadx.boingagames.workers.dev/melee/index.html"><img src="images/melee.webp" width="96" height="96" alt="Super Smash Bros. Melee"></a>
+    <a href="games/metroid/"><img src="images/metroid.jpg" width="96" height="96" alt="Metroid"></a>
+    <a href="games/supermetroid/"><img src="images/supermetroid.jpg" width="96" height="96" alt="Super Metroid"></a>
+    <a href="games/megaman/"><img src="images/megaman.webp" width="96" height="96" alt="Mega Man"></a>
+    <a href="games/megaman2/"><img src="images/megaman2.jpg" width="96" height="96" alt="Mega Man 2"></a>
+    <a href="games/megaman3/"><img src="images/megaman3.jpg" width="96" height="96" alt="Mega Man 3"></a>
+    <a href="games/megaman4/"><img src="images/megaman4.webp" width="96" height="96" alt="Mega Man 4"></a>
+    <a href="games/megaman5/"><img src="images/megaman5.jpg" width="96" height="96" alt="Mega Man 5"></a>
+    <a href="games/megaman6/"><img src="images/megaman6.jpg" width="96" height="96" alt="Mega Man 6"></a>
+    <a href="games/megaman7/"><img src="images/megaman7.jpg" width="96" height="96" alt="Mega Man 7"></a>
+    <a href="games/megaman8/"><img src="images/megaman8.jpg" width="96" height="96" alt="Mega Man 8"></a>
+    <a href="games/megax/"><img src="images/megax.webp" width="96" height="96" alt="Mega Man X"></a>
+    <a href="games/megax2/"><img src="images/megax2.jpg" width="96" height="96" alt="Mega Man X2"></a>
+    <a href="games/megax3/"><img src="images/megax3.jpg" width="96" height="96" alt="Mega Man X3"></a>
+    <a href="games/megax4/"><img src="images/megax4.jpg" width="96" height="96" alt="Mega Man X4"></a>
+    <a href="games/megax5/"><img src="images/megax5.jpg" width="96" height="96" alt="Mega Man X5"></a>
+    <a href="games/street/"><img src="images/street.png" width="96" height="96" alt="Street Fighter II"></a>
+    <a href="games/fzero/"><img src="images/fzero.png" width="96" height="96" alt="F-Zero"></a>
+    <a href="games/fox/"><img src="images/fox.jpg" width="96" height="96" alt="Star Fox"></a>
+    <a href="games/fox64/"><img src="images/fox64.jpg" width="96" height="96" alt="Star Fox 64"></a>
+    <a href="games/earthboundb/"><img src="images/earthboundb.jpg" width="96" height="96" alt="EarthBound Beginnings"></a>
+    <a href="games/earthbound/"><img src="images/earthbound.jpg" width="96" height="96" alt="EarthBound"></a>
+    <a href="games/mother3/"><img src="images/mother3.jfif" width="96" height="96" alt="Mother 3"></a>
+    <a href="games/wildworld/"><img src="images/wildworld.png" width="96" height="96" alt="Animal Crossing Wild World"></a>
+    <a href="games/tomodachi/"><img src="images/tomodachi.webp" width="96" height="96" alt="Tomodachi Collection"></a>
+    <a href="games/doom/"><img src="images/doom.ico" width="96" height="96" alt="Doom"></a>
+    <a href="games/pacman/"><img src="images/pacman.png" width="96" height="96" alt="Pac-Man"></a>
+    <a href="games/digdug/"><img src="images/digdug.jpg" width="96" height="96" alt="Dig-Dug"></a>
+    <a href="games/galaga/"><img src="images/galaga.png" width="96" height="96" alt="Galaga"></a>
+    <a href="games/spaceinvaders/"><img src="images/spaceinvaders.png" width="96" height="96" alt="Space Invaders"></a>
+    <a href="games/sonic1/"><img src="images/sonic1.jfif" width="96" height="96" alt="Sonic 1"></a>
+    <a href="games/soniccd/"><img src="images/soniccd.png" width="96" height="96" alt="Sonic CD"></a>
+    <a href="games/sonic2/"><img src="images/sonic2.png" width="96" height="96" alt="Sonic 2"></a>
+    <a href="games/sonic3/"><img src="images/sonic3.jfif" width="96" height="96" alt="Sonic 3"></a>
+    <a href="games/sonicmania/"><img src="images/sonicmania.jpg" width="96" height="96" alt="Sonic Mania"></a>
+    <a href="https://sadx.boingagames.workers.dev/"><img src="images/sadx.jpg" width="96" height="96" alt="Sonic Adventure DX"></a>
+    <a href="games/spinball/"><img src="images/spinball.png" width="96" height="96" alt="Sonic Spinball"></a>
+    <a href="games/chaos/"><img src="images/chaos.jpg" width="96" height="96" alt="Sonic Chaos"></a>
+    <a href="games/triple/"><img src="images/triple.jpg" width="96" height="96" alt="Sonic Triple Trouble"></a>
+    <a href="games/pocket/"><img src="images/pocket.webp" width="96" height="96" alt="Sonic Pocket"></a>
+    <a href="games/sonicadvance/"><img src="images/sonicadvance.webp" width="96" height="96" alt="Sonic Advance"></a>
+    <a href="games/sonicadvance2/"><img src="images/sonicadvance2.webp" width="96" height="96" alt="Sonic Advance 2"></a>
+    <a href="games/sonicadvance3/"><img src="images/advance3.jpg" width="96" height="96" alt="Sonic Advance 3"></a>
+    <a href="games/sonicrush/"><img src="images/rush.jpeg" width="96" height="96" alt="Sonic Rush"></a>
+    <a href="games/battle/"><img src="images/battle.webp" width="96" height="96" alt="Sonic Battle"></a>
+    <a href="games/srb2/"><img src="images/srb2.jpg" width="96" height="96" alt="Sonic Robo Blast 2"></a>
+    <a id="firered-link"><img src="images/firered.jfif" width="96" height="96" alt="Pokemon: Fire Red"></a>
+    <a href="games/leafgreen/"><img src="images/leafgreen.jpg" width="96" height="96" alt="Pokemon: Leaf Green"></a>
+    <a href="games/yellow/"><img src="images/yellow.jpg" width="96" height="96" alt="Pokemon: Yellow"></a>
+    <a id="gold-link"><img src="images/gold.jpg" width="96" height="96" alt="Pokemon: Gold"></a>
+    <a href="games/silver/"><img src="images/silver.jpg" width="96" height="96" alt="Pokemon: Silver"></a>
+    <a href="games/crystal/"><img src="images/crystal.png" width="96" height="96" alt="Pokemon: Crystal"></a>
+    <a id="sapphire-link"><img src="images/sapphire.png" width="96" height="96" alt="Pokemon: Sapphire"></a>
+    <a href="games/ruby/"><img src="images/ruby.jpg" width="96" height="96" alt="Pokemon: Ruby"></a>
+    <a href="games/emerald/"><img src="images/emerald.jpg" width="96" height="96" alt="Pokemon: Emerald"></a>
+    <a href="games/diamond/"><img src="images/diamond.jpg" width="96" height="96" alt="Pokemon: Diamond"></a>
+    <a href="games/pearl/"><img src="images/pearl.jpg" width="96" height="96" alt="Pokemon: Pearl"></a>
+    <a href="games/platinum/"><img src="images/platinum.jpg" width="96" height="96" alt="Pokemon: Platinum"></a>
+    <a href="games/black/"><img src="images/black.jpg" width="96" height="96" alt="Pokemon: Black"></a>
+    <a href="games/white/"><img src="images/white.jpg" width="96" height="96" alt="Pokemon: White"></a>
+    <a href="games/black2/"><img src="images/black2.jpg" width="96" height="96" alt="Pokemon: Black 2"></a>
+    <a href="games/white2/"><img src="images/white2.jpg" width="96" height="96" alt="Pokemon: White 2"></a>
+    <a href="games/crash/"><img src="images/crash.png" width="96" height="96" alt="Crash Bandicoot"></a>
+    <a href="games/crash2/"><img src="images/crash2.jpg" width="96" height="96" alt="Crash Bandicoot 2: Warped"></a>
+    <a href="games/ctr/"><img src="images/ctr.png" width="96" height="96" alt="Crash Team Racing"></a>
+    <a href="games/spider/"><img src="images/spider.jpg" width="96" height="96" alt="Spider-Man"></a>
+    <a href="games/pepsi/"><img src="images/pepsiman.jpeg" width="96" height="96" alt="Pepsi Man"></a>
+    <a href="games/hockey/"><img src="images/hockey.jpg" width="96" height="96" alt="Backyard Hockey"></a>
+    <a href="games/bbaseball/"><img src="images/bbaseball.jpg" width="96" height="96" alt="Backyard Baseball"></a>
+    <a href="games/bfootball/"><img src="images/bfootball.jpg" width="96" height="96" alt="Backyard Football"></a>
+    <a href="games/bbasketball/"><img src="images/bbasketball.jpg" width="96" height="96" alt="Backyard Basketball"></a>
+    <a href="games/bskate/"><img src="images/bskate.jpg" width="96" height="96" alt="Backyard Skateboarding"></a>
+    <a href="games/tinyfishing/"><img src="images/tinyfishing.jpg" width="96" height="96" alt="Tiny Fishing"></a>
+    <a href="games/breakingthebank/"><img src="images/breakingthebank.jpg" width="96" height="96" alt="Henry Stickmin: Breaking the Bank"></a>
+    <a href="games/escapingtheprison/"><img src="images/escapingtheprison.ico" width="96" height="96" alt="Henry Stickmin: Escaping The Prison"></a>
+    <a href="games/infiltratingtheairship/"><img src="images/infiltratingtheairship.ico" width="96" height="96" alt="Henry Stickmin: Infiltrating The Airship"></a>
+    <a href="games/fleeingthecomplex/"><img src="images/fleeingthecomplex.webp" width="96" height="96" alt="Henry Stickmin: Fleeing The Complex"></a>
+    <a href="games/riddleschool3/"><img src="images/rs3.webp" width="96" height="96" alt="Riddle School 3"></a>
+    <a href="games/jacksmith/"><img src="images/jacksmith.jpg" width="96" height="96" alt="Jack Smith"></a>
+    <a href="games/1v1lol/"><img src="images/1v1.jpg" width="96" height="96" alt="1v1.lol"></a>
+    <a href="games/crossyroad/"><img src="images/crossyroad.avif" width="96" height="96" alt="Crossy Road"></a>
+    <a href="games/baldisbasics/"><img src="images/baldisbasics.webp" width="96" height="96" alt="Baldi's Basics"></a>
+    <a href="games/tetris/"><img src="images/tetris.jpg" width="96" height="96" alt="Twitch Tetris"></a>
+    <a href="games/jetpack-joyride/"><img src="images/jetpack.jpeg" width="96" height="96" alt="Jetpack Joyride"></a>
+    <a href="games/stack/"><img src="images/stack.jpeg" width="96" height="96" alt="Stack"></a>
+    <a href="games/doodle-jump/"><img src="images/doodle.webp" width="96" height="96" alt="Doodle Jump"></a>
+    <a href="games/alienhominid/"><img src="images/alien.png" width="96" height="96" alt="Alien Hominid"></a>
+    <a href="games/fancypantsadventures/"><img src="images/fancy.png" width="96" height="96" alt="Mr.Fancy Pants Adventures"></a>
+    <a href="games/there-is-no-game/"><img src="images/nogame.jpeg" width="96" height="96" alt="There Is No Game"></a>
+    <a href="games/idle-breakout/"><img src="images/idle.webp" width="96" height="96" alt="Idle Breakout"></a>
+    <a href="games/fruitninja/"><img src="images/fruit-ninja.avif" width="96" height="96" alt="Fruit Ninja"></a>
+    <a href="games/holeio/"><img src="images/holeio.jpg" width="96" height="96" alt="Hole.io"></a>
+    <a href="games/fued/"><img src="images/fued.png" width="96" height="96" alt="Google Fued"></a>
+    <a href="games/achivement/"><img src="images/achivement.jpg" width="96" height="96" alt="Achivement Unlocked"></a>
+    <a href="games/n-gon/"><img src="images/n-gon.jpg" width="96" height="96" alt="N-Gon"></a>
+    <a href="games/btd5/"><img src="images/btd5.png" width="96" height="96" alt="Bloon's Tower Defense 5"></a>
+    <a href="games/deal/"><img src="images/deal.jpg" width="96" height="96" alt="Deal Or No Deal"></a>
+    <a href="games/surf/"><img src="images/surf.jpg" width="96" height="96" alt="Edge Surf"></a>
+    <a href="games/Run 2/"><img src="images/run2.jpg" width="96" height="96" alt="Run 2"></a>
+    <a href="games/block/"><img src="images/block.jpg" width="96" height="96" alt="Block Blast"></a>
+    <a href="games/drift-hunters/"><img src="images/hunt.webp" width="96" height="96" alt="Drift Hunters"></a>
+    <a href="games/house/"><img src="images/house.webp" width="96" height="96" alt="House Of Hazards"></a>
+    <a href="games/superhot/"><img src="images/superhot.jpg" width="96" height="96" alt="Superhot"></a>
+    <a href="games/gettingoverit/"><img src="images/getting.jpg" width="96" height="96" alt="Getting Over It"></a>
+    <a href="games/minutes/"><img src="images/minutes.png" width="96" height="96" alt="10 Minutes Till Dawn"></a>
+    <a href="games/smashkarts/"><img src="images/smashkarts.jpg" width="96" height="96" alt="Smash Karts"></a>
+    <a href="games/bomberman/"><img src="images/bomberman.png" width="96" height="96" alt="Super Bomberman 2"></a>
+    <a href="games/tomb/"><img src="images/tomb.png" width="96" height="96" alt="Tomb Of The Mask"></a>
+    <a href="games/color/"><img src="images/color.png" width="96" height="96" alt="Color Switch"></a>
+    <a href="games/tag/"><img src="images/tag.webp" width="96" height="96" alt="Tag"></a>
+    <a href="games/cut/"><img src="images/cut.png" width="96" height="96" alt="Cut The Rope"></a>
+    <a href="games/elasticman/"><img src="images/elasticman.webp" width="96" height="96" alt="Elastic Man"></a>
+    <a href="games/ball/"><img src="images/stack.png" width="96" height="96" alt="Stack Ball"></a>
+    <a href="games/fireice/"><img src="images/fireice.png" width="96" height="96" alt="A Dance of Fire and Ice"></a>
+    <a href="games/"><img src="images/cluster.png" width="96" height="96" alt="Cluster Rush"></a>
+    <a href="games/cat/"><img src="images/cat.png" width="96" height="96" alt="Cat Trap"></a>
+    <a href="games/bezos/"><img src="images/bezos.png" width="96" height="96" alt="You Are Jeff Bezos"></a>
+    <a href="games/burger/"><img src="images/burger.jpg" width="96" height="96" alt="60 Second Burger Rush"></a>
+    <a href="games/portal/"><img src="images/portal.jpg" width="96" height="96" alt="Portal: Flash Version"></a>
+    <a href="games/core-ball/"><img src="images/core-ball.webp" width="96" height="96" alt="Core Ball"></a>
+    <a href="games/basketstars/"><img src="images/basketstars.jpg" width="96" height="96" alt="Basketball Stars"></a>
+    <a href="games/ducktales/"><img src="images/ducktales.jpg" width="96" height="96" alt="Ducktales"></a>
+    <a href="games/line/"><img src="images/line.jpg" width="96" height="96" alt="Line Rider"></a>
+    <a href="games/angry/"><img src="images/angry.webp" width="96" height="96" alt="Angry Birds"></a>
+    <a href="games/angryspace/"><img src="images/angryspace.png" width="96" height="96" alt="Angry Birds Space"></a>
+    <a href="games/murder/"><img src="images/murder.png" width="96" height="96" alt="Murder"></a>
+    <a href="games/stacktris/"><img src="images/stacktris.png" width="96" height="96" alt="Stacktris"></a>
+    <a href="games/run3/"><img src="images/run3.jfif" width="96" height="96" alt="Run 3"></a>
+    <a href="games/penguin/"><img src="images/penguin.jpg" width="96" height="96" alt="Club Penguin Fishing"></a>
+    <a href="https://play.cplegacy.com/"><img src="images/clubpenguin.jpg" width="96" height="96" alt="Club Penguin"></a>
+    <a href="games/pingpong/"><img src="images/pingpong.png" width="96" height="96" alt="Ping Pong"></a>
+    <a href="https://crazycattle3d.github.io/"><img src="images/cattle.jpg" width="96" height="96" alt="Crazy Cattle 3D"></a>
+    <a href="games/meatboy/"><img src="images/meatboy.jpg" width="96" height="96" alt="Super Meat Boy"></a>
+    <a href="games/crossover/"><img src="images/crossover.png" width="96" height="96" alt="Crossover"></a>
+    <a href="games/hextris/"><img src="images/hextris.webp" width="96" height="96" alt="Hextris"></a>
+    <a href="games/smashf/"><img src="images/smashf.png" width="96" height="96" alt="Super Smash Flash."></a>
+    <a href="games/undertale/"><img src="images/undertale.jpg" width="96" height="96" alt="UNDERTALE"></a>
+    <a href="games/deltarune/"><img src="images/deltarune.png" width="96" height="96" alt="DELTARUNE"></a>
+    <a href="games/pvz/"><img src="images/pvz.jpg" width="96" height="96" alt="Plants Vs Zombies"></a>
+    <a href="games/pizzat/"><img src="images/pizzat.png" width="96" height="96" alt="Pizza Tower"></a>
+    <a href="games/celeste/"><img src="images/celeste.png" width="96" height="96" alt="Celeste"></a>
+    <a href="games/fnaf/"><img src="images/fnaf.png" width="96" height="96" alt="Five Nights At Freddy's"></a>
+    <a href="games/fnaf2/"><img src="images/fnaf2.png" width="96" height="96" alt="Five Nights At Freddy's 2"></a>
+    <a href="games/fnaf3/"><img src="images/fnaf3.png" width="96" height="96" alt="Five Nights At Freddy's 3"></a>
+    <a href="games/fnaf4/"><img src="images/fnaf4.png" width="96" height="96" alt="Five Nights At Freddy's 4"></a>
+    <a href="games/fnaf5/"><img src="images/fnaf5.png" width="96" height="96" alt="Five Nights At Freddy's Sister Location"></a>
+    <a href="games/fnaf6/"><img src="images/fnaf6.png" width="96" height="96" alt="Five Nights At Freddy's Pizzaria Simulator"></a>
+    <a href="games/fnaf8/"><img src="images/fnaf8.png" width="96" height="96" alt="Five Nights At Freddy's Ultimate Custom Night"></a>
+    <a href="games/fnafworld/"><img src="images/fnafworld.webp" width="96" height="96" alt="Five Nights At Freddy's World"></a>
+    <a href="games/peopleplayground/"><img src="images/peopleplayground.png" width="96" height="96" alt="People Playground"></a>
+    <a href="games/ultrakill/"><img src="images/ultrakill.png" width="96" height="96" alt="ULTRAKILL"></a>
+    <a href="games/tboi/"><img src="images/tboi.png" width="96" height="96" alt="The Binding Of Issac: Wrath Of The Lamb"></a>
+    <a href="games/tboir/"><img src="images/tboir.webp" width="96" height="96" alt="The Binding Of Issac: Repentance"></a>
+    <a href="games/bendy/"><img src="images/bendy.png" width="96" height="96" alt="Bendy And The Ink Machine"></a>
+    <a href="games/peggle/"><img src="images/peggle.jpg" width="96" height="96" alt="Peggle: Double Shot"></a>
+    <a href="games/granny/"><img src="images/granny.png" width="96" height="96" alt="Granny"></a>
+    <a href="games/halflife/"><img src="images/halflife.png" width="96" height="96" alt="Half-Life"></a>
+    <a href="games/halflifeop/"><img src="images/halflifeop.png" width="96" height="96" alt="Half-Life: Opposing Force"></a>
+    <a href="games/hl2/"><img src="images/hl2.webp" width="96" height="96" alt="Half-Life 2"></a>
+    <a href="games/minertycoon/"><img src="images/minertycoon.jpg" width="96" height="96" alt="Idle Miner Tycoon"></a>
+    <a href="games/cuphead/"><img src="images/cuphead.jpg" width="96" height="96" alt="Cuphead"></a>
+    <a href="games/raftwars/"><img src="images/raftwars.jpg" width="96" height="96" alt="Raft Wars"></a>
+    <a href="games/raftwars2/"><img src="images/raftwars2.webp" width="96" height="96" alt="Raft Wars 2"></a>
+    <a href="games/aquapark/"><img src="images/aquapark.png" width="96" height="96" alt="Aquapark.io"></a>
+    <a href="games/kindergarten/"><img src="images/kindergarten.png" width="96" height="96" alt="Kindergarten"></a>
+    <a href="games/kindergarten2/"><img src="images/kindergarten2.jpg" width="96" height="96" alt="Kindergarten 2"></a>
+    <a href="games/kindergarten3/"><img src="images/kindergarten3.png" width="96" height="96" alt="Kindergarten 3"></a>
+    <a href="games/rb4/"><img src="images/rb4.webp" width="96" height="96" alt="Red Ball 4"></a>
+    <a href="games/8ball/"><img src="images/8ball.webp" width="96" height="96" alt="8-Ball Pool"></a>
+    <a href="games/buddy/"><img src="images/buddy.jpg" width="96" height="96" alt="Interactive Buddy"></a>
+    <a href="games/infinitecraft/"><img src="images/infinite.webp" width="96" height="96" alt="Infinite Craft"></a>
+    <a href="games/iqball/"><img src="images/iqball.jpg" width="96" height="96" alt="IQ Ball"></a>
+    <a href="games/bronzeage/"><img src="images/bronzeage.jpg" width="96" height="96" alt="Bronze Age"></a>
+    <a href="games/suika/"><img src="images/suika.webp" width="96" height="96" alt="Suika Game"></a>
+    <a href="games/crazycars/"><img src="images/crazycars.png" width="96" height="96" alt="Crazy Cars"></a>
+    <a href="games/button/"><img src="images/button.jpg" width="96" height="96" alt="Just Press The Button"></a>
+    <a href="games/slice/"><img src="images/slice.png" width="96" height="96" alt="Slice It All!"></a>
+    <a href="games/boss/"><img src="images/boss.jpg" width="96" height="96" alt="Just One Boss"></a>
+    <a href="games/snow/"><img src="images/snow.png" width="96" height="96" alt="Snow Rider 3D"></a>
+    <a href="games/bouncymotors/"><img src="images/bouncymotors.png" width="96" height="96" alt="Bouncy Motors"></a>
+    <a href="games/tonyhawk/"><img src="images/tonyhawk.jpg" width="96" height="96" alt="Tony Hawk's Pro Skater"></a>
+    <a href="games/spaceiskey/"><img src="images/spaceiskey.png" width="96" height="96" alt="Space Is Key"></a>
+    <a href="games/factoryballs/"><img src="images/factoryballs.webp" width="96" height="96" alt="Factory Balls"></a>
+    <a href="games/factoryballs2/"><img src="images/factoryballs2.jpg" width="96" height="96" alt="Factory Balls 2"></a>
+    <a href="games/factoryballs3/"><img src="images/factoryballs3.jpg" width="96" height="96" alt="Factory Balls 3"></a>
+    <a href="games/factoryballs4/"><img src="images/factoryballs4.jpg" width="96" height="96" alt="Factory Balls 4"></a>
+    <a href="games/rerun/"><img src="images/rerun.png" width="96" height="96" alt="Re:Run"></a>
+    <a href="games/madalin/"><img src="images/madalin.webp" width="96" height="96" alt="Madalin Stunt Cars 2"></a>
+    <a href="games/basketfrvr/"><img src="images/basketfrvr.avif" width="96" height="96" alt="Basket FRVR"></a>
+    <a href="games/circlo/"><img src="images/circlo.png" width="96" height="96" alt="CircloO"></a>
+    <a href="games/bouncemasters/"><img src="images/bouncemasters.png" width="96" height="96" alt="Bouncemasters"></a>
+    <a href="games/solarsmash/"><img src="images/solarsmash.png" width="96" height="96" alt="Solar Smash"></a>
+    <a href="games/buildabigarmy/"><img src="images/buildabigarmy.jpg" width="96" height="96" alt="Build a Big Army"></a>
+    <a href="games/goingballs/"><img src="images/goingballs.png" width="96" height="96" alt="Going Balls"></a>
+    <a href="games/dragonsvsbricks/"><img src="images/dragonvsbricks.jpg" width="96" height="96" alt="Dragon Vs. Icy Bricks"></a>
+    <a href="games/oggettingoverit/"><img src="images/oggettingoverit.png" width="96" height="96" alt="OG Getting Over It"></a>
+    <a href="games/onebitadventure/"><img src="images/onebitadventure.png" width="96" height="96" alt="One Bit Adventure"></a>
+    <a href="games/blockydemolitionderby/"><img src="images/blockydemolitionderby.png" width="96" height="96" alt="Blocky Demolition Derby"></a>
+    <a href="games/finalearth2/"><img src="images/finalearth2.png" width="96" height="96" alt="The Final Earth 2"></a>
+    <a href="games/fallout/"><img src="images/fallout.png" width="96" height="96" alt="Fallout"></a>
+    <a href="games/gunspin/"><img src="images/gunspin.png" width="96" height="96" alt="Gunspin"></a>
+    <a href="games/flipmaster/"><img src="images/flipmaster.png" width="96" height="96" alt="Flip Master"></a>
+    <a href="games/highwayracer/"><img src="images/highwayracer.png" width="96" height="96" alt="Highway Racer"></a>
+    <a href="games/cubefield/"><img src="images/cubefield.png" width="96" height="96" alt="Cubefield"></a>
+    <a href="games/bigtowertinysquare/"><img src="images/bigtowertinysquare.jpg" width="96" height="96" alt="Big Tower Tiny Square"></a>
+    <a href="games/bigtowertinysquare2/"><img src="images/bigtowertinysquare2.png" width="96" height="96" alt="Big Tower Tiny Square 2"></a>
+    <a href="games/bigicetowertinysquare/"><img src="images/bigicetowertinysquare.png" width="96" height="96" alt="Big ICE Tower Tiny Square"></a>
+    <a href="games/bigneontowertinysquare/"><img src="images/bigneontowertinysquare.png" width="96" height="96" alt="Big NEON Tower Tiny Square"></a>
+    <a href="games/metalgear/"><img src="images/metalgear.webp" width="96" height="96" alt="Metal Gear"></a>
+    <a href="games/metalgearsolid/"><img src="images/metalgearsolid.png" width="96" height="96" alt="Metal Gear Solid"></a>
+    <a href="games/evilglitch/"><img src="images/evilglitch.png" width="96" height="96" alt="Evil Glitch"></a>
+    <a href="games/findthealien/"><img src="images/findthealien.png" width="96" height="96" alt="Find The Alien"></a>
+    <a href="games/wallkickersnes/"><img src="images/wallkickersnes.png" width="96" height="96" alt="Wall Kickers NES"></a>
+    <a href="games/residentevil/"><img src="images/residentevil.png" width="96" height="96" alt="Resident Evil"></a>
+    <a href="games/silenthill/"><img src="images/silenthill.png" width="96" height="96" alt="Silent Hill"></a>
+    <a href="games/minibattles/"><img src="images/minibattles.png" width="96" height="96" alt="12 Mini Battles"></a>
+    <a href="games/boomslingersreboom/"><img src="images/boomslingersreboom.png" width="96" height="96" alt="Boom Slingers ReBoom"></a>
+    <a href="games/bitplanes/"><img src="images/bitplanes.png" width="96" height="96" alt="BitPlanes"></a>
+    <a href="games/gobble/"><img src="images/gobble.png" width="96" height="96" alt="Gobble"></a>
+    <a href="games/infinimoes/"><img src="images/infinimoes.png" width="96" height="96" alt="Infinimoes"></a>
+    <a href="games/idlelumberinc/"><img src="images/idlelumberinc.png" width="96" height="96" alt="Idle Lumber Inc."></a>
+    <a href="games/pacmanworld/"><img src="images/pacmanworld.png" width="96" height="96" alt="Pac-Man World"></a>
+    <a href="games/escaperoad/"><img src="images/escaperoad.png" width="96" height="96" alt="Escape Road"></a>
+    <a href="games/papersplease/"><img src="images/papersplease.png" width="96" height="96" alt="Papers Please"></a>
+    <a href="games/postal/"><img src="images/postal.png" width="96" height="96" alt="Postal"></a>
+    <a href="games/celestenew/"><img src="images/celestenew.png" width="96" height="96" alt="Celeste Full"></a>
+    <a href="games/idledice/"><img src="images/idledice.png" width="96" height="96" alt="Idle Dice"></a>
+    <a href="games/monkeymart/"><img src="images/monkeymart.png" width="96" height="96" alt="Monkey Mart"></a>
+    <a href="games/raft/"><img src="images/raft.png" width="96" height="96" alt="Raft"></a>
+    <a href="games/rollyvortex/"><img src="images/rollyvortex.png" width="96" height="96" alt="Rolly Vortex"></a>
+    <a href="games/slope2/"><img src="images/slope2.png" width="96" height="96" alt="Slope 2"></a>
+    <a href="games/spacewaves/"><img src="images/spacewaves.png" width="96" height="96" alt="Space Waves"></a>
+    <a href="games/templerun2/"><img src="images/templerun2.png" width="96" height="96" alt="Temple Run 2"></a>
+    <a href="games/giantwanted/"><img src="images/giantwanted.png" width="96" height="96" alt="Giant Wanted"></a>
+    <a href="games/ragdollarchers/"><img src="images/ragdollarchers.png" width="96" height="96" alt="Ragdoll Archers"></a>
+    <a href="games/ragdollhit/"><img src="images/ragdollhit.png" width="96" height="96" alt="Ragdoll Hit"></a>
+    <a href="games/thisistheonlylevel/"><img src="images/thisistheonlylevel.png" width="96" height="96" alt="This Is The Only Level"></a>
+    <a href="games/worldbox/"><img src="images/worldbox.png" width="96" height="96" alt="World Box"></a>
+    <a href="games/gladihoppers/"><img src="images/gladihoppers.png" width="96" height="96" alt="Gladihoppers"></a>
+    <a href="games/shipo.io/"><img src="images/shipo.io.png" width="96" height="96" alt="Shipo.io"></a>
+    <a href="games/slimerancher/"><img src="images/slimerancher.png" width="96" height="96" alt="Slime Rancher"></a>
+    <a href="games/tattletail/"><img src="images/tattletail.png" width="96" height="96" alt="Tattletail"></a>
+    <a href="games/cavestory/"><img src="images/cavestory.png" width="96" height="96" alt="Cave Story"></a>
+    <a href="games/dadish/"><img src="images/dadish.png" width="96" height="96" alt="Dadish"></a>
+    <a href="games/dadish2/"><img src="images/dadish2.png" width="96" height="96" alt="Dadish 2"></a>
+    <a href="games/dadish3/"><img src="images/dadish3.png" width="96" height="96" alt="Dadish 3"></a>
+    <a href="games/dadish3d/"><img src="images/dadish3d.png" width="96" height="96" alt="Dadish 3D"></a>
+    <a href="games/tombraider/"><img src="images/tombraider.jpg" width="96" height="96" alt="Tomb Raider"></a>
+    <a href="games/terraria/"><img src="images/terraria.png" width="96" height="96" alt="Terraria"></a>
+    <a href="games/ff/"><img src="images/ff.jpg" width="96" height="96" alt="Final Fantasy"></a>
+    <a href="games/ff7/"><img src="images/ff7.jpg" width="96" height="96" alt="Final Fantasy VII"></a>
+    <a href="games/castlevania/"><img src="images/castlevania.png" width="96" height="96" alt="Castlevania: Symphony of The Night"></a>
+    <a href="games/touch/"><img src="images/touch.png" width="96" height="96" alt="Please Don't Touch Anything"></a>
+    <a href="games/chrono/"><img src="images/chrono.png" width="96" height="96" alt="Chrono Trigger"></a>
+    <a href="games/climbing/"><img src="images/climbing.png" width="96" height="96" alt="A Difficult Game About Climbing"></a>
+    <a href="games/learntofly/"><img src="images/learntofly.png" width="96" height="96" alt="Learn To Fly"></a>
+    <a href="games/ironlung/"><img src="images/ironlung.png" width="96" height="96" alt="Iron Lung"></a>
+    <a href="games/goose/"><img src="images/goose.png" width="96" height="96" alt="Untitled Goose Game"></a>
+    <a href="games/cloverpit/"><img src="images/cloverpit.png" width="96" height="96" alt="Clover Pit"></a>
+    <a href="games/99balls/"><img src="images/99balls.png" width="96" height="96" alt="99 Balls"></a>
+    <a href="games/polytrack/"><img src="images/polytrack.png" width="96" height="96" alt="Poly Track"></a>
+    <a href="games/redacted/"><img src="images/redacted.png" width="96" height="96" alt="Five Nights at Ep"></a>
+    <a href="games/monkey/"><img src="images/monkey.png" width="96" height="96" alt="Super Monkey Ball 1&2"></a>
+    <a href="games/hustle/"><img src="images/hustle.png" width="96" height="96" alt="Your Only Move Is HUSTLE"></a>
+    <a href="games/bustaloop/"><img src="images/bustaloop.png" width="96" height="96" alt="Bust-a-Loop"></a>
+    <a href="games/glover/"><img src="images/glover.jpg" width="96" height="96" alt="Glover"></a>
+    <a href="games/phoenix/"><img src="images/phoenix.jpg" width="96" height="96" alt="Phoenix Wright: Ace Attorney"></a>
+    <a href="games/phoenix2/"><img src="images/phoenix2.jpg" width="96" height="96" alt="Phoenix Wright: Ace Attorney – Justice for All"></a>
+    <a href="games/phoenix3/"><img src="images/phoenix3.jpg" width="96" height="96" alt="Phoenix Wright: Ace Attorney – Trials and Tribulations"></a>
+    <a href="games/2playerbattle/"><img src="images/2playerbattle.webp" width="96" height="96" alt="2 Player Battle"></a>
+    <a href="games/balatro/"><img src="images/balatro.jpg" width="96" height="96" alt="Balatro"></a>
+    <a href="games/wordle/"><img src="images/wordle.webp" width="96" height="96" alt="Wordle"></a>
+    <a href="https://scribblers.bios-marcel.link/"><img src="images/skribbl.jpg" width="96" height="96" alt="Skribbl.io"></a>
+    <a href="https://shar-wasm.cjoseph.workers.dev/?skipmovie"><img src="images/simpsons.jpg" width="96" height="96" alt="Simpsons Hit and Run"></a>
+    <a href="games/vice/"><img src="images/vice.webp" width="96" height="96" alt="Grand Theft Auto: Vice City"></a>
+    <a href="games/anton/"><img src="images/anton.jpg" width="96" height="96" alt="Anton Blast"></a>
+    <a href="games/jsab/"><img src="images/jsab.webp" width="96" height="96" alt="Just Shapes and Beats"></a>
+  </div>
+
+  <img id="curiousGeorge" src="curious-george.png" width="768" height="768" alt="Curious George" class="center">
 
   <!-- ================= Rating joke ================= -->
   <div class="rating-section">
@@ -228,11 +1485,6 @@
     <button id="submitRating">Submit Rating</button>
     <div id="ratingResult" class="rating-result"></div>
   </div>
-
-  <footer class="site-footer">
-    <a href="terms.html">Terms of Service</a> ·
-    <a href="privacy.html">Privacy Policy</a>
-  </footer>
 
   <!-- ================= Secret code bar ================= -->
   <div id="codeInputBar">
@@ -246,28 +1498,877 @@
     <img src="xp-window.jpg" alt="Windows XP Window" class="xp-window-image">
   </div>
 
-  <div id="gameOverlay">
-    <iframe id="gameFrame" allow="fullscreen; autoplay; gamepad; clipboard-write; cross-origin-isolated" allowfullscreen></iframe>
-    <div id="gameCloseBtn" title="Close game">&times;</div>
-  </div>
+<div id="gameOverlay">
+  <iframe id="gameFrame" allow="fullscreen; autoplay; gamepad; clipboard-write; cross-origin-isolated" allowfullscreen></iframe>
+  <div id="gameCloseBtn" title="Close game">&times;</div>
+</div>
 
   <!-- ================= Scripts ================= -->
-  <script src="js/config.js"></script>
-  <script src="js/games.js"></script>
-  <script src="js/stats.js"></script>
-  <script src="js/overlay.js"></script>
-  <script src="js/library.js"></script>
-  <script src="js/themes.js"></script>
-  <script src="js/settings.js"></script>
-  <script src="js/extras.js"></script>
 
-  <script src="js/account/api.js"></script>
-  <script src="js/account/ui.js"></script>
-  <script src="js/account/profile.js"></script>
-  <script src="js/account/gifs.js"></script>
-  <script src="js/account/social.js"></script>
-  <script src="js/account/admin.js"></script>
-  <script src="js/account/presence.js"></script>
-  <script src="js/music.js"></script>
+  <!-- Game overlay -->
+<script>
+  (function () {
+    const overlay = document.getElementById('gameOverlay');
+    const frame = document.getElementById('gameFrame');
+    const closeBtn = document.getElementById('gameCloseBtn');
+
+    function openGame(url) {
+      frame.src = url;
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      frame.focus();
+      if (window.Stats) Stats.gameOpened(url);
+    }
+
+    function closeGame() {
+      overlay.classList.remove('active');
+      frame.src = 'about:blank'; // unloads the game so audio stops
+      document.body.style.overflow = '';
+      if (window.Stats) Stats.gameClosed();
+    }
+
+    window.openGame = openGame; // so other scripts (Pokemon links) can use it
+    closeBtn.addEventListener('click', closeGame);
+
+    // Intercept clicks on game links (main grid + favorites bar)
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('.game-star')) return;
+      const a = e.target.closest('#games a, #favorites-bar a');
+      if (!a) return;
+
+      const href = a.getAttribute('href');
+      if (!href) return;                             // Pokemon links handle themselves
+      if (/^https?:\/\//i.test(href)) return;        // external sites open normally
+
+      e.preventDefault();
+      openGame(href);
+    });
+  })();
+</script>
+
+<script>
+  (function () {
+    const KEY = 'siteStats';
+    const AWAY_CAP = 120; // seconds of off-tab time that still count
+
+    function load() {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY));
+        if (d && d.games) return d;
+      } catch (e) {}
+      return { siteTime: 0, totalOpens: 0, games: {} };
+    }
+    function save() {
+      try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+    }
+
+    const data = load();
+    let currentId = null;
+    let hiddenAt = null;
+    let ticks = 0;
+
+    function addTime(sec) {
+      data.siteTime += sec;
+      if (currentId && data.games[currentId]) data.games[currentId].time += sec;
+    }
+
+    // Count a second whenever the tab is visible (playing a game counts too)
+    setInterval(function () {
+      if (document.visibilityState === 'visible') {
+        addTime(1);
+        if (++ticks % 5 === 0) save();
+      }
+    }, 1000);
+
+    // Off-tab time only counts up to AWAY_CAP seconds
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'hidden') {
+        hiddenAt = Date.now();
+        save();
+      } else if (hiddenAt) {
+        const away = (Date.now() - hiddenAt) / 1000;
+        hiddenAt = null;
+        addTime(Math.min(away, AWAY_CAP));
+        save();
+      }
+    });
+    window.addEventListener('pagehide', save);
+
+    // Work out which game a URL belongs to
+    function gameInfo(url) {
+      const m = url.match(/games\/([^\/?#]*)/);
+      const slug = m && m[1] ? decodeURIComponent(m[1]) : 'clusterrush';
+      const link = Array.from(document.querySelectorAll('#games a'))
+        .find(a => a.getAttribute('href') === url) || document.getElementById(slug + '-link');
+      const img = link && link.querySelector('img');
+      return { id: slug, name: img ? img.alt : slug };
+    }
+
+    function gameOpened(url) {
+      const info = gameInfo(url);
+      const g = data.games[info.id] || (data.games[info.id] = { name: info.name, opens: 0, time: 0 });
+      g.name = info.name;
+      g.opens++;
+      data.totalOpens++;
+      currentId = info.id;
+      save();
+    }
+
+    function gameClosed() {
+      currentId = null;
+      save();
+    }
+
+    window.Stats = { gameOpened: gameOpened, gameClosed: gameClosed };
+
+    // ---------- UI ----------
+    function fmt(s) {
+      s = Math.floor(s);
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      if (h) return h + 'h ' + m + 'm';
+      if (m) return m + 'm ' + sec + 's';
+      return sec + 's';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const btn = document.getElementById('statsBtn');
+      const overlay = document.getElementById('statsOverlay');
+      const closeBtn = document.getElementById('statsCloseBtn');
+      const siteTimeEl = document.getElementById('statSiteTime');
+      const opensEl = document.getElementById('statTotalOpens');
+      const search = document.getElementById('statsSearch');
+      const sort = document.getElementById('statsSort');
+      const list = document.getElementById('statsGameList');
+      let refresh = null;
+
+      function render() {
+        siteTimeEl.textContent = fmt(data.siteTime);
+        opensEl.textContent = data.totalOpens;
+
+        const q = search.value.toLowerCase().trim();
+        const rows = Object.values(data.games).filter(g => g.name.toLowerCase().includes(q));
+
+        if (sort.value === 'time') rows.sort((a, b) => b.time - a.time);
+        else if (sort.value === 'opens') rows.sort((a, b) => b.opens - a.opens);
+        else rows.sort((a, b) => a.name.localeCompare(b.name));
+
+        list.innerHTML = '';
+        if (rows.length === 0) {
+          const p = document.createElement('p');
+          p.className = 'stats-empty';
+          p.textContent = Object.keys(data.games).length === 0
+            ? 'No games played yet!'
+            : 'No played games match your search.';
+          list.appendChild(p);
+          return;
+        }
+
+        rows.forEach(g => {
+          const row = document.createElement('div');
+          row.className = 'stats-game-row';
+
+          const name = document.createElement('span');
+          name.className = 'stats-game-name';
+          name.textContent = g.name;
+
+          const nums = document.createElement('span');
+          nums.className = 'stats-game-nums';
+          nums.textContent = fmt(g.time) + ' · opened ' + g.opens + 'x';
+
+          row.appendChild(name);
+          row.appendChild(nums);
+          list.appendChild(row);
+        });
+      }
+
+      function open() {
+        overlay.classList.add('active');
+        render();
+        refresh = setInterval(render, 1000); // live-updating numbers
+      }
+      function close() {
+        overlay.classList.remove('active');
+        clearInterval(refresh);
+      }
+
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
+      search.addEventListener('input', render);
+      sort.addEventListener('change', render);
+    });
+  })();
+</script>
+
+  <!-- Favorites (star) system -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const STORAGE_KEY = 'favoriteGames';
+      const MAX_FAVORITES = 10;
+      const gamesContainer = document.getElementById('games');
+      const favoritesBar = document.getElementById('favorites-bar');
+
+      if (!gamesContainer || !favoritesBar) {
+        console.error('Could not find #games or #favorites-bar on the page.');
+        return;
+      }
+
+      function idFromHref(href) {
+        return href
+          .replace(/^\/|\/$/g, '') // trim leading/trailing slashes
+          .split('/')
+          .filter(Boolean)
+          .pop(); // last non-empty segment
+      }
+
+      // Build lookup data AND inject data-id + star span into every game link
+      const gamesData = {};
+      gamesContainer.querySelectorAll('a').forEach(a => {
+        const href = a.getAttribute('href');
+        const img = a.querySelector('img');
+
+        if (!href || !img) {
+          console.warn('Skipping malformed game link:', a);
+          return; // skip this one, keep going
+        }
+
+        const id = idFromHref(href);
+        a.dataset.id = id;
+
+        const star = document.createElement('span');
+        star.className = 'game-star';
+        star.dataset.id = id;
+        star.textContent = '☆';
+        a.insertBefore(star, img);
+
+        gamesData[id] = {
+          href: href,
+          src: img.getAttribute('src'),
+          alt: img.getAttribute('alt')
+        };
+      });
+
+      function getFavorites() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveFavorites(favs) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+      }
+
+      function updateStarStates(favs) {
+        document.querySelectorAll('.game-star').forEach(star => {
+          const id = star.dataset.id;
+          if (favs.includes(id)) {
+            star.classList.add('favorited');
+            star.textContent = '★';
+            star.title = 'Remove from favorites';
+          } else {
+            star.classList.remove('favorited');
+            star.textContent = '☆';
+            star.title = 'Add to favorites';
+          }
+        });
+      }
+
+      function renderFavoritesBar(favs) {
+        favoritesBar.innerHTML = '';
+
+        if (favs.length === 0) {
+          const msg = document.createElement('p');
+          msg.className = 'favorites-empty';
+          msg.textContent = 'Star a game to add it to favorites!';
+          favoritesBar.appendChild(msg);
+          return;
+        }
+
+        favs.forEach(id => {
+          const data = gamesData[id];
+          if (!data) return;
+
+          const a = document.createElement('a');
+          a.href = data.href;
+          a.dataset.id = id;
+
+          const star = document.createElement('span');
+          star.className = 'game-star favorited';
+          star.dataset.id = id;
+          star.textContent = '★';
+          star.title = 'Remove from favorites';
+
+          const img = document.createElement('img');
+          img.src = data.src;
+          img.width = 96;
+          img.height = 96;
+          img.alt = data.alt;
+
+          a.appendChild(star);
+          a.appendChild(img);
+          favoritesBar.appendChild(a);
+        });
+      }
+
+      function toggleFavorite(id) {
+        let favs = getFavorites();
+
+        if (favs.includes(id)) {
+          favs = favs.filter(f => f !== id);
+        } else {
+          if (favs.length >= MAX_FAVORITES) {
+            alert('You can only favorite up to ' + MAX_FAVORITES + ' games. Remove one first.');
+            return;
+          }
+          favs.push(id);
+        }
+
+        saveFavorites(favs);
+        updateStarStates(favs);
+        renderFavoritesBar(favs);
+      }
+
+      document.addEventListener('click', function (e) {
+        const star = e.target.closest('.game-star');
+        if (star) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleFavorite(star.dataset.id);
+        }
+      });
+
+      const favs = getFavorites();
+      updateStarStates(favs);
+      renderFavoritesBar(favs);
+    });
+  </script>
+
+  <!-- Search + sort -->
+  <script>
+    (function () {
+      function init() {
+        const input = document.getElementById('gameSearch');
+        const sortBtn = document.getElementById('sortBtn');
+        const container = document.getElementById('games');
+
+        if (!input || !sortBtn || !container) return;
+
+        const items = Array.from(container.querySelectorAll('a'));
+        const originalOrder = [...items];
+        let sorted = false;
+
+        input.addEventListener('input', function () {
+          const value = this.value.toLowerCase().trim();
+
+          items.forEach(item => {
+            const alt = item.querySelector('img').alt.toLowerCase();
+            item.style.display = alt.includes(value) ? '' : 'none';
+          });
+        });
+
+        sortBtn.addEventListener('click', function () {
+          sortBtn.classList.remove('pressed');
+          void sortBtn.offsetWidth; // restart animation if clicked rapidly
+          sortBtn.classList.add('pressed');
+
+          sorted = !sorted;
+          let newOrder;
+
+          if (sorted) {
+            newOrder = [...items].sort((a, b) => {
+              const altA = a.querySelector('img').alt.toLowerCase();
+              const altB = b.querySelector('img').alt.toLowerCase();
+              return altA.localeCompare(altB);
+            });
+            sortBtn.textContent = 'Sort: A-Z';
+          } else {
+            newOrder = originalOrder;
+            sortBtn.textContent = 'Sort: Default';
+          }
+
+          newOrder.forEach(item => container.appendChild(item));
+        });
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+
+  <!-- Themes -->
+  <script>
+    const themesSection = document.getElementById('themes');
+    const toggleThemesBtn = document.getElementById('toggle-themes-btn');
+    const backgroundUpload = document.getElementById('background-upload');
+    const xpWindow = document.getElementById('xp-window');
+
+    /* ---------- Halloween (limited-time) ---------- */
+    const HALLOWEEN_UNLOCKED_KEY = 'halloween.unlocked';
+    const HALLOWEEN_AUTO_YEAR_KEY = 'halloween.autoYear';
+    const halloweenBtn = document.getElementById('halloween-theme-btn');
+    const HALLOWEEN_QUOTE = '"BOOingaloingaloingaloinga.."';
+    let playHalloweenIntro = false; // set to true right before applyTheme('halloween') to play the lightning
+
+    function isHalloweenWindow(date) {
+      return date.getMonth() === 9 && (date.getDate() === 30 || date.getDate() === 31);
+    }
+
+    function showHalloweenButton() {
+      halloweenBtn.hidden = false;
+      const mh = themesSection.style.maxHeight;
+      if (mh && mh !== '0px') themesSection.style.maxHeight = themesSection.scrollHeight + 'px';
+    }
+
+    function playLightning() {
+      // Skip if animations are off in Settings, or the OS asks for reduced motion
+      if (document.documentElement.classList.contains('no-animations')) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const w = window.innerWidth, h = window.innerHeight;
+
+      // Build a jagged bolt from the top of the screen
+      let x = w * (0.2 + Math.random() * 0.6), y = 0;
+      const pts = [[x, y]];
+      while (y < h * 0.75) {
+        y += 25 + Math.random() * 45;
+        x += (Math.random() - 0.5) * 90;
+        pts.push([x, y]);
+      }
+      const toStr = (arr) => arr.map(p => p[0].toFixed(0) + ',' + p[1].toFixed(0)).join(' ');
+
+      // One fork branching off the middle of the bolt
+      const forkStart = pts[Math.floor(pts.length / 2)];
+      const dir = Math.random() < 0.5 ? -1 : 1;
+      const branch = [forkStart];
+      let bx = forkStart[0], by = forkStart[1];
+      for (let i = 0; i < 5; i++) {
+        by += 20 + Math.random() * 30;
+        bx += dir * (15 + Math.random() * 35);
+        branch.push([bx, by]);
+      }
+
+      const el = document.createElement('div');
+      el.className = 'hw-lightning';
+      el.innerHTML =
+        '<div class="hw-flash"></div>' +
+        '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+        '<polyline class="hw-bolt" points="' + toStr(pts) + '"/>' +
+        '<polyline class="hw-bolt hw-bolt-branch" points="' + toStr(branch) + '"/>' +
+        '</svg>';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
+
+    function startHalloween() {
+      const intro = playHalloweenIntro;
+      playHalloweenIntro = false;
+
+      document.body.classList.add('halloween');
+
+      // Load the spooky title font only when needed
+      if (!document.getElementById('halloween-font')) {
+        const l = document.createElement('link');
+        l.id = 'halloween-font';
+        l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?family=Creepster&display=swap';
+        document.head.appendChild(l);
+      }
+
+      const quote = document.querySelector('p.quote');
+      if (quote) {
+        if (!quote.dataset.orig) quote.dataset.orig = quote.textContent;
+        quote.textContent = HALLOWEEN_QUOTE;
+      }
+
+      if (!document.getElementById('halloweenFX')) {
+        const web = (cls) =>
+          '<svg class="hw-web ' + cls + '" viewBox="0 0 120 120" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1">' +
+          '<path d="M0 0 L120 0 M0 0 L110 55 M0 0 L85 85 M0 0 L55 110 M0 0 L0 120"/>' +
+          '<path d="M30 0 Q13 13 0 30 M60 0 Q27 27 0 60 M90 0 Q40 40 0 90 M120 0 Q54 54 0 120"/></svg>';
+
+        const fx = document.createElement('div');
+        fx.id = 'halloweenFX';
+        fx.innerHTML =
+          '<div class="hw-fog"></div><div class="hw-vignette"></div>' +
+          web('hw-web-tl') + web('hw-web-tr') +
+          '<div class="hw-spider"><span class="hw-thread"></span><span class="hw-bug">🕷️</span></div>';
+        document.body.appendChild(fx);
+      }
+
+      if (intro) playLightning();
+    }
+
+    function clearHalloween() {
+      document.body.classList.remove('halloween');
+      const fx = document.getElementById('halloweenFX');
+      if (fx) fx.remove();
+      const quote = document.querySelector('p.quote');
+      if (quote && quote.dataset.orig) quote.textContent = quote.dataset.orig;
+    }
+
+    function checkHalloween() {
+      const now = new Date();
+      if (!isHalloweenWindow(now)) return;
+      const year = String(now.getFullYear());
+      try {
+        localStorage.setItem(HALLOWEEN_UNLOCKED_KEY, 'true');   // permanent unlock
+        showHalloweenButton();
+        if (localStorage.getItem(HALLOWEEN_AUTO_YEAR_KEY) !== year) {
+          localStorage.setItem(HALLOWEEN_AUTO_YEAR_KEY, year); // only auto-activate once per year
+          localStorage.setItem('selectedTheme', 'halloween');
+          playHalloweenIntro = true;                           // lightning on auto-activation
+          applyTheme('halloween');
+        }
+      } catch (e) {}
+    }
+
+    toggleThemesBtn.addEventListener('click', () => {
+      if (themesSection.style.maxHeight === '0px' || themesSection.style.maxHeight === '') {
+        themesSection.style.maxHeight = themesSection.scrollHeight + 'px';
+        toggleThemesBtn.textContent = '-';
+      } else {
+        themesSection.style.maxHeight = '0';
+        toggleThemesBtn.textContent = '+';
+      }
+    });
+
+    function applyTheme(theme) {
+      // Reset properties that individual themes might set, so switching
+      // away from "space" (transparent + background-clip: text) or a
+      // fixed image background doesn't leak into the next theme.
+      document.body.style.backgroundSize = '';
+      document.body.style.backgroundAttachment = '';
+      document.body.style.backgroundClip = '';
+      document.body.style.webkitBackgroundClip = '';
+      xpWindow.style.display = 'none';
+      clearHalloween();
+
+      switch (theme) {
+        case 'default':
+          document.body.style.background = 'linear-gradient(to right, #1e1e2f, #3a3b5b)';
+          document.body.style.color = '#ffcc00';
+          break;
+        case 'blossom':
+          document.body.style.background = 'linear-gradient(to right, #ffafcc, #ffcad4)';
+          document.body.style.color = '#880e4f';
+          break;
+        case 'iridium':
+          document.body.style.background = 'linear-gradient(to right, #333, #666)';
+          document.body.style.color = '#ddd';
+          break;
+        case 'sunset':
+          document.body.style.background = 'linear-gradient(to right, #ff7e5f, #feb47b)';
+          document.body.style.color = '#4b2e05';
+          break;
+        case 'forest':
+          document.body.style.background = 'linear-gradient(to right, #228B22, #014421)';
+          document.body.style.color = '#90EE90';
+          break;
+        case 'ocean':
+          document.body.style.background = 'linear-gradient(to right, #064273, #76b6c4)';
+          document.body.style.color = '#e6f6fb';
+          break;
+        case 'volcano':
+          document.body.style.background = 'linear-gradient(to right, #823661, #4E2728)';
+          document.body.style.color = '#1da2d8';
+          break;
+        case 'cotton':
+          document.body.style.background = 'linear-gradient(to right, #E9B7CE, #D3F3F1)';
+          document.body.style.color = '#DCD9E2';
+          break;
+        case 'flame':
+          document.body.style.background = 'linear-gradient(to right, #e9d022, #e60b09)';
+          document.body.style.color = '#e60b09';
+          break;
+        case 'meadow':
+          document.body.style.background = 'linear-gradient(to right, #56AB2F, #A8E063)';
+          document.body.style.color = '#56AB2F';
+          break;
+        case 'aurora':
+          document.body.style.background = 'linear-gradient(to right, #2E1A47, #16A085)';
+          document.body.style.color = '#2E1A47';
+          break;
+        case 'yinyang':
+          document.body.style.background = 'linear-gradient(to right, #E6DADA, #274046)';
+          document.body.style.color = '#E6DADA';
+          break;
+        case 'desert':
+          document.body.style.background = 'linear-gradient(to right, #FCEABB, #E1B850)';
+          document.body.style.color = '#E1B850';
+          break;
+        case 'mist':
+          document.body.style.background = 'linear-gradient(to right, #757F9A, #D7DDE8)';
+          document.body.style.color = '#757F9A';
+          break;
+        case 'space':
+          document.body.style.background = 'url("space.gif") repeat';
+          document.body.style.backgroundSize = '100% 120%';
+          document.body.style.backgroundAttachment = 'fixed';
+          document.body.style.color = 'transparent';
+          document.body.style.backgroundClip = 'text';
+          document.body.style.webkitBackgroundClip = 'text';
+          break;
+        case 'george':
+          document.body.style.background = 'url("georgebg.jpg")';
+          document.body.style.backgroundSize = '100% 120%';
+          document.body.style.backgroundAttachment = 'fixed';
+          break;
+        case 'xp':
+          document.body.style.background = 'url("xp.png")';
+          document.body.style.backgroundSize = '100% 120%';
+          document.body.style.backgroundAttachment = 'fixed';
+          break;
+        case 'james':
+          document.body.style.background = 'url("james.jpg")';
+          document.body.style.backgroundSize = '100% 120%';
+          document.body.style.backgroundAttachment = 'fixed';
+          break;
+        case 'halloween':
+          document.body.style.background = 'linear-gradient(to bottom, #07030d 0%, #1d0a2e 55%, #3b1204 100%)';
+          document.body.style.backgroundAttachment = 'fixed';
+          document.body.style.color = '#ff7518';
+          startHalloween();
+          break;
+        case 'custom': {
+          const savedCustomBackground = localStorage.getItem('customBackground');
+          if (savedCustomBackground) {
+            document.body.style.background = `url('${savedCustomBackground}') no-repeat center center fixed`;
+            document.body.style.backgroundSize = '100% 120%';
+          }
+          break;
+        }
+      }
+    }
+
+    document.querySelectorAll('.theme-btn').forEach(button => {
+      button.addEventListener('click', () => {
+        const theme = button.getAttribute('data-theme');
+        if (theme === 'halloween') playHalloweenIntro = true;
+        localStorage.setItem('selectedTheme', theme);
+        applyTheme(theme);
+      });
+    });
+
+    backgroundUpload.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        clearHalloween();
+        const dataUrl = e.target.result;
+        document.body.style.background = `url('${dataUrl}') no-repeat center center fixed`;
+        document.body.style.backgroundSize = '100% 120%';
+        localStorage.setItem('customBackground', dataUrl);
+        localStorage.setItem('selectedTheme', 'custom');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (localStorage.getItem(HALLOWEEN_UNLOCKED_KEY) === 'true') showHalloweenButton();
+
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme) {
+      applyTheme(savedTheme);
+    }
+
+    checkHalloween();                    // auto-activate on first visit in the window
+    setInterval(checkHalloween, 30000);  // catches midnight if the tab is already open
+  </script>
+
+  <!-- Pokemon randomizer prompts -->
+  <script>
+    document.getElementById('firered-link').addEventListener('click', function (event) {
+      event.preventDefault();
+      const choice = confirm('OK for Normal, Cancel for Randomizer.');
+      const baseURL = 'games/firered/';
+      openGame(choice ? baseURL : baseURL + 'random/');
+    });
+
+    document.getElementById('gold-link').addEventListener('click', function (event) {
+      event.preventDefault();
+      const choice = confirm('Press OK for Normal, Cancel for Randomized.');
+      const baseURL = 'games/gold/';
+      openGame(choice ? baseURL : baseURL + 'random/');
+    });
+
+    document.getElementById('sapphire-link').addEventListener('click', function (event) {
+      event.preventDefault();
+      const choice = confirm('Press OK for Normal, Cancel for Randomized.');
+      const baseURL = 'games/sapphire/';
+      openGame(choice ? baseURL : baseURL + 'random/');
+    });
+  </script>
+
+  <!-- Lazy-load every image -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('img').forEach(img => img.setAttribute('loading', 'lazy'));
+    });
+  </script>
+
+  <!-- Rating joke -->
+  <script>
+    document.getElementById('submitRating').onclick = function () {
+      const ratingResult = document.getElementById('ratingResult');
+      ratingResult.textContent = document.body.classList.contains('halloween')
+        ? "Sorry.. these ratings are too SCARY for me to find!"
+        : "Thank you for rating.. You gave us.. Uh.. Hold On.. I need to find the ratings.. Give me a second.. almost got them wait no that's not it.. Hold on.. I think this is wait no.. Maybe is it this one? Nope nope, not ratings.. Give me time to think about this.";
+    };
+  </script>
+
+  <!-- Secret codes (click Curious George to open) -->
+  <script>
+    const SECRET_REDIRECTS = {
+      'chaotix': 'games/knuckles/',
+      'OG': '/boingagames/original.html',
+      'Super Secret': '/boingagames/time.html',
+      'DEER': 'games/deer/',
+      'april': '/boingagames/april.html',
+      'april2': '/boingagames/april2.html',
+      'boinga': '/boingagames/boinga.html',
+      'parappa': 'games/parappa/',
+      'the room in between': '/boingagames/man.html',
+      'The room in between': '/boingagames/man.html',
+      'DVD': '/boingagames/dvd.html',
+      'clock': '/boingagames/clock.html',
+      'blast': 'https://www.youtube.com/@blastonianSOF',
+      'Blast': 'https://www.youtube.com/@blastonianSOF',
+      'place': '/boingagames/boingaplace.html'
+    };
+
+    function openCodeBar() {
+      const bar = document.getElementById('codeInputBar');
+      bar.classList.remove('glitch-out');
+      bar.style.display = 'block';
+      void bar.offsetWidth; // force reflow so the animation restarts every time
+      bar.classList.add('glitch-in');
+    }
+
+    function closeCodeBar() {
+      const bar = document.getElementById('codeInputBar');
+      bar.classList.remove('glitch-in');
+      bar.classList.add('glitch-out');
+
+      const finish = () => {
+        bar.style.display = 'none';
+        bar.classList.remove('glitch-out');
+        document.getElementById('codeInput').value = '';
+        document.getElementById('message').textContent = '';
+        bar.removeEventListener('animationend', finish);
+      };
+      bar.addEventListener('animationend', finish);
+      // Fallback in case animations are disabled and animationend never fires
+      setTimeout(finish, 400);
+    }
+
+    document.getElementById('curiousGeorge').onclick = openCodeBar;
+    document.querySelector('.closeBtn').onclick = closeCodeBar;
+
+    document.getElementById('codeInput').addEventListener('input', function () { 
+        if (this.value.toLowerCase() === 'gaster') { 
+            window.location.reload(); 
+        } else if (this.value.toLowerCase() === 'james') { 
+            applyTheme('james');
+        } 
+    });
+
+    document.getElementById('submitCode').onclick = function () {
+      const input = document.getElementById('codeInput').value.trim();
+      const messageBox = document.getElementById('message');
+
+      if (SECRET_REDIRECTS[input]) {
+        window.location.href = SECRET_REDIRECTS[input];
+        return;
+      }
+
+      fetch('codes.txt')
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.text();
+        })
+        .then(data => {
+          const codes = data.split('\n').map(line => line.split(':'));
+          const match = codes.find(code => code[0].trim() === input);
+
+          if (match) {
+            messageBox.textContent = match[1].trim();
+            messageBox.className = 'message';
+          } else {
+            messageBox.textContent = 'X';
+            messageBox.className = 'message error';
+          }
+        })
+        .catch(() => {
+          messageBox.textContent = 'X';
+          messageBox.className = 'message error';
+        });
+    };
+  </script>
+
+  <!-- Settings menu -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const gearBtn = document.getElementById('settingsGearBtn');
+      const overlay = document.getElementById('settingsOverlay');
+      const closeBtn = document.getElementById('settingsCloseBtn');
+      const animToggle = document.getElementById('settingsAnimToggle');
+      const titleInput = document.getElementById('settingsTitleInput');
+      const faviconInput = document.getElementById('settingsFaviconInput');
+
+      // Reflect whatever was already applied (by the early head script) in the UI
+      animToggle.checked = localStorage.getItem('settings.animationsOff') === 'true';
+      titleInput.value = localStorage.getItem('settings.tabTitle') || document.title;
+
+      function openSettings() {
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeSettings() {
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      gearBtn.addEventListener('click', openSettings);
+      closeBtn.addEventListener('click', closeSettings);
+
+      // Clicking the darkened backdrop (not the panel itself) also closes it
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeSettings();
+      });
+
+      animToggle.addEventListener('change', function () {
+        localStorage.setItem('settings.animationsOff', animToggle.checked);
+        document.documentElement.classList.toggle('no-animations', animToggle.checked);
+      });
+
+      titleInput.addEventListener('input', function () {
+        const val = titleInput.value.trim() || 'BoingaGames';
+        document.title = val;
+        localStorage.setItem('settings.tabTitle', val);
+      });
+
+      faviconInput.addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const dataUrl = ev.target.result;
+          const link = document.querySelector('link[rel="icon"]');
+          if (link) link.href = dataUrl;
+          localStorage.setItem('settings.favicon', dataUrl);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+  </script>
+
 </body>
 </html>
