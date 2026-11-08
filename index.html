@@ -52,6 +52,28 @@
       color: #ffcc00;
     }
 
+    /* ---------- Countdown Timer Header ---------- */
+    #boingaCountdownBanner {
+      width: 100%;
+      background: #000000;
+      text-align: center;
+      padding: 15px 10px;
+      border-bottom: 3px solid #ff0000;
+      box-sizing: border-box;
+      z-index: 10003;
+      position: relative;
+    }
+
+    #boingaCountdownText {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      font-size: 32px;
+      font-weight: bold;
+      color: #ff0000;
+      margin: 0;
+      text-transform: uppercase;
+      transition: text-shadow 0.3s ease;
+    }
+
     /* ---------- Header / Boinga banner ---------- */
     .boinga-container {
       display: flex;
@@ -965,6 +987,11 @@
 </head>
 <body>
 
+  <!-- ================= Countdown Timer Banner ================= -->
+  <div id="boingaCountdownBanner">
+    <p id="boingaCountdownText">Loading...</p>
+  </div>
+
   <!-- ================= Settings (gear icon always floats top-right) ================= -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
   <button id="statsBtn" title="Statistics">📊</button>
@@ -1324,7 +1351,7 @@
     <a href="games/angryspace/"><img src="images/angryspace.png" width="96" height="96" alt="Angry Birds Space"></a>
     <a href="games/murder/"><img src="images/murder.png" width="96" height="96" alt="Murder"></a>
     <a href="games/stacktris/"><img src="images/stacktris.png" width="96" height="96" alt="Stacktris"></a>
-    <a href="games/run3/"><img src="images/run3.jfif" width="96" height="96" alt="Run 3"></a>
+    <a href="games/run3/"><img src="games/run3.jfif" width="96" height="96" alt="Run 3"></a>
     <a href="games/penguin/"><img src="images/penguin.jpg" width="96" height="96" alt="Club Penguin Fishing"></a>
     <a href="https://play.cplegacy.com/"><img src="images/clubpenguin.jpg" width="96" height="96" alt="Club Penguin"></a>
     <a href="games/pingpong/"><img src="images/pingpong.png" width="96" height="96" alt="Ping Pong"></a>
@@ -1504,6 +1531,44 @@
 </div>
 
   <!-- ================= Scripts ================= -->
+
+  <!-- Countdown Timer Script -->
+  <script>
+    (function() {
+      const targetDate = new Date("November 13, 2026 08:00:00 EST").getTime();
+      const totalDuration = targetDate - new Date().getTime(); // Initial window span for glow calculation
+      const textEl = document.getElementById('boingaCountdownText');
+
+      function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance <= 0) {
+          textEl.textContent = "BIGGEST BOINGA.";
+          textEl.style.textShadow = "0 0 30px #ff0000, 0 0 60px #ff0000";
+          return;
+        }
+
+        // Calculate time left
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        textEl.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        // Dynamic red glow intensity based on how close it is to the target time
+        // As distance decreases, glow radius and intensity increase
+        const closeness = Math.max(0, 1 - (distance / (7 * 24 * 60 * 60 * 1000))); // scales up over the last week
+        const blurSize = 5 + (closeness * 35);
+        const spreadSize = 2 + (closeness * 20);
+        textEl.style.textShadow = `0 0 ${blurSize}px #ff0000, 0 0 ${spreadSize}px rgba(255, 0, 0, 0.8)`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+    })();
+  </script>
 
   <!-- Game overlay -->
 <script>
