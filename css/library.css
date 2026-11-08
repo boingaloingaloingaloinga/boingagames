@@ -101,6 +101,8 @@ body.halloween .game-tile:hover { transform: scale(1.1) rotate(-3deg); filter: d
 }
 .lib-search > i {
   position: absolute;
+  z-index: 1;
+  font-size: 17px;
   left: 16px;
   top: 50%;
   transform: translateY(-50%);

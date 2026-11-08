@@ -89,7 +89,7 @@
         h('p', { class: 'admin-reason' }, rep.reason));
       if (rep.message) {
         const m = rep.message;
-        const box = h('div', { class: 'admin-msg' }, h('small', null, (m.groupId ? 'Group chat message' : 'Direct message') + (m.deleted ? ' (deleted)' : '')));
+        const box = h('div', { class: 'admin-msg' }, h('small', null, (m.groupId === 0 ? 'Community chat message' : m.groupId ? 'Group chat message' : 'Direct message') + (m.deleted ? ' (deleted)' : '')));
         if (m.rawBody) box.appendChild(h('div', null, m.rawBody));
         if (m.gif) box.appendChild(h('img', { src: m.gif.url, alt: 'GIF' }));
         if (m.attachment && m.attachment.key) box.appendChild(h('img', { src: Api.base + '/media/' + m.attachment.key, alt: 'Image' }));

@@ -125,7 +125,7 @@ body.music-on .music-panel { bottom: 72px; }
 .mp-head { display: flex; align-items: center; gap: 8px; padding: 14px 14px 8px; }
 .mp-head h2 { flex: 1; margin: 0; font: 22px 'Comic Sans MS', cursive, sans-serif; color: var(--accent); }
 .mp-searchbar { position: relative; margin: 0 14px 8px; }
-.mp-searchbar i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--accent); }
+.mp-searchbar i { position: absolute; z-index: 1; left: 14px; top: 50%; transform: translateY(-50%); color: var(--accent); }
 .mp-search {
   width: 100%; box-sizing: border-box; padding: 10px 14px 10px 38px; border: 2px solid var(--accent); border-radius: 999px;
   background: rgba(0, 0, 0, 0.25); color: #fff; font: 15px Arial, sans-serif; outline: none;
@@ -196,3 +196,57 @@ body.music-on .music-panel { bottom: 72px; }
 .mp-artist-name { position: relative; padding: 12px 14px; background: linear-gradient(transparent, rgba(30, 30, 47, 0.95)); width: 100%; }
 .mp-artist-name h3 { margin: 0; font: 28px 'Comic Sans MS', cursive, sans-serif; color: #fff; }
 .mp-artist-name small { color: var(--text-soft); }
+
+/* =====================================================================
+   Mute button, mini player (compact) and the music panel on top of games
+   ===================================================================== */
+.mb-mute, .mb-compact { display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+.mb-mute.on { color: #ff8a8a; opacity: 1; }
+body.music-on.music-compact { padding-bottom: 0; }
+body.music-compact .music-panel { bottom: 0; }
+
+#musicBar.compact {
+  left: auto;
+  right: 14px;
+  bottom: 14px;
+  width: min(360px, calc(100vw - 28px));
+  height: 64px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px;
+  padding: 0 8px 0 8px;
+  border: 2px solid var(--accent);
+  border-radius: 16px;
+  overflow: hidden;
+  cursor: grab;
+}
+#musicBar.compact .mb-cover { width: 44px; height: 44px; }
+#musicBar.compact .mb-center { flex-direction: row; }
+#musicBar.compact .mb-controls { gap: 0; }
+#musicBar.compact .mb-shuffle,
+#musicBar.compact .mb-controls .mb-btn:last-child,
+#musicBar.compact .mb-vol { display: none; }
+#musicBar.compact .mb-play { width: 34px; height: 34px; font-size: 14px; }
+#musicBar.compact .mb-btn { width: 28px; height: 28px; font-size: 13px; }
+#musicBar.compact .mb-right { display: flex; gap: 0; }
+/* thin progress line along the bottom edge */
+#musicBar.compact .mb-progress { position: absolute; left: 0; right: 0; bottom: 0; gap: 0; }
+#musicBar.compact .mb-progress .mb-time { display: none; }
+#musicBar.compact input.mb-seek { height: 3px; border-radius: 0; }
+#musicBar.compact input.mb-seek::-webkit-slider-thumb { width: 8px; height: 8px; }
+
+/* Music panel as a floating window while a game is open */
+body.in-game .music-panel {
+  top: 70px;
+  bottom: auto;
+  right: 14px;
+  height: min(560px, calc(100vh - 160px));
+  width: min(400px, calc(100vw - 28px));
+  border: 2px solid var(--accent);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+@media (max-width: 700px) {
+  #musicBar.compact .mb-right { display: flex; }
+  #musicBar.compact .mb-progress { top: auto; }
+}

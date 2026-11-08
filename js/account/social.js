@@ -14,10 +14,18 @@
   let chat = null; // the open conversation
   const GROUP_MIN = 3, GROUP_MAX = 15;
 
-  const pollMs = () => Math.max(3, (Account.saver && Account.saver.chatPoll) || 3) * 1000;
+  const pollSec = () => Math.max(3, (Account.saver && Account.saver.chatPoll) || 3);
+  // Community chat is busier and has no notifications, so it checks less often (saves server requests)
+  const pollMs = () => (chat && chat.kind === 'community' ? Math.max(6, pollSec() * 2) : pollSec()) * 1000;
   const uploadsOn = () => !Account.saver || Account.saver.uploads !== false;
 
   /* ============================================================ DRAWER */
+
+  let drag = null;
+  let compactPref = false;
+  try { compactPref = localStorage.getItem('boinga.chatCompact') === '1'; } catch (e) {}
+  const inGame = () => document.body.classList.contains('in-game');
+  const isFloating = () => !!drawer && drawer.classList.contains('floating');
 
   function ensureDrawer() {
     if (drawer) return;
@@ -26,6 +34,29 @@
     drawer.appendChild(content);
     document.body.appendChild(drawer);
     drawer.addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('.acct-overlay')) close(); });
+    // Floating window can be dragged by its title bar
+    drag = UI.makeDraggable(drawer, drawer, 'chat', () => isFloating());
+    applyMode();
+  }
+
+  // Floating (small window, works on top of games) vs. full side drawer
+  function applyMode() {
+    if (!drawer) return;
+    const floating = inGame() || compactPref;
+    const was = isFloating();
+    drawer.classList.toggle('floating', floating);
+    if (floating && !was) drag.restore();
+    if (!floating) drag.reset();
+    content.querySelectorAll('.social-compact').forEach(b => {
+      b.innerHTML = Icon(floating ? 'expand' : 'compress');
+      b.title = floating ? 'Full size' : 'Compact (small floating chat)';
+      b.hidden = inGame(); // always small while a game is open
+    });
+  }
+  function toggleCompact() {
+    compactPref = !compactPref;
+    try { localStorage.setItem('boinga.chatCompact', compactPref ? '1' : '0'); } catch (e) {}
+    applyMode();
   }
 
   function open(which) {
@@ -34,6 +65,7 @@
     if (which) tab = which;
     drawer.classList.add('open');
     document.body.classList.add('social-open');
+    applyMode();
     if (!chat) renderList();
     refreshList();
     clearInterval(listTimer);
@@ -56,17 +88,23 @@
     } catch (e) { /* shown on next render */ }
   }
 
+  function compactBtn() {
+    return h('button', { class: 'social-mini social-compact', onclick: toggleCompact });
+  }
   function header(title, left) {
-    return h('div', { class: 'social-head' },
+    const head = h('div', { class: 'social-head' },
       left || null,
       h('h2', null, title),
+      compactBtn(),
       h('button', { class: 'social-x', title: 'Close', onclick: close }, '×'));
+    return head;
   }
 
   function renderList() {
     if (!content) return;
     content.innerHTML = '';
     content.appendChild(header('Friends'));
+    setTimeout(applyMode, 0);
     const reqCount = data.incoming.length + gdata.invites.length;
     const groupUnread = gdata.groups.reduce((n, g) => n + (g.unread || 0), 0);
     const tabBtn = (key, label, badge) => h('button', { class: tab === key ? 'active' : '', onclick: () => { tab = key; renderList(); } },
@@ -95,7 +133,17 @@
     return row;
   }
 
+  function communityRow() {
+    const row = h('div', { class: 'social-row clickable community-row' },
+      h('span', { class: 'community-icon', html: Icon('globe') }),
+      h('div', { class: 'social-row-main' }, h('span', { class: 'acct-name group-name' }, 'Community chat'),
+        h('div', { class: 'social-sub' }, 'Everyone on BoingaGames')));
+    row.addEventListener('click', openCommunity);
+    return row;
+  }
+
   function friendsTab(body) {
+    body.appendChild(communityRow());
     if (!data.friends.length) {
       body.appendChild(h('div', { class: 'social-empty' },
         h('p', null, 'No friends yet.'),
@@ -471,7 +519,12 @@
     const back = h('button', { class: 'social-back', title: 'Back', onclick: () => closeChat() }, '‹');
     let who;
     conv.headIcon = null;
-    if (conv.kind === 'dm') {
+    if (conv.kind === 'community') {
+      conv.headSub = h('div', { class: 'social-sub' }, 'Everyone on BoingaGames');
+      who = h('div', { class: 'chat-who' },
+        h('span', { class: 'community-icon small', html: Icon('globe') }),
+        h('div', null, h('span', { class: 'acct-name group-name' }, 'Community'), conv.headSub));
+    } else if (conv.kind === 'dm') {
       who = h('button', { class: 'chat-who', onclick: () => Profile.view(conv.user.username) },
         UI.avatarEl(conv.user, 34, true),
         h('div', null, UI.nameEl(conv.user), h('div', { class: 'social-sub ' + conv.user.status }, UI.statusLine(conv.user))));
@@ -484,6 +537,7 @@
     }
     const head = h('div', { class: 'social-head chat-head' }, back, who,
       conv.kind === 'group' ? h('button', { class: 'social-mini', title: 'Group info', onclick: () => groupInfo(conv.id), html: '<i class="fa-solid fa-circle-info"></i>' }) : null,
+      compactBtn(),
       h('button', { class: 'social-x', title: 'Close', onclick: close }, '×'));
 
     const list = h('div', { class: 'chat-list' }, h('div', { class: 'acct-loading' }, 'Loading…'));
@@ -492,22 +546,26 @@
     const fileInput = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
     const attachBtn = h('button', { class: 'chat-attach', title: 'Attach an image', onclick: () => fileInput.click(), html: '<i class="fa-solid fa-image"></i>' });
     const gifBtn = h('button', { class: 'chat-attach chat-gif-btn', title: 'Send a GIF' }, 'GIF');
-    const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: 1000,
-      placeholder: conv.kind === 'dm' ? 'Message ' + conv.user.username + '…' : 'Message ' + conv.group.name + '…' });
+    const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: conv.kind === 'community' ? 500 : 1000,
+      placeholder: conv.kind === 'dm' ? 'Message ' + conv.user.username + '…' : conv.kind === 'group' ? 'Message ' + conv.group.name + '…' : 'Say something to everyone…' });
+    if (conv.kind === 'community') attachBtn.hidden = true;
     const sendBtn = h('button', { class: 'chat-send', title: 'Send', html: '<i class="fa-solid fa-paper-plane"></i>' });
     const pending = h('div', { class: 'chat-pending', hidden: true });
     const err = UI.errorBox();
     const lockNote = h('div', { class: 'chat-lock', hidden: true });
     const composer = h('div', { class: 'chat-compose' }, lockNote, pending, err,
       h('div', { class: 'chat-compose-row' }, attachBtn, gifBtn, text, sendBtn), fileInput,
-      h('div', { class: 'chat-note' }, 'Uploaded images are deleted from the server after a while to save space.'));
+      h('div', { class: 'chat-note' }, conv.kind === 'community'
+        ? 'Be nice! One message every 10 seconds. Right-click someone to add them as a friend.'
+        : 'Uploaded images are deleted from the server after a while to save space.'));
 
     content.appendChild(head);
     content.appendChild(h('div', { class: 'chat-scroll' }, older, list));
     content.appendChild(composer);
+    applyMode();
 
     chat = Object.assign(conv, { lastId: 0, firstId: 0, list, text, attachment: null, timer: null, ids: new Set(),
-      composer, lockNote, attachBtn, members: new Map(), pending: new Set(), lastSender: null });
+      composer, lockNote, attachBtn, sendBtn, members: new Map(), pending: new Set(), lastSender: null, cooldownUntil: 0 });
     if (conv.kind === 'group') setChatGroup(conv.group); else updateComposerLock();
     const scroller = list.parentNode;
 
@@ -541,6 +599,7 @@
     let sending = false;
     async function send(extra) {
       if (sending || !chat) return;
+      if (chat.cooldownUntil > Date.now()) { err.show('Slow down! Wait a few seconds between community messages.'); return; }
       const body = extra ? '' : text.value.trim();
       if (!extra && !body && !chat.attachment) return;
       sending = true;
@@ -554,12 +613,14 @@
         }
         const r = await Api.post(chat.path, payload);
         if (!extra) { text.value = ''; text.style.height = 'auto'; clearAttachment(); }
+        if (r.sender) chat.members.set(r.sender.id, r.sender);
         addMessages([r.message], true);
+        if (r.nextAt) startCooldown(r.nextAt * 1000);
       } catch (e) {
         err.show(e.message);
       } finally {
         sending = false;
-        sendBtn.disabled = false;
+        if (!(chat && chat.cooldownUntil > Date.now())) sendBtn.disabled = false;
         text.focus();
       }
     }
@@ -567,6 +628,7 @@
 
     older.addEventListener('click', () => UI.busy(older, async () => {
       const r = await Api.get(chat.path + '?before=' + chat.firstId);
+      mergeSenders(r);
       const prevH = scroller.scrollHeight;
       prependMessages(r.messages);
       scroller.scrollTop = scroller.scrollHeight - prevH;
@@ -578,8 +640,10 @@
       try {
         const r = await Api.get(c.path);
         if (chat !== c) return;
+        mergeSenders(r);
+        if (c.kind === 'community' && typeof r.online === 'number') c.headSub.textContent = 'Everyone on BoingaGames · ' + r.online + ' online';
         list.innerHTML = '';
-        if (!r.messages.length) list.appendChild(h('p', { class: 'chat-empty' }, c.kind === 'dm' ? 'Say hi to ' + c.user.username + '! 👋' : 'Say hi to the group! 👋'));
+        if (!r.messages.length) list.appendChild(h('p', { class: 'chat-empty' }, c.kind === 'dm' ? 'Say hi to ' + c.user.username + '! 👋' : c.kind === 'group' ? 'Say hi to the group! 👋' : "It's quiet in here… say hi to everyone! 👋"));
         addMessages(r.messages, true);
         older.hidden = r.messages.length < 50;
         markRead();
@@ -591,6 +655,34 @@
 
     schedulePoll();
     setTimeout(() => text.focus(), 50);
+  }
+
+  function mergeSenders(r) {
+    if (chat && r && r.senders) Object.keys(r.senders).forEach(id => chat.members.set(Number(id), r.senders[id]));
+  }
+
+  function startCooldown(until) {
+    if (!chat) return;
+    const c = chat;
+    c.cooldownUntil = until;
+    const tick = () => {
+      if (chat !== c) return;
+      const left = Math.ceil((c.cooldownUntil - Date.now()) / 1000);
+      if (left > 0) {
+        c.sendBtn.disabled = true;
+        c.sendBtn.textContent = String(left);
+        setTimeout(tick, 250);
+      } else {
+        c.sendBtn.disabled = false;
+        c.sendBtn.innerHTML = Icon('paper-plane');
+      }
+    };
+    tick();
+  }
+
+  function openCommunity() {
+    if (!Account.user) return AuthUI.open('signup');
+    startChat({ kind: 'community', id: 0, path: '/api/community/messages', readPath: null });
   }
 
   function schedulePoll() {
@@ -605,6 +697,7 @@
     try {
       const r = await Api.get(c.path + '?after=' + c.lastId);
       if (chat !== c) return;
+      mergeSenders(r);
       if (r.messages.length) {
         // something changed in the group (join/leave/rename/suggestion): refresh details first
         if (c.kind === 'group' && r.messages.some(m => m.kind === 'system')) {
@@ -623,7 +716,7 @@
   }
 
   function markRead() {
-    if (!chat) return;
+    if (!chat || !chat.readPath) return;
     const c = chat;
     Api.post(c.readPath).then(() => {
       const counts = Object.assign({}, Account.counts);
@@ -699,9 +792,9 @@
     if (msg.body) bubble.appendChild(h('div', { class: 'chat-body' }, msg.body));
 
     const time = new Date(msg.at * 1000);
-    const row = h('div', { class: 'chat-msg ' + (mine ? 'mine' : 'theirs'), 'data-id': msg.id, title: time.toLocaleString() });
-    // In groups, show who's talking when the sender changes
-    if (chat && chat.kind === 'group' && !mine) {
+    const row = h('div', { class: 'chat-msg ' + (mine ? 'mine' : 'theirs'), 'data-id': msg.id, 'data-from': msg.from, title: time.toLocaleString() });
+    // In groups and community, show who's talking when the sender changes
+    if (chat && (chat.kind === 'group' || chat.kind === 'community') && !mine) {
       const u = senderOf(msg.from);
       const showName = chat.lastSender !== msg.from;
       const wrap = h('div', { class: 'chat-from' },
@@ -713,6 +806,10 @@
       row.appendChild(bubble);
     }
     if (chat) chat.lastSender = msg.from;
+    if (!mine && chat && chat.kind !== 'dm') {
+      // Right-click (or long-press) someone for friend / profile / block / report
+      row.addEventListener('contextmenu', e => { e.preventDefault(); personMenu(e.clientX, e.clientY, senderOf(msg.from), msg, row); });
+    }
     if (!msg.deleted) {
       const tools = h('div', { class: 'chat-tools' });
       if (mine) {
@@ -729,6 +826,38 @@
       row.appendChild(tools);
     }
     return row;
+  }
+
+  function personMenu(x, y, u, msg, row) {
+    if (!u || !u.username || u.username === 'Former member') return;
+    const isFriend = data.friends.find(f => f.id === u.id);
+    const sent = data.outgoing.some(f => f.id === u.id);
+    const theyAsked = data.incoming.some(f => f.id === u.id);
+    UI.contextMenu(x, y, [
+      { label: '👤 View profile', run: () => Profile.view(u.username) },
+      isFriend ? { label: '💬 Message', run: () => openChat(isFriend) }
+        : sent ? { label: '⏳ Friend request sent', run: () => UI.toast('Waiting for ' + u.username + ' to accept.') }
+        : { label: theyAsked ? '✅ Accept friend request' : '➕ Add friend', run: async () => {
+            try {
+              const r = await Api.post('/api/friends/request', { username: u.username });
+              UI.toast(r.relationship === 'friends' ? 'You and ' + u.username + ' are now friends!' : 'Friend request sent to ' + u.username + '!', 'good');
+              refreshList();
+            } catch (e) { UI.toast(e.message, 'bad'); }
+          } },
+      msg ? { label: '🚩 Report message', run: () => Profile.report(u, msg.id) } : null,
+      { label: '🚫 Block', danger: true, run: async () => {
+          if (!confirm('Block ' + u.username + '? You won\'t see their messages anymore.')) return;
+          try {
+            await Api.post('/api/blocks', { userId: u.id });
+            UI.toast('Blocked ' + u.username);
+            if (chat) chat.list.querySelectorAll('.chat-msg').forEach(el => { if (Number(el.dataset.from) === u.id) el.remove(); });
+            refreshList();
+          } catch (e) { UI.toast(e.message, 'bad'); }
+        } },
+      Account.user.admin && msg ? { label: '🗑 Delete message (admin)', danger: true, run: async () => {
+          try { await Api.del('/api/admin/messages/' + msg.id); if (row) row.remove(); } catch (e) { UI.toast(e.message, 'bad'); }
+        } } : null
+    ]);
   }
 
   function dayLabel(ts) {
@@ -826,7 +955,8 @@
     if (changed || e.detail.requests !== data.incoming.length + gdata.invites.length) refreshList();
   });
   document.addEventListener('boinga:saver', () => { if (chat) updateComposerLock(); });
-  document.addEventListener('boinga:gameopen', () => close());
+  document.addEventListener('boinga:gameopen', applyMode);
+  document.addEventListener('boinga:gameclose', applyMode);
 
-  window.Social = { open, close, openChat, openGroup, shareTo };
+  window.Social = { open, close, openChat, openGroup, openCommunity, shareTo, isOpen: () => !!drawer && drawer.classList.contains('open') };
 })();

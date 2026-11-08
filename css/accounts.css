@@ -597,3 +597,89 @@ body.halloween .acct-cta, body.halloween .acct-me, body.halloween .acct-icon-btn
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 #saverNotice button { border: none; background: none; color: #c8ffe0; font-size: 20px; cursor: pointer; }
+
+/* =====================================================================
+   Update 3: community chat, right-click menu, floating chat, game dock
+   ===================================================================== */
+.acct-icon-btn span { display: inline-flex; }
+.community-icon {
+  width: 40px; height: 40px; flex: 0 0 auto; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #2a6cff, #3ddc84); color: #fff; font-size: 22px;
+}
+.community-icon.small { width: 34px; height: 34px; font-size: 18px; border-radius: 10px; }
+.community-row { border: 1px dashed rgba(255, 204, 0, 0.45); margin: 4px 0 6px; }
+.chat-send { display: inline-flex; align-items: center; justify-content: center; font: bold 14px Arial, sans-serif; }
+.chat-send:disabled { cursor: not-allowed; }
+.chat-attach[hidden] { display: none; }
+
+/* Right-click menu */
+.ctx-menu { position: fixed; top: 0; left: 0; z-index: 2147483647; min-width: 210px; }
+
+/* ---------- Floating chat window (compact mode, and always while a game is open) ---------- */
+.social.floating {
+  top: auto;
+  left: 74px;
+  bottom: 14px;
+  width: min(350px, calc(100vw - 88px));
+  height: min(520px, calc(100vh - 90px));
+  border: 2px solid var(--accent);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  transform: translateY(16px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.social.floating.open { transform: none; opacity: 1; pointer-events: auto; }
+.social.floating .social-head { padding: 8px 10px 6px; cursor: grab; }
+.social.floating .social-head h2 { font-size: 18px; }
+.social.floating .social-x, .social.floating .social-back { width: 30px; height: 30px; font-size: 19px; }
+.social.floating .chat-note { display: none; }
+.social.floating .social-tabs button { font-size: 12px; }
+.social-compact { display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+.social-compact[hidden] { display: none; }
+body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
+body.dragging iframe { pointer-events: none; }
+
+/* ---------- Game dock (only while a game is open) ---------- */
+#gameDock { display: none; }
+body.in-game #gameDock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2147483647;
+}
+.dock-btn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: rgba(30, 30, 47, 0.92);
+  color: var(--accent);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.75;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dock-btn:hover { opacity: 1; transform: scale(1.08); color: var(--accent); }
+.dock-btn span { display: inline-flex; }
+#gameDock.logged-out .dock-btn:not(:last-child) { display: none; }
+
+/* Everything that should work on top of a game */
+body.in-game .social,
+body.in-game #musicBar,
+body.in-game .music-panel,
+body.in-game .acct-overlay,
+body.in-game #saverNotice { z-index: 2147483647; }
+/* When the full music bar is showing during a game, keep the dock + chat above it */
+body.in-game.music-on:not(.music-compact) #gameDock { bottom: 86px; }
+body.music-on:not(.music-compact) .social.floating { bottom: 86px; height: min(520px, calc(100vh - 160px)); }

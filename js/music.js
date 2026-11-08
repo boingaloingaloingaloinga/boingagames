@@ -27,6 +27,9 @@
   const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem('music.' + k)); return v === null ? d : v; } catch (e) { return d; } };
   let volume = load('volume', 80);
   shuffle = load('shuffle', false);
+  let muted = false, autoMuted = false;
+  let compactPref = load('compact', false);
+  let expandedInGame = false; // user opened the full player while a game is open
 
   function loadYouTube() {
     if (ytReady) return ytReady;
@@ -85,6 +88,7 @@
     renderBar();
     const p = await loadYouTube();
     p.loadVideoById(t.id);
+    try { muted ? p.mute() : p.unMute(); } catch (e) {}
     playing = true;
     userPaused = false; lastTime = -1; stalled = 0; endedFor = null;
     startProgress();
@@ -143,7 +147,13 @@
     renderQueueIfOpen();
   }
   function seek(sec) { if (yt && yt.seekTo) { yt.seekTo(sec, true); lastTime = -1; updateProgress(); } }
-  function setVolume(v) { volume = v; store('volume', v); if (yt && yt.setVolume) yt.setVolume(v); }
+  function setVolume(v) { volume = v; store('volume', v); if (yt && yt.setVolume) yt.setVolume(v); if (muted && v > 0) setMuted(false); }
+  function setMuted(on) {
+    muted = on;
+    if (!on) autoMuted = false;
+    if (yt) { try { on ? yt.mute() : yt.unMute(); } catch (e) {} }
+    renderBar();
+  }
   function stop() {
     if (yt && yt.stopVideo) yt.stopVideo();
     playing = false; queue = []; order = []; pos = -1;
@@ -190,6 +200,8 @@
     els.time = h('span', { class: 'mb-time' }, '0:00');
     els.dur = h('span', { class: 'mb-time' }, '0:00');
     els.vol = h('input', { type: 'range', class: 'mb-vol', min: 0, max: 100, value: volume, 'aria-label': 'Volume' });
+    els.mute = h('button', { class: 'mb-btn mb-mute', title: 'Mute', onclick: () => setMuted(!muted) });
+    els.compact = h('button', { class: 'mb-btn mb-compact', title: 'Mini player', onclick: toggleCompact });
     let dragging = false;
     els.seek.addEventListener('input', () => { dragging = true; els.time.textContent = UI.fmtTime(Number(els.seek.value)); paintRange(els.seek); });
     els.seek.addEventListener('change', () => { dragging = false; seek(Number(els.seek.value)); });
@@ -203,15 +215,36 @@
         h('div', { class: 'mb-controls' }, els.shuffle, els.prev, els.play, els.next,
           h('button', { class: 'mb-btn', title: 'Queue', onclick: () => openPanel('queue') }, '☰')),
         h('div', { class: 'mb-progress' }, els.time, els.seek, els.dur)),
-      h('div', { class: 'mb-right' }, h('span', { class: 'mb-vol-icon' }, '🔊'), els.vol,
+      h('div', { class: 'mb-right' }, els.mute, els.vol, els.compact,
         h('button', { class: 'mb-btn mb-close', title: 'Stop and close player', onclick: stop }, '×')));
     document.body.appendChild(bar);
+    els.drag = UI.makeDraggable(bar, bar, 'music', () => bar.classList.contains('compact'));
+    applyMode();
   }
   function paintRange(r) {
     const pct = (Number(r.value) - Number(r.min)) / ((Number(r.max) - Number(r.min)) || 1) * 100;
     r.style.setProperty('--fill', pct + '%');
   }
-  function showBar() { buildBar(); bar.hidden = false; document.body.classList.add('music-on'); }
+  function showBar() { buildBar(); bar.hidden = false; document.body.classList.add('music-on'); applyMode(); }
+
+  // Compact = small floating mini player (always used on top of games unless expanded)
+  const inGame = () => document.body.classList.contains('in-game');
+  function applyMode() {
+    if (!bar) return;
+    const compact = inGame() ? !expandedInGame : compactPref;
+    const was = bar.classList.contains('compact');
+    bar.classList.toggle('compact', compact);
+    document.body.classList.toggle('music-compact', compact);
+    if (compact && !was) els.drag.restore();
+    if (!compact) els.drag.reset();
+    els.compact.innerHTML = Icon(compact ? 'expand' : 'compress');
+    els.compact.title = compact ? 'Full player' : 'Mini player';
+  }
+  function toggleCompact() {
+    if (inGame()) expandedInGame = !expandedInGame;
+    else { compactPref = !compactPref; store('compact', compactPref); }
+    applyMode();
+  }
   function hideBar() { if (bar) bar.hidden = true; document.body.classList.remove('music-on'); clearInterval(progressTimer); }
 
   function renderBar() {
@@ -222,6 +255,9 @@
     els.title.textContent = t.title;
     els.artist.textContent = t.artist || '';
     els.play.textContent = playing ? '⏸' : '▶';
+    els.mute.innerHTML = Icon(muted ? 'volume-xmark' : 'volume-high');
+    els.mute.title = muted ? 'Unmute' : 'Mute';
+    els.mute.classList.toggle('on', muted);
     els.shuffle.classList.toggle('on', shuffle);
     els.shuffle.title = shuffle ? 'Shuffle is on' : 'Shuffle is off';
     if (t.duration) { els.seek.max = t.duration; els.dur.textContent = UI.fmtTime(t.duration); }
@@ -627,7 +663,24 @@
     if (btn) { btn.hidden = false; btn.addEventListener('click', () => (panel && panel.classList.contains('open') ? closePanel() : openPanel())); }
   });
   document.addEventListener('boinga:saver', updateSaverNote);
+  // Games: mute the music (it keeps its place) and switch to the mini player on top of the game
+  document.addEventListener('boinga:gameopen', () => {
+    expandedInGame = false;
+    if (current() && !muted) {
+      setMuted(true);
+      autoMuted = true;
+      UI.toast('🔇 Music muted while you play. Tap the speaker on the mini player to unmute.');
+    }
+    if (panel && panel.classList.contains('open')) closePanel();
+    applyMode();
+  });
+  document.addEventListener('boinga:gameclose', () => {
+    if (autoMuted) setMuted(false);
+    autoMuted = false;
+    expandedInGame = false;
+    applyMode();
+  });
   document.addEventListener('boinga:user', () => { myPlaylists = null; if (panel && panel.classList.contains('open')) render(); });
 
-  window.Music = { open: openPanel, openPlaylist, playOne, nowPlaying, playList };
+  window.Music = { open: openPanel, openPlaylist, playOne, nowPlaying, playList, hasTrack: () => !!current(), isMuted: () => muted };
 })();

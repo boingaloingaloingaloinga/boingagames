@@ -176,7 +176,63 @@
     return m + ':' + String(s).padStart(2, '0');
   }
 
-  window.UI = { h, nameEl, nameColor, avatarEl, groupIconEl, statusLabel, statusLine, ago, modal, toast, errorBox, busy, checkImage, fmtTime,
+  // Lets a floating window be dragged by its handle. canDrag() decides when dragging is allowed.
+  // Position is remembered per key. While dragging, game iframes ignore the mouse so it doesn't get "stuck".
+  function makeDraggable(el, handle, key, canDrag) {
+    const storeKey = 'boinga.pos.' + key;
+    function clamp(x, y) {
+      const w = el.offsetWidth, hgt = el.offsetHeight;
+      return [Math.max(4, Math.min(x, window.innerWidth - w - 4)), Math.max(4, Math.min(y, window.innerHeight - hgt - 4))];
+    }
+    function apply(x, y) {
+      [x, y] = clamp(x, y);
+      el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.right = 'auto'; el.style.bottom = 'auto';
+    }
+    handle.addEventListener('pointerdown', e => {
+      if (!canDrag() || e.button !== 0 || e.target.closest('button, input, textarea, a, select')) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const dx = e.clientX - r.left, dy = e.clientY - r.top;
+      document.body.classList.add('dragging');
+      const move = ev => apply(ev.clientX - dx, ev.clientY - dy);
+      const up = () => {
+        document.body.classList.remove('dragging');
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+        try { localStorage.setItem(storeKey, JSON.stringify([parseInt(el.style.left, 10), parseInt(el.style.top, 10)])); } catch (err) {}
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
+    return {
+      // put it back where the user last left it (or the CSS default)
+      restore() {
+        let pos = null;
+        try { pos = JSON.parse(localStorage.getItem(storeKey)); } catch (err) {}
+        if (pos && canDrag()) requestAnimationFrame(() => apply(pos[0], pos[1]));
+        else this.reset();
+      },
+      reset() { el.style.left = el.style.top = el.style.right = el.style.bottom = ''; }
+    };
+  }
+
+  // Small right-click / long-press style menu at the mouse position
+  function contextMenu(x, y, items) {
+    document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
+    const menu = h('div', { class: 'acct-menu ctx-menu', role: 'menu' });
+    items.filter(Boolean).forEach(it => menu.appendChild(h('button', { class: 'acct-menu-item' + (it.danger ? ' danger' : ''), onclick: () => { menu.remove(); it.run(); } }, it.label)));
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.min(x, window.innerWidth - r.width - 6) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - r.height - 6) + 'px';
+    setTimeout(() => {
+      const off = e => { if (!menu.contains(e.target)) { menu.remove(); document.removeEventListener('mousedown', off, true); } };
+      document.addEventListener('mousedown', off, true);
+    }, 0);
+    return menu;
+  }
+
+  window.UI = { h, nameEl, nameColor, avatarEl, groupIconEl, statusLabel, statusLine, ago, modal, toast, errorBox, busy, checkImage, fmtTime, makeDraggable, contextMenu,
     IMAGE_RULES: {
       avatar: { maxMB: 4, minW: 128, minH: 128 },
       banner: { maxMB: 6, minW: 600, minH: 150 },
@@ -246,8 +302,12 @@
     const friends = h('button', { class: 'acct-icon-btn', id: 'acctFriendsBtn', title: 'Friends & messages',
       onclick: () => window.Social && Social.open() },
       h('span', { html: '<i class="fa-solid fa-comments"></i>' }), h('span', { class: 'acct-badge', id: 'acctBadge', hidden: true }));
+    const community = h('button', { class: 'acct-icon-btn', id: 'acctCommunityBtn', title: 'Community chat (everyone on BoingaGames)',
+      onclick: () => window.Social && Social.openCommunity() },
+      h('span', { html: '<i class="fa-solid fa-globe"></i>' }));
     corner.appendChild(me);
     corner.appendChild(friends);
+    corner.appendChild(community);
     renderBadges();
   }
 
