@@ -1,17 +1,3 @@
-/* =====================================================================
-   BoingaGames — game list
-   ---------------------------------------------------------------------
-   To add a game, copy any line below and change it:
-     id      unique short name (used for favorites + stats; don't change it later)
-     name    what players see (also shown in the hover box + search)
-     url     "games/<folder>/" for games hosted here, or a full https:// link
-             for games on another site (those open in the same tab)
-     img     96x96 icon in /images
-     genres  2 or more keys from GENRES below
-     randomizer: true   (optional) asks "Normal or Randomizer?" and opens url + "random/"
-   Order here = the "Default" order in Classic layout.
-   ===================================================================== */
-
 window.GENRES = [
   { key: 'action',      label: 'Action',            icon: 'fa-solid fa-bolt' },
   { key: 'platformer',  label: 'Platformers',       icon: 'fa-solid fa-person-running' },
@@ -376,7 +362,7 @@ window.GAMES = [
   { id: 'ragdollhit', name: 'Ragdoll Hit', url: 'games/ragdollhit/', img: 'images/ragdollhit.png', genres: ['action', 'arcade'] },
   { id: 'thisistheonlylevel', name: 'This Is The Only Level', url: 'games/thisistheonlylevel/', img: 'images/thisistheonlylevel.png', genres: ['puzzle', 'platformer'] },
   { id: 'worldbox', name: 'World Box', url: 'games/worldbox/', img: 'images/worldbox.png', genres: ['sandbox', 'simulation'] },
-  { id: 'gladihoppers', name: 'Gladihoppers', url: 'games/gladihoppers/', img: 'images/gladihoppers.png', genres: ['fighting', 'action'] },
+  { id: 'gladihoppers', name: 'Gladihoppers', url: 'games/gladihoppers/', img: 'images/gladihoppers.png', genres: ['action'] },
   { id: 'shipo.io', name: 'Shipo.io', url: 'games/shipo.io/', img: 'images/shipo.io.png', genres: ['multiplayer', 'action'] },
   { id: 'slimerancher', name: 'Slime Rancher', url: 'games/slimerancher/', img: 'images/slimerancher.png', genres: ['simulation', 'adventure'] },
   { id: 'tattletail', name: 'Tattletail', url: 'games/tattletail/', img: 'images/tattletail.png', genres: ['horror', 'adventure'] },
@@ -398,16 +384,16 @@ window.GAMES = [
   { id: 'goose', name: 'Untitled Goose Game', url: 'games/goose/', img: 'images/goose.png', genres: ['puzzle', 'adventure'] },
   { id: 'cloverpit', name: 'Clover Pit', url: 'games/cloverpit/', img: 'images/cloverpit.png', genres: ['strategy', 'horror'] },
   { id: '99balls', name: '99 Balls', url: 'games/99balls/', img: 'images/99balls.png', genres: ['arcade', 'puzzle'] },
-  { id: 'polytrack', name: 'Poly Track', url: 'games/polytrack/', img: 'images/polytrack.png', genres: ['racing', 'multiplayer'] },
+  { id: 'polytrack', name: 'Poly Track', url: 'games/polytrack/', img: 'images/polytrack.png', genres: ['racing'] },
   { id: 'redacted', name: 'Five Nights at Ep', url: 'games/redacted/', img: 'images/redacted.png', genres: ['horror', 'strategy'] },
   { id: 'monkey', name: 'Super Monkey Ball 1&2', url: 'games/monkey/', img: 'images/monkey.png', genres: ['retro', 'arcade', 'puzzle'] },
-  { id: 'hustle', name: 'Your Only Move Is HUSTLE', url: 'games/hustle/', img: 'images/hustle.png', genres: ['fighting', 'strategy'] },
+  { id: 'hustle', name: 'Your Only Move Is HUSTLE', url: 'games/hustle/', img: 'images/hustle.png', genres: ['fighting', 'strategy', 'rhythm'] },
   { id: 'bustaloop', name: 'Bust-a-Loop', url: 'games/bustaloop/', img: 'images/bustaloop.png', genres: ['rhythm', 'arcade'] },
   { id: 'glover', name: 'Glover', url: 'games/glover/', img: 'images/glover.jpg', genres: ['retro', 'platformer', 'puzzle'] },
   { id: 'phoenix', name: 'Phoenix Wright: Ace Attorney', url: 'games/phoenix/', img: 'images/phoenix.jpg', genres: ['retro', 'adventure', 'puzzle'] },
   { id: 'phoenix2', name: 'Phoenix Wright: Ace Attorney – Justice for All', url: 'games/phoenix2/', img: 'images/phoenix2.jpg', genres: ['retro', 'adventure', 'puzzle'] },
   { id: 'phoenix3', name: 'Phoenix Wright: Ace Attorney – Trials and Tribulations', url: 'games/phoenix3/', img: 'images/phoenix3.jpg', genres: ['retro', 'adventure', 'puzzle'] },
-  { id: '2playerbattle', name: '2 Player Battle', url: 'games/2playerbattle/', img: 'images/2playerbattle.webp', genres: ['multiplayer', 'arcade'] },
+  { id: '2playerbattle', name: '2 Player Battle', url: 'games/2playerbattle/', img: 'images/2playerbattle.webp', genres: ['multiplayer', 'fighting'] },
   { id: 'balatro', name: 'Balatro', url: 'games/balatro/', img: 'images/balatro.jpg', genres: ['strategy', 'casual'] },
   { id: 'wordle', name: 'Wordle', url: 'games/wordle/', img: 'images/wordle.webp', genres: ['puzzle', 'casual'] },
   { id: 'skribbl', name: 'Skribbl.io', url: 'https://scribblers.bios-marcel.link/', img: 'images/skribbl.jpg', genres: ['multiplayer', 'casual'] },
