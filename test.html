@@ -123,9 +123,9 @@
        To post a new hater: change the date + name spans. New changelog lines go at the BOTTOM of the list. -->
   <header id="siteHeader">
     <div class="boinga-container">
-      <img src="boinga.gif" alt="Boinga GIF">
+      <img src="boinga.gif" alt="Boinga GIF" class="boinga-gif">
       <h1>BOINGA</h1>
-      <img src="boinga.gif" alt="Boinga GIF">
+      <img src="boinga.gif" alt="Boinga GIF" class="boinga-gif">
     </div>
     <p class="quote">"Boingaloingaloingaloinga!"</p>
 
@@ -145,7 +145,8 @@
             <p class="changelog">11/6/2026 Adjustments - Removed Yokai-Watch (for now). </p>
             <p class="changelog">11/6/2026 BIG UPDATE - Accounts! Make a profile, add friends and chat (no email needed). Games are now sorted by genre (switch back to the old look in Settings).</p>
             <p class="changelog">11/6/2026 BIG UPDATE 2 - Group chats, GIFs, music player with playlists, see your friends' favorite games, and a smaller header (the old one is in Settings).</p>
-            <p class="changelog">11/6/2026 Update 3 - Community chat for everyone! Chat and music now work on top of games (music mutes itself when a game starts), plus a mini music player and fixed icons.</p>
+            <p class="changelog">11/6/2026 Update 3 - Community chat for everyone! Chat and music now work on top of games, plus a mini music player and fixed icons.</p>
+            <p class="changelog">11/8/2026 Update 4 - Play tic-tac-toe with friends in DMs! 🎮 Your music now mutes the game instead of the other way around, plus roles and bouncier boingas.</p>
           </div>
           <button type="button" class="changelog-more" id="changelogMore">Show all updates</button>
         </div>
@@ -220,8 +221,6 @@
     <div id="games"></div> <!-- filled from js/games.js -->
   </section>
 
-  <img id="curiousGeorge" src="curious-george.png" width="768" height="768" alt="Curious George" class="center" loading="lazy">
-
   <!-- ================= Rating joke ================= -->
   <div class="rating-section">
     <h2>Rate this website:</h2>
@@ -231,6 +230,7 @@
   </div>
 
   <footer class="site-footer">
+    <img id="curiousGeorge" src="curious-george.png" width="768" height="768" alt="Curious George" loading="lazy">
     <a href="terms.html">Terms of Service</a> ·
     <a href="privacy.html">Privacy Policy</a>
   </footer>
@@ -257,6 +257,8 @@
   <script src="js/games.js"></script>
   <script src="js/stats.js"></script>
   <script src="js/overlay.js"></script>
+  <script src="js/gameaudio.js"></script>
+  <script src="js/boinga.js"></script>
   <script src="js/library.js"></script>
   <script src="js/themes.js"></script>
   <script src="js/settings.js"></script>
@@ -266,6 +268,7 @@
   <script src="js/account/ui.js"></script>
   <script src="js/account/profile.js"></script>
   <script src="js/account/gifs.js"></script>
+  <script src="js/account/ttt.js"></script>
   <script src="js/account/social.js"></script>
   <script src="js/account/admin.js"></script>
   <script src="js/account/presence.js"></script>

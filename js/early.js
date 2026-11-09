@@ -12,6 +12,10 @@
 
     if (localStorage.getItem('settings.animationsOff') === 'true') {
       document.documentElement.classList.add('no-animations');
+    } else {
+      // hide the header boingas until they bounce in (js/boinga.js); failsafe in case that never runs
+      document.documentElement.classList.add('boinga-intro');
+      setTimeout(function () { document.documentElement.classList.remove('boinga-intro'); }, 4000);
     }
 
     // 'genres' (new) or 'classic' (the old single grid)

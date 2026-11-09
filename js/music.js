@@ -27,7 +27,7 @@
   const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem('music.' + k)); return v === null ? d : v; } catch (e) { return d; } };
   let volume = load('volume', 80);
   shuffle = load('shuffle', false);
-  let muted = false, autoMuted = false;
+  let muted = false;
   let compactPref = load('compact', false);
   let expandedInGame = false; // user opened the full player while a game is open
 
@@ -150,7 +150,6 @@
   function setVolume(v) { volume = v; store('volume', v); if (yt && yt.setVolume) yt.setVolume(v); if (muted && v > 0) setMuted(false); }
   function setMuted(on) {
     muted = on;
-    if (!on) autoMuted = false;
     if (yt) { try { on ? yt.mute() : yt.unMute(); } catch (e) {} }
     renderBar();
   }
@@ -666,17 +665,11 @@
   // Games: mute the music (it keeps its place) and switch to the mini player on top of the game
   document.addEventListener('boinga:gameopen', () => {
     expandedInGame = false;
-    if (current() && !muted) {
-      setMuted(true);
-      autoMuted = true;
-      UI.toast('🔇 Music muted while you play. Tap the speaker on the mini player to unmute.');
-    }
+    // (The game's own sound gets muted instead when music is on — see gameaudio.js.)
     if (panel && panel.classList.contains('open')) closePanel();
     applyMode();
   });
   document.addEventListener('boinga:gameclose', () => {
-    if (autoMuted) setMuted(false);
-    autoMuted = false;
     expandedInGame = false;
     applyMode();
   });

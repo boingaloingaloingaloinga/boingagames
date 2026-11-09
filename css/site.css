@@ -237,6 +237,32 @@ h1 {
   background: #ffcc00;
 }
 
+/* Game sound toggle, sits left of the close button */
+#gameSoundBtn {
+  position: absolute;
+  top: 8px;
+  right: 40px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #ffcc00;
+  background: #1e1e2f;
+  border: 2px solid #ffcc00;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.6;
+  z-index: 2;
+  transition: opacity 0.2s;
+}
+#gameSoundBtn svg { width: 12px; height: 12px; }
+#gameSoundBtn:hover { opacity: 1; color: #1e1e2f; background: #ffcc00; }
+#gameSoundBtn.muted { opacity: 0.95; color: #1e1e2f; background: #ffcc00; }
+#gameSoundBtn.unavailable { opacity: 0.35; border-style: dashed; cursor: help; }
+
 p.quote {
   font-size: 24px;
   font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -386,7 +412,7 @@ p.left {
   filter: brightness(1.25);
 }
 
-:not(#games):not(#favorites-bar) img {
+:not(#games):not(#favorites-bar) img:not(.boinga-gif):not(#curiousGeorge) {
   transform: none !important;
   transition: none !important;
 }
@@ -1012,3 +1038,17 @@ i.ico svg { width: 1em; height: 1em; display: block; }
   opacity: 0.8;
 }
 .changelog-more:hover { opacity: 1; }
+
+
+/* ---------- Header boingas bounce in on load (js/boinga.js) ---------- */
+html.boinga-intro .boinga-gif { visibility: hidden; }
+.boinga-gif { transform-origin: 50% 100%; will-change: transform; }
+.boinga-gif.falling { position: relative; z-index: 60; }
+
+/* ---------- Curious George: small, next to the Terms / Privacy links ---------- */
+.site-footer { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+#curiousGeorge {
+  width: 44px; height: 44px; object-fit: contain; margin-right: 6px; cursor: pointer;
+  border-radius: 8px; transition: transform .15s;
+}
+#curiousGeorge:hover { transform: rotate(-8deg) scale(1.12); }

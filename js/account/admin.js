@@ -140,9 +140,62 @@
         h('div', { class: 'acct-hint' }, '#' + u.id + ' · joined ' + new Date(u.createdAt * 1000).toLocaleDateString() + (u.bio ? ' · “' + u.bio.slice(0, 60) + '”' : ''))),
       u.admin ? h('span', { class: 'acct-hint' }, 'admin') : h('div', { class: 'admin-actions' },
         act('Profile', async () => Profile.view(u.username)),
+        act(u.role ? 'Role: ' + (u.role.emoji || '') + ' ' + (u.role.label || '') : 'Give role', async () => roleEditor(u, reload)),
         u.banned ? act('Unban', async () => Api.post('/api/admin/users/' + u.id + '/ban', { banned: false }), 'primary')
           : act('Ban', async () => { if (confirm('Ban ' + u.username + '?')) await Api.post('/api/admin/users/' + u.id + '/ban', { banned: true }); }, 'danger'),
         u.avatar ? clear('avatar') : null, u.banner ? clear('banner') : null, u.bio ? clear('bio') : null, clear('username')));
+  }
+
+  // Cosmetic roles: an emoji badge before the name, a label (shown on hover) and an optional glow
+  // in the person's own name colour. Presets are just shortcuts; anything custom works too.
+  const ROLE_PRESETS = [
+    { label: 'Tester', emoji: '🛠', glow: true },
+    { label: 'Moderator', emoji: '🛡️', glow: true },
+    { label: 'Supporter', emoji: '💖', glow: true },
+    { label: 'Artist', emoji: '🎨', glow: false },
+    { label: 'OG', emoji: '⭐', glow: false },
+    { label: 'Bug hunter', emoji: '🐛', glow: false }
+  ];
+  function roleEditor(u, reload) {
+    const cur = u.role || { label: '', emoji: '', glow: true };
+    const label = h('input', { type: 'text', maxlength: 20, value: cur.label, placeholder: 'Role name (e.g. Tester)' });
+    const emoji = h('input', { type: 'text', maxlength: 16, value: cur.emoji, placeholder: '🛠', class: 'role-emoji-input' });
+    const glow = h('input', { type: 'checkbox' }); glow.checked = !!cur.glow;
+    const preview = h('div', { class: 'role-preview' });
+    const err = UI.errorBox();
+    const draw = () => {
+      preview.innerHTML = '';
+      preview.appendChild(UI.nameEl(Object.assign({}, u, { role: { label: label.value.trim(), emoji: emoji.value.trim(), glow: glow.checked } })));
+    };
+    [label, emoji].forEach(i => i.addEventListener('input', draw));
+    glow.addEventListener('change', draw);
+    const presets = h('div', { class: 'role-presets' }, ROLE_PRESETS.map(p => h('button', {
+      class: 'acct-btn small', type: 'button',
+      onclick: () => { label.value = p.label; emoji.value = p.emoji; glow.checked = p.glow; draw(); }
+    }, p.emoji + ' ' + p.label)));
+    const save = h('button', { class: 'acct-btn primary' }, 'Save role');
+    const remove = u.role ? h('button', { class: 'acct-btn danger' }, 'Remove role') : null;
+    const body = h('div', { class: 'role-editor' },
+      h('p', { class: 'acct-hint' }, 'Roles are just for show — they don\'t give any powers. The glow uses the colour ' + u.username + ' picked for their name.'),
+      h('div', { class: 'role-label' }, 'Presets'), presets,
+      h('div', { class: 'role-label' }, 'Custom'),
+      h('div', { class: 'edit-inline' }, emoji, label),
+      h('label', { class: 'acct-check' }, glow, h('span', null, 'Glowing name')),
+      h('div', { class: 'role-label' }, 'Preview'), preview, err,
+      h('div', { class: 'acct-row-btns' }, remove, save));
+    const m = UI.modal({ title: 'Role for ' + u.username, body });
+    draw();
+    save.addEventListener('click', () => UI.busy(save, async () => {
+      err.show('');
+      try {
+        await Api.post('/api/admin/users/' + u.id + '/role', { label: label.value.trim(), emoji: emoji.value.trim(), glow: glow.checked });
+        UI.toast('Role saved.'); m.close(); reload();
+      } catch (e) { err.show(e.message); }
+    }));
+    if (remove) remove.addEventListener('click', () => UI.busy(remove, async () => {
+      try { await Api.post('/api/admin/users/' + u.id + '/role', { clear: true }); UI.toast('Role removed.'); m.close(); reload(); }
+      catch (e) { err.show(e.message); }
+    }));
   }
 
   window.AdminPanel = { open };

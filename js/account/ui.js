@@ -40,9 +40,20 @@
       return h('span', { class: 'acct-name admin' + (extraClass ? ' ' + extraClass : ''), title: 'BoingaGames creator' },
         h('span', { class: 'acct-crown', 'aria-label': 'Creator' }, '👑'), user.username);
     }
-    const el = h('span', { class: 'acct-name' + (extraClass ? ' ' + extraClass : '') }, user.username);
+    const role = user && user.role;
+    const el = h('span', { class: 'acct-name' + (extraClass ? ' ' + extraClass : '') + (role && role.glow ? ' glow' : '') });
+    // Role from the admin panel (e.g. Tester 🛠): badge before the name, optional glow in their own colour
+    if (role && role.emoji) el.appendChild(h('span', { class: 'acct-role', title: role.label || '', 'aria-label': role.label || 'Role' }, role.emoji));
+    el.appendChild(document.createTextNode(user.username));
+    if (role && role.label && !role.emoji) el.title = role.label;
+    else if (role && role.label) el.title = role.label;
     const c = nameColor(user);
     if (c) el.style.color = c;
+    if (role && role.glow) {
+      const hue = user.nameHue !== null && user.nameHue !== undefined ? user.nameHue : null;
+      el.style.setProperty('--glow', hue === null ? 'var(--accent)' : 'hsl(' + hue + ', 100%, 62%)');
+      el.style.setProperty('--glow-soft', hue === null ? 'var(--accent)' : 'hsla(' + hue + ', 100%, 55%, 0.6)');
+    }
     return el;
   }
 

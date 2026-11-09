@@ -470,6 +470,24 @@ body.halloween .acct-cta, body.halloween .acct-me, body.halloween .acct-icon-btn
   50%      { text-shadow: 0 0 10px rgba(255, 230, 80, 1), 0 0 24px rgba(255, 190, 0, 0.9); }
 }
 
+/* ---------- Roles from the admin panel (badge + optional glow in the user's own colour) ---------- */
+.acct-role { margin-right: 4px; text-shadow: none; display: inline-block; transform: translateY(-1px); font-weight: normal; }
+.acct-name.glow {
+  text-shadow: 0 0 6px var(--glow), 0 0 14px var(--glow-soft);
+  animation: role-glow 2.4s ease-in-out infinite;
+}
+.acct-name.glow .acct-role { text-shadow: none; }
+@keyframes role-glow {
+  0%, 100% { text-shadow: 0 0 5px var(--glow), 0 0 12px var(--glow-soft); }
+  50%      { text-shadow: 0 0 9px var(--glow), 0 0 22px var(--glow-soft); }
+}
+.role-editor { display: flex; flex-direction: column; gap: 8px; min-width: min(380px, 80vw); }
+.role-label { font: bold 12px Arial, sans-serif; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; margin-top: 4px; }
+.role-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.acct-panel input.role-emoji-input { width: 64px; flex: 0 0 64px; text-align: center; font-size: 18px; }
+.role-preview { padding: 10px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.25); font-size: 18px; }
+html.no-animations .acct-name.glow, html.no-animations .acct-name.admin { animation: none; }
+
 /* ---------- Groups ---------- */
 .group-icon img { border-radius: 14px; }
 .group-name { color: #fff; }
@@ -683,3 +701,47 @@ body.in-game #saverNotice { z-index: 2147483647; }
 /* When the full music bar is showing during a game, keep the dock + chat above it */
 body.in-game.music-on:not(.music-compact) #gameDock { bottom: 86px; }
 body.music-on:not(.music-compact) .social.floating { bottom: 86px; height: min(520px, calc(100vh - 160px)); }
+
+/* =====================================================================
+   Update 4: tic-tac-toe in DMs
+   ===================================================================== */
+.chat-games-btn svg { width: 17px; height: 17px; }
+.games-menu { min-width: 190px; }
+.games-menu-title { font: bold 11px Arial, sans-serif; color: var(--accent); text-transform: uppercase; letter-spacing: .05em; padding: 6px 12px 4px; }
+.chat-bubble.has-game { padding: 6px; }
+.ttt {
+  width: 200px; padding: 10px; border-radius: 14px; background: rgba(0, 0, 0, 0.28);
+  border: 2px solid transparent; font: 13px Arial, sans-serif; color: #fff; text-align: center;
+  transition: border-color .2s, box-shadow .2s;
+}
+.chat-msg.mine .ttt { background: rgba(30, 30, 47, 0.85); }
+.ttt.your-turn { border-color: var(--accent); box-shadow: 0 0 12px rgba(255, 204, 0, 0.35); }
+.ttt-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.ttt-title { font: bold 13px 'Comic Sans MS', 'Comic Sans', cursive; color: var(--accent); }
+.ttt-forfeit { background: none; border: none; color: var(--text-soft); font: 11px Arial, sans-serif; cursor: pointer; padding: 2px 4px; text-decoration: underline; }
+.ttt-forfeit:hover { color: #ff8080; }
+.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.ttt-cell {
+  aspect-ratio: 1; border-radius: 10px; border: 2px solid var(--line); background: var(--panel-2);
+  color: #fff; font: bold 30px 'Comic Sans MS', 'Comic Sans', cursive; line-height: 1; padding: 0;
+  display: flex; align-items: center; justify-content: center; cursor: default;
+  transition: transform .12s, border-color .12s, background .12s;
+}
+.ttt-cell.x { color: var(--accent); }
+.ttt-cell.o { color: #7fd6ff; }
+.ttt-cell:not(:disabled) { cursor: pointer; }
+.ttt-cell:not(:disabled):hover { border-color: var(--accent); background: #34365a; transform: scale(1.05); }
+.ttt-cell.win { border-color: var(--accent); background: rgba(255, 204, 0, 0.18); animation: ttt-win 0.9s ease-in-out infinite alternate; }
+@keyframes ttt-win { to { box-shadow: 0 0 12px rgba(255, 204, 0, 0.7); } }
+.ttt-clock { height: 6px; margin-top: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.ttt-clock[hidden] { display: none; }
+.ttt-clock-fill { display: block; height: 100%; width: 100%; background: #7fd6ff; border-radius: inherit; transition: width .1s linear; }
+.ttt-clock.mine .ttt-clock-fill { background: var(--accent); }
+.ttt-clock.low .ttt-clock-fill { background: #ff6b6b; }
+.ttt-status { margin-top: 8px; min-height: 1.2em; color: var(--text-soft); }
+.ttt.your-turn .ttt-status { color: var(--accent); font-weight: bold; }
+.ttt-status.good { color: #8dff9a; font-weight: bold; }
+.ttt-status.bad { color: #ff9a9a; font-weight: bold; }
+.ttt-again { margin-top: 8px; }
+.ttt-again[hidden] { display: none; }
+html.no-animations .ttt-cell.win { animation: none; }

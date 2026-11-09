@@ -546,6 +546,9 @@
     const fileInput = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
     const attachBtn = h('button', { class: 'chat-attach', title: 'Attach an image', onclick: () => fileInput.click(), html: '<i class="fa-solid fa-image"></i>' });
     const gifBtn = h('button', { class: 'chat-attach chat-gif-btn', title: 'Send a GIF' }, 'GIF');
+    // Games you can play right in the DM (just tic-tac-toe for now)
+    const gamesBtn = conv.kind === 'dm' && window.TicTacToe
+      ? h('button', { class: 'chat-attach chat-games-btn', title: 'Play a game', html: Icon('gamepad') }) : null;
     const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: conv.kind === 'community' ? 500 : 1000,
       placeholder: conv.kind === 'dm' ? 'Message ' + conv.user.username + '…' : conv.kind === 'group' ? 'Message ' + conv.group.name + '…' : 'Say something to everyone…' });
     if (conv.kind === 'community') attachBtn.hidden = true;
@@ -554,7 +557,7 @@
     const err = UI.errorBox();
     const lockNote = h('div', { class: 'chat-lock', hidden: true });
     const composer = h('div', { class: 'chat-compose' }, lockNote, pending, err,
-      h('div', { class: 'chat-compose-row' }, attachBtn, gifBtn, text, sendBtn), fileInput,
+      h('div', { class: 'chat-compose-row' }, attachBtn, gifBtn, gamesBtn, text, sendBtn), fileInput,
       h('div', { class: 'chat-note' }, conv.kind === 'community'
         ? 'Be nice! One message every 10 seconds. Right-click someone to add them as a friend.'
         : 'Uploaded images are deleted from the server after a while to save space.'));
@@ -573,6 +576,19 @@
     text.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
     sendBtn.addEventListener('click', () => send());
     gifBtn.addEventListener('click', () => GifPicker.open(gifBtn, gif => send({ gif })));
+    if (gamesBtn) gamesBtn.addEventListener('click', () => {
+      const r = gamesBtn.getBoundingClientRect();
+      const menu = UI.contextMenu(r.left, r.top, [{ label: '❌⭕ Tic-Tac-Toe', run: async () => {
+        err.show('');
+        try { const m = await TicTacToe.start(conv.user); if (chat === conv) addMessages([m], true); }
+        catch (e) { err.show(e.message); }
+      } }]);
+      menu.classList.add('games-menu');
+      menu.insertBefore(h('div', { class: 'games-menu-title' }, 'Play with ' + conv.user.username), menu.firstChild);
+      // open upwards from the button
+      const mr = menu.getBoundingClientRect();
+      menu.style.top = Math.max(6, r.top - mr.height - 6) + 'px';
+    });
 
     fileInput.addEventListener('change', async () => {
       const file = fileInput.files[0];
@@ -789,6 +805,13 @@
           h('small', null, 'Playlist'), h('strong', null, p.name), h('span', null, p.count + ' songs · by ' + p.by)),
         h('span', { class: 'chat-playlist-open' }, 'Open')));
     }
+    if (msg.kind === 'game' && !msg.deleted && window.TicTacToe) {
+      bubble.classList.add('has-card', 'has-game');
+      const peer = chat && chat.kind === 'dm' ? chat.user : null;
+      const card = TicTacToe.card(msg, peer);
+      card.__onRematch = m => addMessages([m], true);
+      bubble.appendChild(card);
+    }
     if (msg.body) bubble.appendChild(h('div', { class: 'chat-body' }, msg.body));
 
     const time = new Date(msg.at * 1000);
@@ -812,7 +835,8 @@
     }
     if (!msg.deleted) {
       const tools = h('div', { class: 'chat-tools' });
-      if (mine) {
+      if (msg.kind === 'game') { /* games stay in the chat */ }
+      else if (mine) {
         tools.appendChild(h('button', { title: 'Delete', onclick: async () => {
           if (!confirm('Delete this message?')) return;
           try {
