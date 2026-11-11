@@ -404,5 +404,5 @@ window.GAMES = [
   { id: 'portal1', name: 'Portal', url: 'games/portal1/', img: 'images/portal1.webp', genres: ['platformer', 'puzzle'] },
   { id: 'diablo', name: 'Diablo', url: 'games/diablo/', img: 'images/diablo.jpg', genres: ['rpg', 'retro'] },
   { id: 'cs2', name: 'Counter Strike 2', url: 'games/cs2/', img: 'images/cs2.webp', genres: ['shooter'] },
-  { id: 'brotato', name: 'Brotato', url: 'games/brotato/', img: 'images/toy.jpg', genres: ['shooter', 'adventure'] },
+  { id: 'brotato', name: 'Brotato', url: 'games/brotato/', img: 'images/brotato.jpg', genres: ['shooter', 'adventure'] },
 ];
