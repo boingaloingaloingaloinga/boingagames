@@ -1,4 +1,5 @@
 window.GENRES = [
+  { key: 'new',         label: 'Newest Games!',     icon: 'fa-solid fa-wand-magic-sparkles' },
   { key: 'action',      label: 'Action',            icon: 'fa-solid fa-bolt' },
   { key: 'platformer',  label: 'Platformers',       icon: 'fa-solid fa-person-running' },
   { key: 'adventure',   label: 'Adventure',         icon: 'fa-solid fa-compass' },
@@ -401,8 +402,6 @@ window.GAMES = [
   { id: 'vice', name: 'Grand Theft Auto: Vice City', url: 'games/vice/', img: 'images/vice.webp', genres: ['retro', 'action', 'shooter'] },
   { id: 'anton', name: 'Anton Blast', url: 'games/anton/', img: 'images/anton.jpg', genres: ['platformer', 'action'] },
   { id: 'jsab', name: 'Just Shapes and Beats', url: 'games/jsab/', img: 'images/jsab.webp', genres: ['rhythm', 'action'] },
-  { id: 'portal1', name: 'Portal', url: 'games/portal1/', img: 'images/portal1.webp', genres: ['platformer', 'puzzle'] },
-  { id: 'diablo', name: 'Diablo', url: 'games/diablo/', img: 'images/diablo.jpg', genres: ['rpg', 'retro'] },
-  { id: 'cs2', name: 'Counter Strike 2', url: 'games/cs2/', img: 'images/cs2.webp', genres: ['shooter'] },
-  { id: 'brotato', name: 'Brotato', url: 'games/brotato/', img: 'images/brotato.jpg', genres: ['shooter', 'adventure'] },
+  { id: 'diablo', name: 'Diablo', url: 'games/diablo/', img: 'images/diablo.jpg', genres: ['rpg', 'retro'], new: true },
+  { id: 'brotato', name: 'Brotato', url: 'games/brotato/', img: 'images/brotato.jpg', genres: ['shooter', 'adventure'], new: true },
 ];
