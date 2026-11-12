@@ -250,3 +250,7 @@ body.in-game .music-panel {
   #musicBar.compact .mb-right { display: flex; }
   #musicBar.compact .mb-progress { top: auto; }
 }
+
+/* While YouTube plays an ad */
+#musicBar.ad .mb-artist { color: var(--accent); font-style: italic; }
+#musicBar.ad input[type="range"] { opacity: 0.4; }

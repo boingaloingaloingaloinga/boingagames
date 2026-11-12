@@ -18,6 +18,9 @@
   let lastFavorites = null;
   let lastMusic = null;
   let timer = null;
+  let lastStatsSent = 0;
+  // Stats ride along with a heartbeat about every 2 minutes (slower when the data saver is on)
+  const statsInterval = () => Math.max(120, ((window.Account && Account.saver && Account.saver.heartbeat) || 0) * 2) * 1000;
   let inflight = false;
 
   function state() {
@@ -48,13 +51,20 @@
       if (sig !== lastActivity) { body.activity = top; lastActivity = sig; }
       lastActivitySent = Date.now();
     }
+    // Game stats played since the last sync, so they're the same on every computer
+    let stats = null;
+    if (window.Stats && Stats.takeDelta && Date.now() - lastStatsSent > statsInterval()) {
+      stats = Stats.takeDelta();
+      if (stats) { body.stats = stats; lastStatsSent = Date.now(); }
+    }
     lastState = s;
     lastSent = Date.now();
     inflight = true;
     try {
       const r = await Api.post('/api/presence', body, { keepalive: !!(extra && extra.external) });
+      if (stats) Stats.ack(true);
       Account.setCounts(r);
-    } catch (e) { /* try again next tick */ }
+    } catch (e) { if (stats) Stats.ack(false); /* try again next tick */ }
     finally { inflight = false; }
   }
 
@@ -97,7 +107,12 @@
       fetch(Api.base + '/api/presence', {
         method: 'POST', keepalive: true,
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + Api.getToken() },
-        body: JSON.stringify({ state: 'offline' })
+        body: JSON.stringify(Object.assign({ state: 'offline' }, (() => {
+          // last bit of playtime from this visit
+          const stats = window.Stats && Stats.takeDelta ? Stats.takeDelta() : null;
+          if (stats) Stats.ack(true);
+          return stats ? { stats } : {};
+        })()))
       });
     } catch (e) {}
   });

@@ -28,6 +28,7 @@
   let volume = load('volume', 80);
   shuffle = load('shuffle', false);
   let muted = false;
+  let inAd = false;   // YouTube is showing an ad before/inside the song
   let compactPref = load('compact', false);
   let expandedInGame = false; // user opened the full player while a game is open
 
@@ -73,7 +74,7 @@
     tracks = (tracks || []).filter(t => t && t.id);
     if (!tracks.length) return UI.toast('Nothing to play here.');
     if (opts && typeof opts.shuffle === 'boolean') { shuffle = opts.shuffle; store('shuffle', shuffle); }
-    queue = tracks.map(t => Object.assign({}, t));
+    queue = tracks.map(t => Object.assign({}, t, { srcDuration: Number(t.srcDuration || t.duration) || 0 }));
     const start = index === undefined || index < 0 ? (shuffle ? -1 : 0) : index;
     const o = makeOrder(start);
     order = o.order; pos = o.pos;
@@ -91,6 +92,7 @@
     try { muted ? p.mute() : p.unMute(); } catch (e) {}
     playing = true;
     userPaused = false; lastTime = -1; stalled = 0; endedFor = null;
+    inAd = false; renderAd();
     startProgress();
     renderBar();
     renderQueueIfOpen();
@@ -103,7 +105,7 @@
     if (!S) return;
     if (e.data === S.PLAYING) { playing = true; errorsInRow = 0; startProgress(); }
     else if (e.data === S.PAUSED) { playing = false; }
-    else if (e.data === S.ENDED) { const t = current(); if (t && endedFor !== t.id) { endedFor = t.id; playing = false; next(true); } }
+    else if (e.data === S.ENDED && !inAd) { const t = current(); if (t && endedFor !== t.id) { endedFor = t.id; playing = false; next(true); } }
     renderBar();
     document.dispatchEvent(new CustomEvent('boinga:music', { detail: current() }));
   }
@@ -252,7 +254,7 @@
     if (!t) return;
     els.cover.src = t.cover || 'boinga.gif';
     els.title.textContent = t.title;
-    els.artist.textContent = t.artist || '';
+    els.artist.textContent = inAd ? 'Ad playing — your song starts right after' : t.artist || '';
     els.play.textContent = playing ? '⏸' : '▶';
     els.mute.innerHTML = Icon(muted ? 'volume-xmark' : 'volume-high');
     els.mute.title = muted ? 'Unmute' : 'Mute';
@@ -262,14 +264,35 @@
     if (t.duration) { els.seek.max = t.duration; els.dur.textContent = UI.fmtTime(t.duration); }
   }
 
+  function renderAd() {
+    if (!bar) return;
+    bar.classList.toggle('ad', inAd);
+    els.seek.disabled = inAd;
+    const t = current();
+    els.artist.textContent = inAd ? 'Ad playing — your song starts right after' : (t ? t.artist || '' : '');
+  }
+
   function updateProgress() {
     if (!yt || !yt.getCurrentTime || !bar || bar.hidden) return;
     const exactD = yt.getDuration ? Number(yt.getDuration() || 0) : 0;
     const exactC = Number(yt.getCurrentTime() || 0);
     const d = Math.floor(exactD);
     const c = Math.floor(exactC);
-    // Clock-based state (works even when YouTube's events don't arrive)
     const t = current();
+    // Is YouTube playing an ad instead of our song? (different video, or a length that doesn't match the song)
+    let vid = '';
+    try { vid = (yt.getVideoData && yt.getVideoData().video_id) || ''; } catch (e) {}
+    const known = t && t.srcDuration;
+    const ad = !!t && ((vid && vid !== t.id) || (known && exactD > 1 && Math.abs(exactD - known) > 4));
+    if (ad !== inAd) { inAd = ad; renderAd(); if (!ad) lastTime = -1; }
+    if (ad) {
+      // keep the clock and "song ended" check out of it, so the ad can't skip the song
+      if (!playing && !userPaused) { playing = true; renderBar(); }
+      els.time.textContent = UI.fmtTime(Math.floor(exactC));
+      if (exactD > 1) els.dur.textContent = UI.fmtTime(Math.floor(exactD));
+      return;
+    }
+    // Clock-based state (works even when YouTube's events don't arrive)
     if (exactC > lastTime + 0.05 && lastTime >= 0) {
       if (!playing && !userPaused) { playing = true; errorsInRow = 0; renderBar(); document.dispatchEvent(new CustomEvent('boinga:music', { detail: t })); }
       stalled = 0;
@@ -278,7 +301,7 @@
     }
     lastTime = exactC;
     if (t && exactD > 1 && exactC >= exactD - 0.6 && endedFor !== t.id) { endedFor = t.id; playing = false; next(true); return; }
-    if (d) { els.seek.max = d; els.dur.textContent = UI.fmtTime(d); const t = current(); if (t && !t.duration) t.duration = d; }
+    if (d) { els.seek.max = d; els.dur.textContent = UI.fmtTime(d); if (t && !t.duration) t.duration = d; }
     if (!els.seekDragging()) { els.seek.value = c; els.time.textContent = UI.fmtTime(c); paintRange(els.seek); }
   }
 
@@ -657,6 +680,12 @@
   }
 
   // Top-right button
+  // Load the hidden YouTube player in the background once the page is idle, so the first song only waits for YouTube
+  window.addEventListener('load', () => {
+    const warm = () => { if (!window.Account || !Account.saver || Account.saver.music !== false) loadYouTube(); };
+    if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 6000 }); else setTimeout(warm, 3000);
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('musicBtn');
     if (btn) { btn.hidden = false; btn.addEventListener('click', () => (panel && panel.classList.contains('open') ? closePanel() : openPanel())); }

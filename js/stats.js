@@ -1,28 +1,69 @@
-/* Statistics: time on site + per-game playtime (saved in this browser).
-   Exposes window.Stats = { gameOpened(url), gameClosed(), top(n) } */
+/* Statistics: time on site + per-game playtime.
+   Logged out: saved in this browser. Logged in: saved to your account, so they follow you to any computer.
+   How syncing works: this computer only ever sends what was played since its last sync (a "delta",
+   piggybacked on the online-status heartbeat), and the server adds it to your totals. Two computers
+   playing at once just both add their time, nothing gets overwritten.
+   Exposes window.Stats = { gameOpened(url), gameClosed(), top(n), info(url), fmt(s), takeDelta(), ack(ok), refresh() } */
 (function () {
-  const KEY = 'siteStats';
+  const KEY = 'siteStats';                 // this computer's own stats (also used while logged out)
+  const MERGED_KEY = 'siteStats.mergedInto'; // this computer's older stats were added to an account already
   const AWAY_CAP = 120; // seconds of off-tab time that still count
 
-  function load() {
+  const empty = () => ({ siteTime: 0, totalOpens: 0, games: {} });
+  function read(key) {
     try {
-      const d = JSON.parse(localStorage.getItem(KEY));
+      const d = JSON.parse(localStorage.getItem(key));
       if (d && d.games) return d;
     } catch (e) {}
-    return { siteTime: 0, totalOpens: 0, games: {} };
+    return empty();
   }
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+  function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} }
+
+  const local = read(KEY);
+  // While logged in: base = totals from the server, pending = played here but not sent yet,
+  // inflight = sent and waiting for the server to say OK.
+  let acct = null;
+  let fetching = false;
+  let lastFetch = 0;
+
+  function addInto(d, sec, gameId) {
+    d.siteTime += sec;
+    if (gameId) {
+      const g = d.games[gameId] || (d.games[gameId] = { name: (local.games[gameId] || {}).name || gameId, opens: 0, time: 0 });
+      g.time += sec;
+    }
+  }
+  function sumInto(dst, src) {
+    if (!src) return dst;
+    dst.siteTime += src.siteTime || 0;
+    dst.totalOpens += src.totalOpens || 0;
+    for (const id in src.games || {}) {
+      const s = src.games[id];
+      const g = dst.games[id] || (dst.games[id] = { name: s.name || id, opens: 0, time: 0 });
+      if (s.name) g.name = s.name;
+      g.opens += s.opens || 0;
+      g.time += s.time || 0;
+    }
+    return dst;
+  }
+  // What the stats window and your profile show
+  function view() {
+    if (!acct) return local;
+    return sumInto(sumInto(sumInto(empty(), acct.base), acct.pending), acct.inflight);
   }
 
-  const data = load();
+  function save() {
+    write(KEY, local);
+    if (acct) write('siteStats.pending.' + acct.uid, acct.pending);
+  }
+
   let currentId = null;
   let hiddenAt = null;
   let ticks = 0;
 
   function addTime(sec) {
-    data.siteTime += sec;
-    if (currentId && data.games[currentId]) data.games[currentId].time += sec;
+    addInto(local, sec, currentId && local.games[currentId] ? currentId : null);
+    if (acct) addInto(acct.pending, sec, currentId);
   }
 
   // Count a second whenever the tab is visible (playing a game counts too)
@@ -55,12 +96,16 @@
     return { id: slug, name: game ? game.name : slug };
   }
 
-  function gameOpened(url) {
-    const info = gameInfo(url);
-    const g = data.games[info.id] || (data.games[info.id] = { name: info.name, opens: 0, time: 0 });
+  function opened(d, info) {
+    const g = d.games[info.id] || (d.games[info.id] = { name: info.name, opens: 0, time: 0 });
     g.name = info.name;
     g.opens++;
-    data.totalOpens++;
+    d.totalOpens++;
+  }
+  function gameOpened(url) {
+    const info = gameInfo(url);
+    opened(local, info);
+    if (acct) opened(acct.pending, info);
     currentId = info.id;
     save();
     return info;
@@ -73,14 +118,89 @@
 
   // Most-played games, used for the "Activity" section on profiles
   function top(n) {
-    return Object.keys(data.games)
-      .map(id => ({ id: id, name: data.games[id].name, time: Math.floor(data.games[id].time) }))
+    const d = view();
+    return Object.keys(d.games)
+      .map(id => ({ id: id, name: d.games[id].name, time: Math.floor(d.games[id].time) }))
       .filter(g => g.time >= 60)
       .sort((a, b) => b.time - a.time)
       .slice(0, n || 3);
   }
 
-  window.Stats = { gameOpened: gameOpened, gameClosed: gameClosed, top: top, info: gameInfo };
+  /* ---------- syncing with your account ---------- */
+
+  // Whole seconds only: fractions stay in pending for next time.
+  function splitWhole(src) {
+    const out = empty();
+    out.siteTime = Math.floor(src.siteTime); src.siteTime -= out.siteTime;
+    out.totalOpens = src.totalOpens; src.totalOpens = 0;
+    for (const id in src.games) {
+      const g = src.games[id];
+      const t = Math.floor(g.time);
+      if (t || g.opens) out.games[id] = { name: g.name, opens: g.opens, time: t };
+      g.time -= t; g.opens = 0;
+      if (g.time < 0.001) delete src.games[id];
+    }
+    const any = out.siteTime || out.totalOpens || Object.keys(out.games).length;
+    return any ? out : null;
+  }
+
+  // Called by the heartbeat: hands over what to send (or null). Then ack(true/false) when it's done.
+  function takeDelta() {
+    if (!acct || acct.inflight || fetching) return null;
+    const d = splitWhole(acct.pending);
+    if (d) acct.inflight = d;
+    save();
+    return d;
+  }
+  function ack(ok) {
+    if (!acct || !acct.inflight) return;
+    sumInto(ok ? acct.base : acct.pending, acct.inflight);
+    acct.inflight = null;
+    if (ok) write('siteStats.acct.' + acct.uid, acct.base);
+    save();
+  }
+
+  // Load the totals from the server (on login, and when you open the stats window)
+  async function refresh() {
+    if (!acct || fetching || acct.inflight || !window.Api) return;
+    const a = acct;
+    fetching = true;
+    try {
+      const r = await Api.get('/api/stats');
+      if (acct === a) { a.base = r.stats; lastFetch = Date.now(); write('siteStats.acct.' + a.uid, a.base); }
+    } catch (e) {}
+    finally { fetching = false; }
+  }
+
+  async function login(user) {
+    if (acct && acct.uid === user.id) return;
+    acct = { uid: user.id, base: read('siteStats.acct.' + user.id), pending: read('siteStats.pending.' + user.id), inflight: null };
+    // First account on this computer: add the stats this computer collected before (once only)
+    let merged = null;
+    try { merged = localStorage.getItem(MERGED_KEY); } catch (e) {}
+    if (!merged && (local.siteTime >= 1 || Object.keys(local.games).length)) {
+      try { localStorage.setItem(MERGED_KEY, String(user.id)); } catch (e) {}
+      const copy = JSON.parse(JSON.stringify(local));
+      const d = splitWhole(copy);
+      if (d) {
+        fetching = true;
+        try { await Api.post('/api/stats', { delta: d }); }
+        catch (e) { sumInto(acct.pending, d); }  // try again with the next heartbeat
+        finally { fetching = false; }
+      }
+    } else if (!merged) {
+      try { localStorage.setItem(MERGED_KEY, String(user.id)); } catch (e) {}
+    }
+    await refresh();
+  }
+
+  document.addEventListener('boinga:user', e => {
+    if (e.detail) login(e.detail);
+    else { save(); acct = null; }
+  });
+
+  window.Stats = { gameOpened: gameOpened, gameClosed: gameClosed, top: top, info: gameInfo,
+    takeDelta: takeDelta, ack: ack, refresh: refresh, synced: () => !!acct };
 
   // ---------- UI ----------
   function fmt(s) {
@@ -101,9 +221,11 @@
     const search = document.getElementById('statsSearch');
     const sort = document.getElementById('statsSort');
     const list = document.getElementById('statsGameList');
-    let refresh = null;
+    let ticker = null;
+    const syncNote = document.getElementById('statsSyncNote');
 
     function render() {
+      const data = view();
       siteTimeEl.textContent = fmt(data.siteTime);
       opensEl.textContent = data.totalOpens;
 
@@ -142,12 +264,14 @@
 
     function open() {
       overlay.classList.add('active');
+      if (acct && Date.now() - lastFetch > 60000) refresh().then(render);
+      if (syncNote) syncNote.textContent = acct ? '* Synced to your account, so they follow you to other computers.' : '* Saved in this browser only. Log in to keep them on every computer.';
       render();
-      refresh = setInterval(render, 1000); // live-updating numbers
+      ticker = setInterval(render, 1000); // live-updating numbers
     }
     function close() {
       overlay.classList.remove('active');
-      clearInterval(refresh);
+      clearInterval(ticker);
     }
 
     btn.addEventListener('click', open);
