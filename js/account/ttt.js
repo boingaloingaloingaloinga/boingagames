@@ -1,10 +1,4 @@
-/* Tic-tac-toe cards inside DMs.
- * The server is the referee (turns, wins, the 10-second clock). This file just draws the
- * board, sends moves, and tells the server when it's your turn and the board is on screen
- * — that's when your 10 seconds start.
- *
- * window.TicTacToe = { start(peer) -> Promise<message>, card(msg, peer) -> element }
- */
+
 (function () {
   if (!window.Api || !Api.enabled || !window.UI) return;
   const { h } = UI;
@@ -14,7 +8,6 @@
     return r.message;
   }
 
-  // Is the card actually where the player can see it?
   const seenObs = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     entries.forEach(e => { e.target.__visible = e.isIntersecting; if (e.isIntersecting && e.target.__onVisible) e.target.__onVisible(); });
   }, { threshold: 0.6 }) : null;
@@ -72,7 +65,7 @@
           if (g.yourTurn) text = g.clockRunning ? 'Your turn (' + mark + ') — go!' : 'Your turn (' + mark + ')';
           else text = peerName() + "'s turn" + (g.clockRunning ? '…' : ' — waiting for them to look');
           break;
-        case 'won': text = youWon ? '🎉 You win!' : '😵 ' + peerName() + ' wins!'; break;
+        case 'won': text = youWon ? '🎉 Congrats, you win!' : '😵 ' + peerName() + ' wins!'; break;
         case 'tie': text = "🤝 It's a tie!"; break;
         case 'timeout': text = youWon ? '⏰ ' + peerName() + ' ran out of time — you win!' : '⏰ You ran out of time — ' + peerName() + ' wins!'; break;
         case 'forfeit': text = youWon ? '🏳️ ' + peerName() + ' gave up — you win!' : '🏳️ You gave up — ' + peerName() + ' wins.'; break;
@@ -121,7 +114,6 @@
       catch (e) { if (e.status === 404) cleared(); else schedule(); }
     }
 
-    // Start my 10 seconds once I can actually see the board on my turn
     async function maybeSeen() {
       if (!game || game.status !== 'active' || !game.yourTurn || game.clockRunning || !visible()) return;
       if (Date.now() - seenSent < 1500) return;
