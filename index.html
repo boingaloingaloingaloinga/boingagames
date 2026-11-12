@@ -26,6 +26,7 @@
 </head>
 <body>
 
+  <!-- ================= Top corners ================= -->
   <div id="accountCorner"></div> <!-- filled in by js/account/ui.js -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
   <button id="statsBtn" title="Statistics">📊</button>
@@ -70,7 +71,7 @@
     </div>
   </div>
 
-</div>
+  <!-- ================= Statistics ================= -->
   <div id="statsOverlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
@@ -106,6 +107,7 @@
     </div>
   </div>
 
+  <!-- ================= Full game list ================= -->
   <div id="fullListOverlay" class="overlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="fullListClose">&times;</span>
@@ -116,6 +118,9 @@
     </div>
   </div>
 
+  <!-- ================= Header =================
+       Compact look by default; Settings → Header → Original brings back the full layout.
+       To post a new hater: change the date + name spans. New changelog lines go at the BOTTOM of the list. -->
   <header id="siteHeader">
     <div class="boinga-container">
       <img src="boinga.gif" alt="Boinga GIF" class="boinga-gif">
@@ -126,7 +131,7 @@
 
     <div class="header-body">
       <div class="hater-card">
-        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/12/2026</span> <span class="hater-name">Gabriel B.</span></p>
+        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/6/2026</span> <span class="hater-name">Abram H.</span></p>
         <p class="haterform"><span class="long">Random Boinga Hater Suggestion: </span><a href="https://forms.gle/iBhxB63vtXShfAmy8" target="_blank" rel="noopener" data-short="Suggest a hater →">https://forms.gle/iBhxB63vtXShfAmy8</a></p>
       </div>
 
@@ -188,6 +193,7 @@
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" id="libSearch" placeholder="Search games…" autocomplete="off" aria-label="Search games">
         <button id="libClear" title="Clear search" hidden>&times;</button>
+      </div>
       <button class="lib-pill" id="fullListBtn"><i class="fa-solid fa-list"></i> Full game list</button>
     </div>
     <nav class="lib-chips" id="libChips" aria-label="Genres"></nav>
@@ -198,7 +204,6 @@
 
   <section id="classic">
     <div class="toolbar">
-      <button id="moviesBtn" class="movies-btn">Movies</button>
       <div id="searchContainer">
         <input type="text" id="gameSearch" placeholder="Search games...">
       </div>
