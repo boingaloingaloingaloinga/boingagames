@@ -1,0 +1,62 @@
+<html><head><base href="." />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How To Train Your Dragon 2</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+    
+    .video-container {
+        width: 80%;
+        max-width: 1200px;
+    }
+    
+    video {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    
+    .video-controls {
+        margin-top: 15px;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <div class="video-container">
+        <video controls autoplay>
+            <source src="https://www.dropbox.com/scl/fi/59vopu50z2okfje0m8hpf/How.to.Train.Your.Dragon.The.Hidden.World.2019.720p.BluRay.x265.HEVC-Pahe.in.mp4?rlkey=0p8jl2y46nsukrft0fwm4f8np&st=74nxo7ee&raw=1" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            
+            video.addEventListener('error', function(e) {
+                console.error('Error loading video:', e);
+            });
+            
+            video.addEventListener('dblclick', function() {
+                if (video.requestFullscreen) {
+                    video.requestFullscreen();
+                } else if (video.webkitRequestFullscreen) {
+                    video.webkitRequestFullscreen();
+                } else if (video.msRequestFullscreen) {
+                    video.msRequestFullscreen();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

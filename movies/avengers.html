@@ -1,0 +1,62 @@
+<html><head><base href="." />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Avengers</title>
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+    
+    .video-container {
+        width: 80%;
+        max-width: 1200px;
+    }
+    
+    video {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    }
+    
+    .video-controls {
+        margin-top: 15px;
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <div class="video-container">
+        <video controls autoplay>
+            <source src="https://www.dropbox.com/scl/fi/2soa9dqfcuto1kwzy9k6b/the.avengers.uncensored.2012.480p.bluray.x264-pahe.in.mp4?rlkey=rmyjyryqqwduhdh631fv90vnj&st=igf5z6om&raw=1" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.querySelector('video');
+            
+            video.addEventListener('error', function(e) {
+                console.error('Error loading video:', e);
+            });
+            
+            video.addEventListener('dblclick', function() {
+                if (video.requestFullscreen) {
+                    video.requestFullscreen();
+                } else if (video.webkitRequestFullscreen) {
+                    video.webkitRequestFullscreen();
+                } else if (video.msRequestFullscreen) {
+                    video.msRequestFullscreen();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
