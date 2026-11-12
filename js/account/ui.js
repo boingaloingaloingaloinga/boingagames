@@ -1,7 +1,3 @@
-/* =====================================================================
-   Accounts: shared helpers (window.UI), login state (window.Account),
-   the top-left account corner, sign up / log in, first-visit prompt.
-   ===================================================================== */
 (function () {
   const cfg = window.BOINGA_CONFIG || {};
 
@@ -35,14 +31,12 @@
   }
 
   function nameEl(user, extraClass) {
-    // The site creator gets a crown + glowing gold name (set by the server, can't be faked)
     if (user && user.admin) {
       return h('span', { class: 'acct-name admin' + (extraClass ? ' ' + extraClass : ''), title: 'BoingaGames creator' },
         h('span', { class: 'acct-crown', 'aria-label': 'Creator' }, '👑'), user.username);
     }
     const role = user && user.role;
     const el = h('span', { class: 'acct-name' + (extraClass ? ' ' + extraClass : '') + (role && role.glow ? ' glow' : '') });
-    // Role from the admin panel (e.g. Tester 🛠): badge before the name, optional glow in their own colour
     if (role && role.emoji) el.appendChild(h('span', { class: 'acct-role', title: role.label || '', 'aria-label': role.label || 'Role' }, role.emoji));
     el.appendChild(document.createTextNode(user.username));
     if (role && role.label && !role.emoji) el.title = role.label;
@@ -85,7 +79,6 @@
     return Math.floor(s / 86400) + ' d ago';
   }
 
-  // One line like "Playing Vex" / "Away" / "Just went to Club Penguin"
   function statusLine(user) {
     if (user.status !== 'offline' && user.game) return 'Playing ' + user.game.name;
     if (user.status !== 'offline' && user.music) return '🎵 Listening to ' + user.music.title + (user.music.artist ? ' — ' + user.music.artist : '');
@@ -93,7 +86,6 @@
     return statusLabel(user.status);
   }
 
-  // Group chat icon: uploaded image, or a colour-shifted Boinga like profile pictures
   function groupIconEl(group, size) {
     const wrap = h('span', { class: 'acct-avatar group-icon', style: { width: size + 'px', height: size + 'px' } });
     const img = h('img', { alt: '', draggable: 'false' });
@@ -152,7 +144,6 @@
     return el;
   }
 
-  // Disable a button while a promise runs
   async function busy(btn, fn) {
     if (btn.disabled) return;
     const old = btn.textContent;
@@ -162,7 +153,6 @@
     finally { btn.disabled = false; btn.classList.remove('loading'); btn.textContent = old; }
   }
 
-  // Check an image file's type, size and pixel dimensions before uploading
   function checkImage(file, rule) {
     return new Promise((resolve, reject) => {
       if (!file) return reject(new Error('No file chosen.'));
@@ -187,8 +177,6 @@
     return m + ':' + String(s).padStart(2, '0');
   }
 
-  // Lets a floating window be dragged by its handle. canDrag() decides when dragging is allowed.
-  // Position is remembered per key. While dragging, game iframes ignore the mouse so it doesn't get "stuck".
   function makeDraggable(el, handle, key, canDrag) {
     const storeKey = 'boinga.pos.' + key;
     function clamp(x, y) {
@@ -216,7 +204,6 @@
       window.addEventListener('pointerup', up);
     });
     return {
-      // put it back where the user last left it (or the CSS default)
       restore() {
         let pos = null;
         try { pos = JSON.parse(localStorage.getItem(storeKey)); } catch (err) {}
@@ -227,7 +214,6 @@
     };
   }
 
-  // Small right-click / long-press style menu at the mouse position
   function contextMenu(x, y, items) {
     document.querySelectorAll('.ctx-menu').forEach(m => m.remove());
     const menu = h('div', { class: 'acct-menu ctx-menu', role: 'menu' });
@@ -437,7 +423,7 @@
         user, hint, pw.wrap, pw2.wrap,
         h('div', { class: 'acct-warn' },
           h('strong', null, '⚠ There is no way to recover a forgotten password.'),
-          ' Since there\'s no email, nobody (not even us) can reset it. Write it down or save it in your browser\'s password manager.'),
+          ' Since there\'s no email, nobody (not even the owner due to how the encryption works) can reset it. Write it down or save it in your browser\'s password manager.'),
         h('label', { class: 'acct-check' }, age, h('span', null, 'I am 13 years old or older')),
         h('label', { class: 'acct-check' }, agree, h('span', null, 'I agree to the ',
           h('a', { href: 'terms.html', target: '_blank', rel: 'noopener' }, 'Terms of Service'), ' and ',
@@ -477,7 +463,7 @@
     const body = h('div', { class: 'acct-welcome' },
       avatarEl(Object.assign({}, user, { status: 'active' }), 96, false),
       h('p', null, 'Welcome to BoingaGames, ', nameEl(user), '!'),
-      h('p', { class: 'acct-hint center' }, 'Your profile picture is a one-of-a-kind Boinga. You can change it, add a banner, a bio and a name colour any time.'));
+      h('p', { class: 'acct-hint center' }, 'Your profile picture is a one-of-a-kind randomly colored Boingaloing. You can change it, add a banner, a bio and a name colour any time.'));
     const m = modal({ title: 'Account created! 🎉', body });
     body.appendChild(h('div', { class: 'acct-row-btns' },
       h('button', { class: 'acct-btn primary', onclick: () => { m.close(); Profile.edit(); } }, 'Customize profile'),
@@ -487,7 +473,7 @@
 
   /* ------------------------------------------------------ first visit */
 
-  const ASK_KEY = 'boinga.signupPrompt'; // 'never' or a timestamp of "ask me later"
+  const ASK_KEY = 'boinga.signupPrompt';
   function maybeAskToSignUp() {
     if (!Api.enabled || cfg.ASK_TO_SIGN_UP === false || Account.user || Api.getToken()) return;
     let v; try { v = localStorage.getItem(ASK_KEY); } catch (e) { return; }
@@ -500,11 +486,11 @@
       h('img', { src: 'boinga.gif', alt: '', class: 'acct-prompt-boinga' }),
       h('p', { class: 'acct-prompt-big' }, 'Want to make a BoingaGames account?'),
       h('ul', { class: 'acct-prompt-list' },
-        h('li', null, '🎨 Your own profile, banner and name colour'),
+        h('li', null, '🎨 Your own profile with it\'s own options'),
         h('li', null, '👋 Add friends and see what they\'re playing'),
         h('li', null, '💬 Chat with friends (images and GIFs too)')),
       h('p', { class: 'acct-prompt-free' }, 'No email required!'));
-    const m = modal({ title: 'Hey there!', body, onClose: () => { if (!chosen) remember(String(Date.now())); } });
+    const m = modal({ title: 'Hey!', body, onClose: () => { if (!chosen) remember(String(Date.now())); } });
     let chosen = false;
     body.appendChild(h('div', { class: 'acct-row-btns' },
       h('button', { class: 'acct-btn primary', onclick: () => { chosen = true; remember('never'); m.close(); openAuth('signup'); } }, 'Create account'),
@@ -513,7 +499,6 @@
     body.appendChild(h('button', { class: 'acct-link', onclick: () => { chosen = true; remember('never'); m.close(); } }, "Don't ask me again"));
   }
 
-  /* ------------------------------------------------------ data saver notice */
 
   function renderSaverNotice() {
     let bar = document.getElementById('saverNotice');
@@ -539,7 +524,6 @@
     try { const r = await Api.get('/api/status'); Account.setSaver(r.saver); } catch (e) {}
   }
 
-  /* ------------------------------------------------------ boot */
 
   async function boot() {
     if (!Api.enabled) return;
@@ -552,7 +536,6 @@
         Account.setUser(r.user);
       } catch (e) {
         if (e.status !== 401) {
-          // Server unreachable: keep the token and try again later.
           setTimeout(boot, 30000);
         }
       }
