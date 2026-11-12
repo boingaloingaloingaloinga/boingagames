@@ -48,6 +48,12 @@
 
     a.appendChild(star);
     a.appendChild(img);
+    if (g.new) {
+      const badge = document.createElement('span');
+      badge.className = 'game-new';
+      badge.textContent = 'NEW';
+      a.appendChild(badge);
+    }
     if (isExternal(g)) {
       const ext = document.createElement('span');
       ext.className = 'tile-ext';
@@ -196,6 +202,7 @@
   let activeGenre = 'all';
 
   function gamesIn(key) {
+    if (key === 'new') return GAMES.filter(g => g.new);
     return key === 'all' ? GAMES : GAMES.filter(g => g.genres.includes(key));
   }
 
@@ -266,9 +273,12 @@
   function buildRows() {
     const wrap = $('libRows');
     wrap.innerHTML = '';
+    const fresh = gamesIn('new');
+    if (fresh.length) wrap.appendChild(makeRow('Newest Games!', 'fa-solid fa-wand-magic-sparkles', fresh, 'new')).classList.add('lib-row-new');
     const recent = window.Stats ? Stats.top(12).map(s => byId[s.id]).filter(Boolean) : [];
     if (recent.length >= 2) wrap.appendChild(makeRow('Your most played', 'fa-solid fa-clock-rotate-left', recent, null));
     GENRES.forEach(gen => {
+      if (gen.key === 'new') return;  // already shown first
       const list = gamesIn(gen.key);
       if (list.length) wrap.appendChild(makeRow(gen.label, gen.icon, list, gen.key));
     });

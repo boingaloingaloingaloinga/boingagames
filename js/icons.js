@@ -55,6 +55,7 @@
     'hourglass-half': P('M6 3h12M6 21h12') + P('M7 3c0 5.5 5 6 5 9s-5 3.5-5 9M17 3c0 5.5-5 6-5 9s5 3.5 5 9') + P('M9 18h6'),
     'cubes': '<rect x="3.5" y="12.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="12.5" width="7.5" height="7.5" rx="1"/><rect x="8.25" y="4" width="7.5" height="7.5" rx="1"/>',
     'music': P('M9 18V5l11-2v13') + C(6.5, 18, 2.5) + C(17.5, 16, 2.5),
+    'wand-magic-sparkles': P('M4 20 15 9M13 7l4 4') + P('M18 2v4M16 4h4M7 3v3M5.5 4.5h3M19 14v3M17.5 15.5h3'),
     'floppy-disk': P('M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 1-2z') + P('M8 3v5h7V3M7 21v-7h10v7')
   };
 
