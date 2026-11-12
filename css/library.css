@@ -368,3 +368,12 @@ body.halloween .game-tile:hover { transform: scale(1.1) rotate(-3deg); filter: d
   cursor: pointer;
 }
 .seg button.active { background: var(--accent); color: var(--panel); }
+
+/* "Newest Games!" (games marked new: true in js/games.js) */
+.game-new {
+  position: absolute; left: 4px; bottom: 4px; z-index: 2; pointer-events: none;
+  font: bold 10px Arial, sans-serif; letter-spacing: .5px; color: #1e1e2f;
+  background: var(--accent); border-radius: 999px; padding: 2px 6px;
+  box-shadow: 0 0 8px rgba(255, 204, 0, 0.7);
+}
+.lib-row-new .lib-row-title, .lib-row-new h2, .lib-row-new h3 { color: var(--accent); text-shadow: 0 0 8px rgba(255, 204, 0, 0.6); }
