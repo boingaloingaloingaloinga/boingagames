@@ -70,21 +70,6 @@
     </div>
   </div>
 
-  <div style="text-align: center; margin-top: 20px;">
-  <button onclick="location.href='movies/'" 
-  style="
-               padding: 10px 20px;
-               font-size: 16px;
-               font-family: 'Comic Sans MS', cursive, sans-serif;
-               color: yellow;
-               background-color: #1e1e2f;
-               border: 2px solid yellow;
-               border-radius: 8px;
-               cursor: pointer;
-               transition: color 0.3s ease, border-color 0.3s ease;
-           ">
-Movies
-</button>
 </div>
   <div id="statsOverlay">
     <div class="settings-panel">
@@ -203,8 +188,22 @@ Movies
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="search" id="libSearch" placeholder="Search games…" autocomplete="off" aria-label="Search games">
         <button id="libClear" title="Clear search" hidden>&times;</button>
-      </div>
-      <button id="moviesBtn" class="movies-btn">Movies</button>
+        </div>
+          <div style="text-align: center; margin-top: 20px;">
+          <button onclick="location.href='movies/'" 
+          style="
+               padding: 10px 20px;
+               font-size: 16px;
+               font-family: 'Comic Sans MS', cursive, sans-serif;
+               color: yellow;
+               background-color: #1e1e2f;
+               border: 2px solid yellow;
+               border-radius: 8px;
+               cursor: pointer;
+               transition: color 0.3s ease, border-color 0.3s ease;
+          ">
+        Movies
+      </button>
       <button class="lib-pill" id="fullListBtn"><i class="fa-solid fa-list"></i> Full game list</button>
     </div>
     <nav class="lib-chips" id="libChips" aria-label="Genres"></nav>
