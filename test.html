@@ -26,7 +26,6 @@
 </head>
 <body>
 
-  <!-- ================= Top corners ================= -->
   <div id="accountCorner"></div> <!-- filled in by js/account/ui.js -->
   <button id="settingsGearBtn" title="Settings">⚙</button>
   <button id="statsBtn" title="Statistics">📊</button>
@@ -71,7 +70,22 @@
     </div>
   </div>
 
-  <!-- ================= Statistics ================= -->
+  <div style="text-align: center; margin-top: 20px;">
+  <button onclick="location.href='movies/'" 
+  style="
+               padding: 10px 20px;
+               font-size: 16px;
+               font-family: 'Comic Sans MS', cursive, sans-serif;
+               color: yellow;
+               background-color: #1e1e2f;
+               border: 2px solid yellow;
+               border-radius: 8px;
+               cursor: pointer;
+               transition: color 0.3s ease, border-color 0.3s ease;
+           ">
+Movies
+</button>
+</div>
   <div id="statsOverlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="statsCloseBtn">&times;</span>
@@ -107,7 +121,6 @@
     </div>
   </div>
 
-  <!-- ================= Full game list ================= -->
   <div id="fullListOverlay" class="overlay">
     <div class="settings-panel">
       <span class="settings-close-btn" id="fullListClose">&times;</span>
@@ -118,9 +131,6 @@
     </div>
   </div>
 
-  <!-- ================= Header =================
-       Compact look by default; Settings → Header → Original brings back the full layout.
-       To post a new hater: change the date + name spans. New changelog lines go at the BOTTOM of the list. -->
   <header id="siteHeader">
     <div class="boinga-container">
       <img src="boinga.gif" alt="Boinga GIF" class="boinga-gif">
@@ -131,7 +141,7 @@
 
     <div class="header-body">
       <div class="hater-card">
-        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/6/2026</span> <span class="hater-name">Abram H.</span></p>
+        <p class="blake"><span class="hater-label">Random Boinga Hater Of The Day: </span><span class="hater-date">11/12/2026</span> <span class="hater-name">Gabriel B.</span></p>
         <p class="haterform"><span class="long">Random Boinga Hater Suggestion: </span><a href="https://forms.gle/iBhxB63vtXShfAmy8" target="_blank" rel="noopener" data-short="Suggest a hater →">https://forms.gle/iBhxB63vtXShfAmy8</a></p>
       </div>
 
