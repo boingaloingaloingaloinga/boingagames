@@ -1,8 +1,4 @@
-/* =====================================================================
-   Friends drawer: friends, group chats, requests, add people,
-   and the chat view (direct messages + group chats share it).
-   window.Social = { open, close, openChat(user), openGroup(id), shareTo(onPick) }
-   ===================================================================== */
+
 (function () {
   const { h } = window.UI;
 
@@ -15,11 +11,9 @@
   const GROUP_MIN = 3, GROUP_MAX = 15;
 
   const pollSec = () => Math.max(3, (Account.saver && Account.saver.chatPoll) || 3);
-  // Community chat is busier and has no notifications, so it checks less often (saves server requests)
   const pollMs = () => (chat && chat.kind === 'community' ? Math.max(6, pollSec() * 2) : pollSec()) * 1000;
   const uploadsOn = () => !Account.saver || Account.saver.uploads !== false;
 
-  /* ============================================================ DRAWER */
 
   let drag = null;
   let compactPref = false;
@@ -39,7 +33,7 @@
     applyMode();
   }
 
-  // Floating (small window, works on top of games) vs. full side drawer
+  // floating windows vs the big ones
   function applyMode() {
     if (!drawer) return;
     const floating = inGame() || compactPref;
@@ -50,7 +44,7 @@
     content.querySelectorAll('.social-compact').forEach(b => {
       b.innerHTML = Icon(floating ? 'expand' : 'compress');
       b.title = floating ? 'Full size' : 'Compact (small floating chat)';
-      b.hidden = inGame(); // always small while a game is open
+      b.hidden = inGame(); // always small when game is open
     });
   }
   function toggleCompact() {
@@ -282,8 +276,6 @@
     });
   }
 
-  /* ========================================================= GROUPS */
-
   // Friend picker used by "New group" and "Invite friends"
   function friendPicker(exclude, max) {
     const chosen = new Set();
@@ -388,14 +380,13 @@
             iconBtns)),
         iconInput));
 
-      // Suggestions (owner decides)
+      // suggestions system
       if (isOwner && g.suggestions && g.suggestions.length) {
         const sec = h('section', { class: 'edit-sec' }, h('h3', null, 'Suggestions'));
         g.suggestions.forEach(s => sec.appendChild(suggestionRow(g, s, load)));
         body.appendChild(sec);
       }
 
-      // Members
       const mem = h('section', { class: 'edit-sec' }, h('h3', null, 'Members (' + g.memberCount + '/' + GROUP_MAX + ')'));
       if (!g.active) mem.appendChild(h('p', { class: 'acct-hint' }, 'Chat opens once at least 3 people have joined.'));
       g.members.forEach(u => {
@@ -430,7 +421,6 @@
       }
       body.appendChild(mem);
 
-      // Leave
       body.appendChild(h('section', { class: 'edit-sec' },
         act('Leave group', 'danger', async () => {
           const msg = isOwner && g.memberCount > 1 ? 'Leave the group? The longest-standing member becomes the new owner.' : 'Leave the group?';
@@ -458,8 +448,6 @@
       s.by ? h('span', { class: 'acct-hint' }, 'from ' + s.by) : null,
       h('div', { class: 'social-right' }, yes, no));
   }
-
-  /* ========================================================== CHAT */
 
   function openChat(user) {
     startChat({ kind: 'dm', id: user.id, user,
@@ -546,7 +534,7 @@
     const fileInput = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/gif,image/webp', hidden: true });
     const attachBtn = h('button', { class: 'chat-attach', title: 'Attach an image', onclick: () => fileInput.click(), html: '<i class="fa-solid fa-image"></i>' });
     const gifBtn = h('button', { class: 'chat-attach chat-gif-btn', title: 'Send a GIF' }, 'GIF');
-    // Games you can play right in the DM (just tic-tac-toe for now)
+    // tic-tac-toe playing (potentially more later down the line)
     const gamesBtn = conv.kind === 'dm' && window.TicTacToe
       ? h('button', { class: 'chat-attach chat-games-btn', title: 'Play a game', html: Icon('gamepad') }) : null;
     const text = h('textarea', { class: 'chat-text', rows: 1, maxlength: conv.kind === 'community' ? 500 : 1000,
@@ -559,7 +547,7 @@
     const composer = h('div', { class: 'chat-compose' }, lockNote, pending, err,
       h('div', { class: 'chat-compose-row' }, attachBtn, gifBtn, gamesBtn, text, sendBtn), fileInput,
       h('div', { class: 'chat-note' }, conv.kind === 'community'
-        ? 'Be nice! One message every 10 seconds. Right-click someone to add them as a friend.'
+        ? 'One message every 10 seconds. Right-click someone to add them as a friend.'
         : 'Uploaded images are deleted from the server after a while to save space.'));
 
     content.appendChild(head);
@@ -966,7 +954,6 @@
     data.friends.forEach(f => body.appendChild(personRow(f, UI.statusLine(f), null, sendTo('/api/messages/' + f.id, f.username))));
   }
 
-  /* ========================================================== EVENTS */
 
   document.addEventListener('boinga:user', e => { if (!e.detail) close(); });
   document.addEventListener('boinga:friendschanged', () => { if (drawer && drawer.classList.contains('open')) refreshList(); });
