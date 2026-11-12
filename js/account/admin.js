@@ -1,5 +1,3 @@
-/* Admin panel for the site creator. Every action is checked on the server (users.is_admin),
-   so this file being public doesn't let anyone else in. window.AdminPanel.open() */
 (function () {
   const { h } = window.UI;
 
@@ -146,15 +144,9 @@
         u.avatar ? clear('avatar') : null, u.banner ? clear('banner') : null, u.bio ? clear('bio') : null, clear('username')));
   }
 
-  // Cosmetic roles: an emoji badge before the name, a label (shown on hover) and an optional glow
-  // in the person's own name colour. Presets are just shortcuts; anything custom works too.
   const ROLE_PRESETS = [
     { label: 'Tester', emoji: '🛠', glow: true },
-    { label: 'Moderator', emoji: '🛡️', glow: true },
-    { label: 'Supporter', emoji: '💖', glow: true },
-    { label: 'Artist', emoji: '🎨', glow: false },
-    { label: 'OG', emoji: '⭐', glow: false },
-    { label: 'Bug hunter', emoji: '🐛', glow: false }
+    { label: 'OG', emoji: '⭐', glow: false }
   ];
   function roleEditor(u, reload) {
     const cur = u.role || { label: '', emoji: '', glow: true };
