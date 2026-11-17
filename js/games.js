@@ -39,7 +39,7 @@ window.GAMES = [
   { id: 'ovo2', name: 'OvO 2', url: 'games/ovo2/', img: 'images/ovo2.avif', genres: ['platformer', 'action'] },
   { id: 'cookieclicker', name: 'Cookie Clicker', url: 'games/cookieclicker/', img: 'images/PerfectCookie.webp', genres: ['idle', 'casual'] },
   { id: 'subwaysurfers', name: 'Subway Surfers', url: 'games/subwaysurfers/', img: 'images/subwaysurfers.jpg', genres: ['arcade', 'action'] },
-  { id: 'gdash', name: 'Geometry Dash', url: 'games/gdash/', img: 'images/gdash.png', genres: ['platformer', 'rhythm'] },
+  { id: 'gdash', name: 'Geometry Dash', url: 'https://gd-webport.pages.dev/', img: 'images/gdash.png', genres: ['platformer', 'rhythm'], new: true },
   { id: 'flappybird', name: 'Flappy Bird', url: 'games/flappybird/', img: 'images/flappybird.png', genres: ['arcade', 'casual'] },
   { id: 'snake', name: 'Snake', url: 'games/snake/', img: 'images/snake.png', genres: ['arcade', 'retro'] },
   { id: 'mc', name: 'Minecraft Classic', url: 'games/mc/', img: 'images/mc.png', genres: ['sandbox', 'adventure'] },
