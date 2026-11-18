@@ -1,3 +1,5 @@
+/* Admin panel for the site creator. Every action is checked on the server (users.is_admin),
+   so this file being public doesn't let anyone else in. window.AdminPanel.open() */
 (function () {
   const { h } = window.UI;
 
@@ -11,7 +13,7 @@
     const body = h('div', { class: 'admin-body' });
     const wrap = h('div', { class: 'admin' }, tabs, body);
     UI.modal({ title: '👑 Admin panel', body: wrap, wide: true, className: 'admin-panel' });
-    const names = { overview: 'Overview', reports: 'Reports', users: 'Users' };
+    const names = { overview: 'Overview', reports: 'Reports', users: 'Users', words: 'Blocked words' };
     function drawTabs() {
       tabs.innerHTML = '';
       Object.keys(names).forEach(k => tabs.appendChild(h('button', { class: tab === k ? 'active' : '', onclick: () => { tab = k; drawTabs(); show(); } }, names[k])));
@@ -19,10 +21,67 @@
     function show() {
       body.innerHTML = '';
       body.appendChild(h('div', { class: 'acct-loading' }, 'Loading…'));
-      ({ overview, reports, users })[tab](body).catch(e => { body.innerHTML = ''; body.appendChild(h('p', { class: 'acct-error' }, e.message)); });
+      ({ overview, reports, users, words })[tab](body).catch(e => { body.innerHTML = ''; body.appendChild(h('p', { class: 'acct-error' }, e.message)); });
     }
     drawTabs();
     show();
+  }
+
+  /* ---------------- blocked words ---------------- */
+  // The built-in list (common swears + slurs, with tricks like sh1t / f.u.c.k / f u c k) is always on.
+  // Words added here are checked the same way. Messages with them are refused and the sender sees a popup.
+  async function words(body) {
+    let list = (await Api.get('/api/admin/words')).words;
+    body.innerHTML = '';
+    const input = h('input', { type: 'text', maxlength: 30, placeholder: 'Add a word…', spellcheck: 'false' });
+    const anywhere = h('input', { type: 'checkbox' });
+    const addBtn = h('button', { class: 'acct-btn primary' }, 'Add');
+    const err = UI.errorBox();
+    const listEl = h('div', { class: 'words-list' });
+    const testIn = h('input', { type: 'text', maxlength: 500, placeholder: 'Type something to test the filter…' });
+    const testOut = h('span', { class: 'words-test-out' });
+    function draw() {
+      listEl.innerHTML = '';
+      if (!list.length) listEl.appendChild(h('p', { class: 'acct-hint' }, 'No extra words yet. The built-in list is still on.'));
+      list.slice().sort((x, y) => x.w.localeCompare(y.w)).forEach(x => {
+        const rm = h('button', { class: 'words-x', title: 'Remove' }, '×');
+        rm.addEventListener('click', () => UI.busy(rm, async () => {
+          try { list = (await Api.del('/api/admin/words/' + encodeURIComponent(x.w))).words; draw(); } catch (e) { UI.toast(e.message, 'bad'); }
+        }));
+        listEl.appendChild(h('span', { class: 'words-chip', title: x.sub ? 'Blocked even inside other words' : 'Blocked as a whole word' },
+          x.w, x.sub ? h('small', null, ' anywhere') : null, rm));
+      });
+    }
+    async function add() {
+      err.show('');
+      const w = input.value.trim();
+      if (!w) return;
+      try { list = (await Api.post('/api/admin/words', { word: w, anywhere: anywhere.checked })).words; input.value = ''; draw(); }
+      catch (e) { err.show(e.message); }
+    }
+    addBtn.addEventListener('click', () => UI.busy(addBtn, add));
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
+    let tt = null;
+    testIn.addEventListener('input', () => {
+      clearTimeout(tt);
+      tt = setTimeout(async () => {
+        const v = testIn.value.trim();
+        if (!v) { testOut.textContent = ''; return; }
+        try {
+          const r = await Api.post('/api/admin/words/test', { text: v });
+          testOut.textContent = r.blocked ? '🚫 Would be blocked' : '✅ Allowed';
+          testOut.className = 'words-test-out ' + (r.blocked ? 'bad' : 'good');
+        } catch (e) { testOut.textContent = e.message; }
+      }, 350);
+    });
+    body.appendChild(h('div', { class: 'words-admin' },
+      h('p', { class: 'acct-hint' }, 'A built-in list of swears and slurs is always on (hell and damn are allowed). It also catches tricks like sh1t, $hit, f.u.c.k, f u c k, f*ck and look-alike letters. Add more words here — the same tricks are caught for them too. Changes apply within a minute.'),
+      h('div', { class: 'edit-inline' }, input, addBtn),
+      h('label', { class: 'acct-check' }, anywhere, h('span', null, 'Also block it inside other words (otherwise only as its own word, plus endings like -s, -ed, -ing)')),
+      err, listEl,
+      h('div', { class: 'role-label' }, 'Test the filter'),
+      h('div', { class: 'edit-inline' }, testIn), testOut));
+    draw();
   }
 
   /* ---------------- overview + data saver ---------------- */
@@ -144,9 +203,15 @@
         u.avatar ? clear('avatar') : null, u.banner ? clear('banner') : null, u.bio ? clear('bio') : null, clear('username')));
   }
 
+  // Cosmetic roles: an emoji badge before the name, a label (shown on hover) and an optional glow
+  // in the person's own name colour. Presets are just shortcuts; anything custom works too.
   const ROLE_PRESETS = [
     { label: 'Tester', emoji: '🛠', glow: true },
-    { label: 'OG', emoji: '⭐', glow: false }
+    { label: 'Moderator', emoji: '🛡️', glow: true },
+    { label: 'Supporter', emoji: '💖', glow: true },
+    { label: 'Artist', emoji: '🎨', glow: false },
+    { label: 'OG', emoji: '⭐', glow: false },
+    { label: 'Bug hunter', emoji: '🐛', glow: false }
   ];
   function roleEditor(u, reload) {
     const cur = u.role || { label: '', emoji: '', glow: true };
