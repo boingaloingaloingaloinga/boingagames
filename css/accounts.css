@@ -745,3 +745,16 @@ body.music-on:not(.music-compact) .social.floating { bottom: 86px; height: min(5
 .ttt-again { margin-top: 8px; }
 .ttt-again[hidden] { display: none; }
 html.no-animations .ttt-cell.win { animation: none; }
+
+/* ---------- Blocked words (admin) + "not allowed" popup ---------- */
+.words-admin { display: flex; flex-direction: column; gap: 10px; }
+.words-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.words-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); font: 13px Arial, sans-serif; color: #fff; }
+.words-chip small { color: var(--accent); }
+.words-x { background: none; border: none; color: var(--text-soft); cursor: pointer; font-size: 16px; line-height: 1; padding: 0 6px; }
+.words-x:hover { color: #ff8080; }
+.words-test-out { font: bold 13px Arial, sans-serif; min-height: 1.2em; }
+.words-test-out.good { color: #8dff9a; }
+.words-test-out.bad { color: #ff9a9a; }
+.blocked-popup p { font: 15px Arial, sans-serif; color: #fff; text-align: center; margin: 4px 0; }
+.blocked-popup .acct-hint { color: var(--text-soft); font-size: 13px; }
