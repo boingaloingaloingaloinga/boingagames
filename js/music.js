@@ -32,7 +32,7 @@
   let compactPref = load('compact', false);
   let expandedInGame = false; // user opened the full player while a game is open
 
-  function loadYouTube() {
+  function loadYouTube(quiet) {
     if (ytReady) return ytReady;
     ytReady = new Promise(resolve => {
       const host = h('div', { id: 'ytBox', 'aria-hidden': 'true' }, h('div', { id: 'ytHost' }));
@@ -53,7 +53,10 @@
       const s = document.createElement('script');
       s.src = 'https://www.youtube.com/iframe_api';
       s.async = true;
-      s.onerror = () => UI.toast("Couldn't load the music player. Is YouTube blocked on this network?", 'bad');
+      s.onerror = () => {
+        ytReady = null; s.remove();   // try again (and say so) when someone actually presses play
+        if (!quiet) UI.toast("Couldn't load the music player. Is YouTube blocked on this network?", 'bad');
+      };
       document.head.appendChild(s);
     });
     return ytReady;
@@ -682,7 +685,7 @@
   // Top-right button
   // Load the hidden YouTube player in the background once the page is idle, so the first song only waits for YouTube
   window.addEventListener('load', () => {
-    const warm = () => { if (!window.Account || !Account.saver || Account.saver.music !== false) loadYouTube(); };
+    const warm = () => { if (!window.Account || !Account.saver || Account.saver.music !== false) loadYouTube(true); };
     if ('requestIdleCallback' in window) requestIdleCallback(warm, { timeout: 6000 }); else setTimeout(warm, 3000);
   });
 
